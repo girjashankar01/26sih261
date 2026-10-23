@@ -160,3 +160,37 @@ class DocumentIngestResponseModel(BaseModel):
     message: str = Field(..., description="Processing summary message")
 
     model_config = ConfigDict(extra="allow")
+
+
+class PageVerdictModel(BaseModel):
+    page_index: int = Field(..., description="1-indexed page number")
+    label: str = Field(..., description="Page classification label (digital, hybrid, scanned, vector_drawing, blank)")
+    reason: str = Field(..., description="Deterministic decision rationale")
+    metrics: dict[str, Any] = Field(default_factory=dict, description="Extracted metrics (visible, invisible, sanity, cover_max, cover_sum, paths)")
+
+    model_config = ConfigDict(extra="allow")
+
+
+class DocumentRouteResponseModel(BaseModel):
+    application_id: str = Field(..., description="Application identifier")
+    document_id: str = Field(..., description="Document identifier")
+    doc_slot: str | None = Field(default=None, description="Assigned document slot")
+    detected_kind: str = Field(..., description="Detected format kind (pdf, png, jpeg)")
+    detected_media_type: str = Field(..., description="MIME media type")
+    byte_size: int = Field(..., description="Exact file size in bytes")
+    blake3: str = Field(..., description="BLAKE3 cryptographic digest (hex)")
+    sha256: str = Field(..., description="SHA-256 cryptographic digest (hex)")
+    storage_key: str = Field(..., description="Storage key in vault")
+    routing_outcome: str = Field(..., description="Document-level routing outcome: BRANCH_A_DIGITAL, BRANCH_B_SCANNED, MIXED, VECTOR_DRAWING, BLANK_DOCUMENT, CORRUPT_DOCUMENT, ENCRYPTED_PDF, EMPTY_DOCUMENT, UNSUPPORTED_FORMAT")
+    reason: str = Field(..., description="Explanatory decision summary")
+    total_pages: int = Field(..., description="Total inspected pages")
+    page_counts: dict[str, int] = Field(..., description="Count of pages per label")
+    page_verdicts: list[PageVerdictModel] = Field(default_factory=list, description="Per-page routing verdicts")
+    processing_state: str = Field(default="ROUTED", description="Pipeline state")
+    pipeline_stage: str = Field(default="S2_ROUTER", description="Architectural pipeline stage (Guide §2.1)")
+    ocr_status: str = Field(default="NOT_RUN", description="OCR status; routing is not OCR")
+    classification_status: str = Field(default="NOT_RUN", description="Document-type classification; routing is not document typing")
+    simulated: bool = Field(default=True, description="Always true in demo prototype")
+    advisory: bool = Field(default=True, description="Advisory decision-support indicator")
+
+    model_config = ConfigDict(extra="allow")

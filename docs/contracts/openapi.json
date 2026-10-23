@@ -148,6 +148,101 @@
           }
         }
       }
+    },
+    "/applications/{application_id}/documents/{document_id}/route": {
+      "get": {
+        "summary": "Retrieve routing and classification result for a persisted document",
+        "operationId": "route_document_endpoint_applications__application_id__documents__document_id__route_get",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentRouteResponseModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Route and classify a persisted document (Guide \u00a74 S2, \u00a76)",
+        "description": "Inspects extractable text, image coverage, and vector drawings using deterministic thresholds. Routes to Branch A (digital), Branch B (scanned raster), or Mixed. Does not perform OCR or document typing.",
+        "operationId": "route_document_endpoint_applications__application_id__documents__document_id__route_post",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentRouteResponseModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -574,6 +669,146 @@
         ],
         "title": "DocumentIngestResponseModel"
       },
+      "DocumentRouteResponseModel": {
+        "properties": {
+          "application_id": {
+            "type": "string",
+            "title": "Application Id",
+            "description": "Application identifier"
+          },
+          "document_id": {
+            "type": "string",
+            "title": "Document Id",
+            "description": "Document identifier"
+          },
+          "doc_slot": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Doc Slot",
+            "description": "Assigned document slot"
+          },
+          "detected_kind": {
+            "type": "string",
+            "title": "Detected Kind",
+            "description": "Detected format kind (pdf, png, jpeg)"
+          },
+          "detected_media_type": {
+            "type": "string",
+            "title": "Detected Media Type",
+            "description": "MIME media type"
+          },
+          "byte_size": {
+            "type": "integer",
+            "title": "Byte Size",
+            "description": "Exact file size in bytes"
+          },
+          "blake3": {
+            "type": "string",
+            "title": "Blake3",
+            "description": "BLAKE3 cryptographic digest (hex)"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256",
+            "description": "SHA-256 cryptographic digest (hex)"
+          },
+          "storage_key": {
+            "type": "string",
+            "title": "Storage Key",
+            "description": "Storage key in vault"
+          },
+          "routing_outcome": {
+            "type": "string",
+            "title": "Routing Outcome",
+            "description": "Document-level routing outcome: BRANCH_A_DIGITAL, BRANCH_B_SCANNED, MIXED, VECTOR_DRAWING, BLANK_DOCUMENT, CORRUPT_DOCUMENT, ENCRYPTED_PDF, EMPTY_DOCUMENT, UNSUPPORTED_FORMAT"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "Explanatory decision summary"
+          },
+          "total_pages": {
+            "type": "integer",
+            "title": "Total Pages",
+            "description": "Total inspected pages"
+          },
+          "page_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Page Counts",
+            "description": "Count of pages per label"
+          },
+          "page_verdicts": {
+            "items": {
+              "$ref": "#/components/schemas/PageVerdictModel"
+            },
+            "type": "array",
+            "title": "Page Verdicts",
+            "description": "Per-page routing verdicts"
+          },
+          "processing_state": {
+            "type": "string",
+            "title": "Processing State",
+            "description": "Pipeline state",
+            "default": "ROUTED"
+          },
+          "pipeline_stage": {
+            "type": "string",
+            "title": "Pipeline Stage",
+            "description": "Architectural pipeline stage (Guide \u00a72.1)",
+            "default": "S2_ROUTER"
+          },
+          "ocr_status": {
+            "type": "string",
+            "title": "Ocr Status",
+            "description": "OCR status; routing is not OCR",
+            "default": "NOT_RUN"
+          },
+          "classification_status": {
+            "type": "string",
+            "title": "Classification Status",
+            "description": "Document-type classification; routing is not document typing",
+            "default": "NOT_RUN"
+          },
+          "simulated": {
+            "type": "boolean",
+            "title": "Simulated",
+            "description": "Always true in demo prototype",
+            "default": true
+          },
+          "advisory": {
+            "type": "boolean",
+            "title": "Advisory",
+            "description": "Advisory decision-support indicator",
+            "default": true
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "application_id",
+          "document_id",
+          "detected_kind",
+          "detected_media_type",
+          "byte_size",
+          "blake3",
+          "sha256",
+          "storage_key",
+          "routing_outcome",
+          "reason",
+          "total_pages",
+          "page_counts"
+        ],
+        "title": "DocumentRouteResponseModel"
+      },
       "FindingCategory": {
         "type": "string",
         "enum": [
@@ -751,6 +986,39 @@
         },
         "type": "object",
         "title": "HealthResponseModel"
+      },
+      "PageVerdictModel": {
+        "properties": {
+          "page_index": {
+            "type": "integer",
+            "title": "Page Index",
+            "description": "1-indexed page number"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Page classification label (digital, hybrid, scanned, vector_drawing, blank)"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "Deterministic decision rationale"
+          },
+          "metrics": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metrics",
+            "description": "Extracted metrics (visible, invisible, sanity, cover_max, cover_sum, paths)"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "page_index",
+          "label",
+          "reason"
+        ],
+        "title": "PageVerdictModel"
       },
       "ValidationError": {
         "properties": {

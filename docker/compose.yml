@@ -26,7 +26,7 @@ services:
       retries: 10
 
   storage:
-    image: chrislusf/seaweedfs:latest
+    image: chrislusf/seaweedfs:4.48
     command: server -s3 -filer
     volumes:
       - storage_data:/data

@@ -176,9 +176,60 @@ Date · decision · reason · owner · interfaces/files affected · unresolved f
     - Idempotency conflict: sent same key with different content; returned HTTP 409 Conflict with `{"detail": {"error_code": "IDEMPOTENCY_CONFLICT", ...}}`.
     - Teardown: `docker compose -f docker/compose.yml down -v` cleanly removed containers, network, and volumes.
 
+## Phase A Step 3 — Document Routing & Classification (S2) — 2026-10-24
+- Docker Compose Image Pinning:
+  - Inspected `docker/compose.yml` for mutable `latest` tags.
+  - Replaced mutable `chrislusf/seaweedfs:latest` with pinned version `chrislusf/seaweedfs:4.48` (image digest `sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d`).
+  - Confirmed `postgres:16-alpine` and `ghcr.io/astral-sh/uv:0.13.5` are version-pinned.
+  - Verified syntax and structure via `docker compose -f docker/compose.yml config`.
+- Storage-Backed Document Reading:
+  - Document router reads strictly via `VaultBackend.open_stream(blob.storage_key)` through the existing content-addressed vault abstraction; it does not rely on local filesystem container paths.
+  - Document records are retrieved from the database via `UploadRepository.get_upload(document_id, application_id)`.
+- Per-Page Classification Engine (`backend/pipeline/router.py`):
+  - Dependencies: Added `pymupdf>=1.24.0` via `pyproject.toml`, resolved in `uv.lock`, and exported to `requirements.txt`.
+  - Deterministic thresholds per Guide §4 S2 and §6.1:
+    - `MIN_VISIBLE = 80`: Minimum visible text characters for a page to qualify as text-bearing.
+    - `COVER_SCAN = 0.60`: If raster images cover ≥ 60% of page area with < 80 visible characters, page is classified as `scanned`.
+    - `COVER_HYBRID = 0.25`: If raster images cover ≥ 25% of page area with ≥ 80 visible characters, page is classified as `hybrid`.
+    - `DRAWING_MIN = 40`, `DRAWING_DENSE = 400`, `DRAWING_TEXT_RATIO = 0.25`: Pages with extensive vector paths and sparse text are classified as `vector_drawing`.
+    - Blank detection: 0 visible text characters, 0 image coverage, and < 5 vector drawing paths classifies the page as `blank`.
+  - Text Sanity & Font Encoding:
+    - `text_sanity()` evaluates alphanumeric ratio, printable ASCII ratio, and Private Use Area / CID unmapped replacement characters (`\ufffd`).
+    - Pages with garbled/corrupted embedded font encodings (sanity score < 0.60) are demoted to `scanned` to ensure they undergo the OCR ladder rather than producing garbage downstream extraction.
+  - Searchable OCR Layer Detection:
+    - Inspects PyMuPDF text trace (`page.get_texttrace()`) to distinguish visible font spans (`type == 0`) from invisible text spans (`type == 3`). Invisible OCR text is recorded in page metadata and not conflated with original born-digital vector text.
+- Document-Level Routing Outcomes:
+  - `BRANCH_A_DIGITAL`: All pages are born-digital (or digital + blank).
+  - `BRANCH_B_SCANNED`: All non-blank pages are scanned rasters.
+  - Raster Images (PNG/JPEG): Directly routed to `BRANCH_B_SCANNED` without requiring PDF wrapper synthesis.
+  - `MIXED`: Multi-page PDFs containing a combination of digital and scanned/hybrid pages.
+  - `VECTOR_DRAWING`: Architectural/site plan drawings dominated by CAD vector paths.
+  - `BLANK_DOCUMENT`: All pages in the document are blank.
+  - Error/Edge Case Outcomes: Explicit outcomes for `CORRUPT_DOCUMENT`, `ENCRYPTED_PDF`, `EMPTY_DOCUMENT`, and `UNSUPPORTED_FORMAT`.
+- API Endpoints & Contracts:
+  - Added `POST /applications/{application_id}/documents/{document_id}/route` (executes routing analysis) and `GET /applications/{application_id}/documents/{document_id}/route` (retrieves routing result).
+  - Created JSON Schema contract `docs/contracts/document_route_response.schema.json` and example `docs/contracts/examples/document_route_response_example.json`.
+  - Re-exported OpenAPI specification in `docs/contracts/openapi.json`.
+- Honest Pipeline State & Confidentiality:
+  - Returns `processing_state: "ROUTED"`, `pipeline_stage: "S2_ROUTER"`, `ocr_status: "NOT_RUN"`, `classification_status: "NOT_RUN"`, `simulated: true`, `advisory: true`.
+  - Zero-Data-Leakage: Log messages and errors contain only IDs, media types, page counts, and outcomes; document contents and extracted text strings are never logged.
+- Verification Runs Executed:
+  - Unit tests (`tests/test_router.py`): 14 focused tests verifying text sanity heuristics, born-digital PDF, scanned PDF, hybrid PDF, CAD vector drawing, blank PDF, mixed PDF, raster PNG/JPEG routing, corrupt documents, empty documents, storage-backed integration, and 404 handling.
+  - Full test suite: 42 tests passing across all test modules (`uv run python -m unittest discover tests`, 10.2s).
+  - `docker compose -f docker/compose.yml config`: validated cleanly with pinned `chrislusf/seaweedfs:4.48`.
+  - Container build & startup: `docker compose -f docker/compose.yml up --build -d` built and started `postgres`, `storage`, and `app`.
+  - Live container verification across container restart:
+    - Uploaded synthetic PDF (`doc_139c29c75222`) and synthetic PNG (`doc_092052e71767`) to `POST /applications/DEMO-CLEAN-001/documents`.
+    - Restarted `app` container via `docker compose -f docker/compose.yml restart app`.
+    - Called `POST /applications/DEMO-CLEAN-001/documents/{id}/route` post-restart:
+      - PDF returned `BRANCH_A_DIGITAL` with 1 digital page, `processing_state: "ROUTED"`, and `ocr_status: "NOT_RUN"`.
+      - PNG returned `BRANCH_B_SCANNED` with 1 scanned page and `processing_state: "ROUTED"`.
+    - Called `GET /applications/DEMO-CLEAN-001/documents/{id}/route` post-restart: returned matching `BRANCH_A_DIGITAL`.
+
 ## Open questions & Next Steps
-- Which exact Handbook edition/category is the target, and who can review rule sources/effective dates?
 - Implementation of the Nginx reverse-proxy gateway for true offline container isolation (Guide §18.3).
-- Phase A Step 3: Document Routing & Classification (Branch A: digitally born / selectable text vs Branch B: scanned / raster document routing per Guide §4 S2).
+- Phase A Step 4: Branch B Preprocessing & OCR Ladder (Guide §4 S3, §7.1 - OpenCV deskew/dewarp, Tesseract OCR with confidence scoring and fallback ladder).
+- Phase A Step 5: Branch A Forensics & Digital Extraction (Guide §4 S4 - PyMuPDF structured text/table extraction, metadata anomaly detection, incremental update inspection).
+
 
 

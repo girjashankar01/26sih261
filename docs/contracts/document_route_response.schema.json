@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aicte.gov.in/schemas/contracts/v1/document_route_response.schema.json",
+  "title": "Document Route Response",
+  "description": "Output of Stage S2 Document Router and Page Classifier (Guide §4 S2, §6)",
+  "type": "object",
+  "required": [
+    "application_id",
+    "document_id",
+    "detected_kind",
+    "detected_media_type",
+    "byte_size",
+    "blake3",
+    "sha256",
+    "storage_key",
+    "routing_outcome",
+    "reason",
+    "total_pages",
+    "page_counts",
+    "page_verdicts",
+    "processing_state",
+    "pipeline_stage",
+    "ocr_status",
+    "classification_status",
+    "simulated",
+    "advisory"
+  ],
+  "properties": {
+    "application_id": {
+      "type": "string",
+      "description": "Application identifier"
+    },
+    "document_id": {
+      "type": "string",
+      "description": "Document identifier"
+    },
+    "doc_slot": {
+      "type": ["string", "null"],
+      "description": "Optional assigned document slot"
+    },
+    "detected_kind": {
+      "type": "string",
+      "description": "Detected format kind (pdf, png, jpeg, unsupported)"
+    },
+    "detected_media_type": {
+      "type": "string",
+      "description": "MIME media type"
+    },
+    "byte_size": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Size in bytes"
+    },
+    "blake3": {
+      "type": "string",
+      "description": "BLAKE3 digest"
+    },
+    "sha256": {
+      "type": "string",
+      "description": "SHA-256 digest"
+    },
+    "storage_key": {
+      "type": "string",
+      "description": "Storage vault key"
+    },
+    "routing_outcome": {
+      "type": "string",
+      "enum": [
+        "BRANCH_A_DIGITAL",
+        "BRANCH_B_SCANNED",
+        "MIXED",
+        "VECTOR_DRAWING",
+        "BLANK_DOCUMENT",
+        "CORRUPT_DOCUMENT",
+        "ENCRYPTED_PDF",
+        "EMPTY_DOCUMENT",
+        "UNSUPPORTED_FORMAT"
+      ],
+      "description": "Document-level routing decision outcome"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Decision rationale"
+    },
+    "total_pages": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "page_counts": {
+      "type": "object",
+      "description": "Counts of pages by label (digital, scanned, hybrid, vector_drawing, blank)"
+    },
+    "page_verdicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["page_index", "label", "reason", "metrics"],
+        "properties": {
+          "page_index": {"type": "integer", "minimum": 1},
+          "label": {"type": "string", "enum": ["digital", "hybrid", "scanned", "vector_drawing", "blank"]},
+          "reason": {"type": "string"},
+          "metrics": {"type": "object"}
+        }
+      }
+    },
+    "processing_state": {
+      "type": "string",
+      "const": "ROUTED"
+    },
+    "pipeline_stage": {
+      "type": "string",
+      "const": "S2_ROUTER"
+    },
+    "ocr_status": {
+      "type": "string",
+      "const": "NOT_RUN"
+    },
+    "classification_status": {
+      "type": "string",
+      "const": "NOT_RUN"
+    },
+    "simulated": {
+      "type": "boolean",
+      "const": true
+    },
+    "advisory": {
+      "type": "boolean",
+      "const": true
+    }
+  }
+}

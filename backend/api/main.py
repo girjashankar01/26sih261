@@ -7,12 +7,17 @@ from fastapi.staticfiles import StaticFiles
 from backend.api.schemas import (
     DemoApplicationsListModel,
     DocumentIngestResponseModel,
+    DocumentRouteResponseModel,
     HealthResponseModel,
     ValidationResponseModel,
 )
+from backend.db.connection import db as default_db
+from backend.db.repository import get_upload_by_id
 from backend.ingest.service import process_upload_stream
+from backend.pipeline.router import route_document
 from backend.records.demo import APPLICATIONS
 from backend.rules.evaluate import validate_application
+from backend.storage.vault import default_vault
 
 app = FastAPI(
     title="AICTE Application Validation Prototype",
@@ -80,3 +85,56 @@ async def upload_document(
         idempotency_key=idempotency_key,
     )
     return result
+
+
+@app.post(
+    "/applications/{application_id}/documents/{document_id}/route",
+    response_model=DocumentRouteResponseModel,
+    summary="Route and classify a persisted document (Guide §4 S2, §6)",
+    description="Inspects extractable text, image coverage, and vector drawings using deterministic thresholds. Routes to Branch A (digital), Branch B (scanned raster), or Mixed. Does not perform OCR or document typing.",
+)
+@app.get(
+    "/applications/{application_id}/documents/{document_id}/route",
+    response_model=DocumentRouteResponseModel,
+    summary="Retrieve routing and classification result for a persisted document",
+)
+async def route_document_endpoint(
+    application_id: str,
+    document_id: str,
+):
+    if not application_id or not application_id.strip():
+        raise HTTPException(status_code=400, detail="Invalid application_id")
+    if not document_id or not document_id.strip():
+        raise HTTPException(status_code=400, detail="Invalid document_id")
+
+    with default_db.connection() as conn:
+        record = get_upload_by_id(conn, document_id.strip(), default_db)
+
+    if not record or record.get("application_id") != application_id.strip():
+        raise HTTPException(
+            status_code=404,
+            detail={"error_code": "DOCUMENT_NOT_FOUND", "message": f"Document '{document_id}' not found for application '{application_id}'"},
+        )
+
+    storage_key = record["storage_key"]
+    if not default_vault.exists(storage_key):
+        raise HTTPException(
+            status_code=404,
+            detail={"error_code": "VAULT_OBJECT_NOT_FOUND", "message": f"Vault storage object '{storage_key}' not found"},
+        )
+
+    raw_bytes = default_vault.get_bytes(storage_key)
+
+    result = route_document(
+        raw_bytes=raw_bytes,
+        media_type=record["media_type"],
+        document_id=record["id"],
+        application_id=record["application_id"],
+        doc_slot=record.get("doc_slot"),
+        blake3=record["blake3"],
+        sha256=record["sha256"],
+        storage_key=storage_key,
+    )
+    from dataclasses import asdict
+    return asdict(result) if hasattr(result, "__dataclass_fields__") else result
+
