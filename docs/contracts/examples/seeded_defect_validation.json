@@ -1,0 +1,101 @@
+{
+  "application_id": "DEMO-ISSUES-001",
+  "category": "EOA_RENEWAL",
+  "workflow": "NEEDS_RECTIFICATION",
+  "decision_support_only": true,
+  "simulated": true,
+  "rule_set": "EOA_RENEWAL-demo-v1",
+  "rule_set_version": "1.0.0",
+  "coverage": {
+    "mode": "demo_partial_checks",
+    "summary": "3 deterministic demo checks evaluated out of full AICTE validation lifecycle",
+    "rules_evaluated": 4,
+    "checks_not_evaluated": [
+      "ocr_and_layout_pipeline",
+      "document_forensics_and_tamper_detection",
+      "live_issuer_registry_verification",
+      "infrastructure_norms_checklist",
+      "officer_manual_review_and_decision"
+    ]
+  },
+  "checks": [
+    {
+      "rule_id": "DEMO-DOC-001",
+      "rule_version": "1.0.0",
+      "status": "PASS",
+      "reason": "'fire_noc' is present.",
+      "evidence": {
+        "document_type": "fire_noc",
+        "source": "submitted_documents"
+      }
+    }
+  ],
+  "findings": [
+    {
+      "id": "finding-doc-001",
+      "rule_id": "DEMO-DOC-001",
+      "rule_version": "1.0.0",
+      "status": "FAILED_CHECK",
+      "category": "MISSING",
+      "severity": "high",
+      "lifecycle": "open",
+      "advisory": true,
+      "reason": "Required document 'affidavit' was not submitted.",
+      "evidence": {
+        "expected_document": "affidavit",
+        "submitted_document": null,
+        "source": "checklist_definition"
+      }
+    },
+    {
+      "id": "finding-date-001",
+      "rule_id": "DEMO-DATE-001",
+      "rule_version": "1.0.0",
+      "status": "FAILED_CHECK",
+      "category": "EXPIRED",
+      "severity": "high",
+      "lifecycle": "open",
+      "advisory": true,
+      "reason": "'fire_noc' validity date precedes submission.",
+      "evidence": {
+        "document_type": "fire_noc",
+        "submitted": {
+          "value": "2026-03-31",
+          "field": "valid_till",
+          "source": "document_validity_metadata"
+        },
+        "compared_with": {
+          "value": "2026-10-12",
+          "field": "submitted_on",
+          "source": "application_metadata"
+        },
+        "comparison": "valid_till < submitted_on"
+      }
+    },
+    {
+      "id": "finding-intake-001",
+      "rule_id": "DEMO-INTAKE-001",
+      "rule_version": "1.0.0",
+      "status": "FAILED_CHECK",
+      "category": "INCONSISTENT",
+      "severity": "medium",
+      "lifecycle": "open",
+      "advisory": true,
+      "reason": "Requested intake is above the synthetic record value; officer review is required.",
+      "evidence": {
+        "submitted": {
+          "value": 540,
+          "field": "requested_intake",
+          "source": "application form"
+        },
+        "compared_with": {
+          "value": 480,
+          "field": "approved_intake",
+          "source": "synthetic_authorized_record",
+          "simulated": true
+        },
+        "difference": 60
+      }
+    }
+  ]
+}

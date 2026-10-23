@@ -1,0 +1,816 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AICTE Application Validation Prototype",
+    "description": "Synthetic decision-support demo for SIH 2026 PS 26261. Not an AICTE-integrated service.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponseModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/demo/applications": {
+      "get": {
+        "summary": "List Applications",
+        "operationId": "list_applications_api_demo_applications_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoApplicationsListModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/demo/applications/{application_id}/validate": {
+      "get": {
+        "summary": "Validate",
+        "operationId": "validate_api_demo_applications__application_id__validate_get",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationResponseModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications/{application_id}/documents": {
+      "post": {
+        "summary": "Upload and ingest a document for an application (Guide \u00a74 S1)",
+        "description": "Streams multipart upload to scratch storage, computes BLAKE3 and SHA-256 in one pass, enforces size limits, sniffs magic bytes (PDF, PNG, JPEG), rejects encrypted PDFs, and returns ingestion metadata.",
+        "operationId": "upload_document_applications__application_id__documents_post",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_document_applications__application_id__documents_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentIngestResponseModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ApplicationWorkflow": {
+        "type": "string",
+        "enum": [
+          "NO_FINDINGS_IN_ENABLED_DEMO_CHECKS",
+          "NEEDS_RECTIFICATION",
+          "NEEDS_MANUAL_REVIEW",
+          "VALIDATED_NO_ISSUES",
+          "DRAFT",
+          "SUBMITTED",
+          "VALIDATING",
+          "UNDER_OFFICER_REVIEW",
+          "OFFICER_DECISION_RECORDED"
+        ],
+        "title": "ApplicationWorkflow"
+      },
+      "Body_upload_document_applications__application_id__documents_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "description": "Document file to upload (PDF, PNG, JPEG)"
+          },
+          "doc_slot": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Doc Slot",
+            "description": "Optional document slot (e.g. fire_noc, affidavit)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_document_applications__application_id__documents_post"
+      },
+      "CheckResultModel": {
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "title": "Rule Id",
+            "description": "Unique rule identifier"
+          },
+          "rule_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule Version",
+            "description": "Rule definition version",
+            "default": "1.0.0"
+          },
+          "status": {
+            "$ref": "#/components/schemas/CheckStatus",
+            "description": "Rule evaluation result"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FindingCategory"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category",
+            "description": "Check category"
+          },
+          "severity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FindingSeverity"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Severity",
+            "description": "Advisory severity tier"
+          },
+          "observed": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed",
+            "description": "Observed value"
+          },
+          "expected": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected",
+            "description": "Expected condition"
+          },
+          "advisory": {
+            "type": "boolean",
+            "title": "Advisory",
+            "description": "Advisory input for officer review",
+            "default": true
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "Plain-language explanation of check outcome"
+          },
+          "evidence": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence",
+            "description": "Supporting evidence data"
+          },
+          "simulated": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Simulated",
+            "description": "True if check ran against synthetic record"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "rule_id",
+          "status",
+          "reason"
+        ],
+        "title": "CheckResultModel"
+      },
+      "CheckStatus": {
+        "type": "string",
+        "enum": [
+          "PASS",
+          "WARNING",
+          "FAILED_CHECK",
+          "NOT_CHECKED",
+          "NEEDS_REVIEW"
+        ],
+        "title": "CheckStatus"
+      },
+      "CoverageModel": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "title": "Mode",
+            "description": "Coverage mode",
+            "default": "demo_partial_checks"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary",
+            "description": "Summary of covered checks"
+          },
+          "rules_evaluated": {
+            "type": "integer",
+            "title": "Rules Evaluated",
+            "description": "Number of rules evaluated in this run"
+          },
+          "checks_not_evaluated": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Checks Not Evaluated",
+            "description": "Checks not evaluated in this slice"
+          }
+        },
+        "type": "object",
+        "required": [
+          "summary",
+          "rules_evaluated",
+          "checks_not_evaluated"
+        ],
+        "title": "CoverageModel"
+      },
+      "DemoApplicationItemModel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "submitted_on": {
+            "type": "string",
+            "title": "Submitted On"
+          },
+          "requested_intake": {
+            "type": "integer",
+            "title": "Requested Intake"
+          },
+          "required_documents": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Required Documents"
+          },
+          "documents": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Documents"
+          },
+          "record": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Record"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "id",
+          "category",
+          "submitted_on",
+          "requested_intake",
+          "required_documents",
+          "documents",
+          "record"
+        ],
+        "title": "DemoApplicationItemModel"
+      },
+      "DemoApplicationsListModel": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DemoApplicationItemModel"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "simulated": {
+            "type": "boolean",
+            "title": "Simulated",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "DemoApplicationsListModel"
+      },
+      "DocumentIngestResponseModel": {
+        "properties": {
+          "application_id": {
+            "type": "string",
+            "title": "Application Id",
+            "description": "Application identifier"
+          },
+          "document_id": {
+            "type": "string",
+            "title": "Document Id",
+            "description": "Unique generated document identifier"
+          },
+          "doc_slot": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Doc Slot",
+            "description": "Assigned document slot (e.g. fire_noc, affidavit)"
+          },
+          "detected_kind": {
+            "type": "string",
+            "title": "Detected Kind",
+            "description": "Detected format kind (pdf, png, jpeg)"
+          },
+          "detected_media_type": {
+            "type": "string",
+            "title": "Detected Media Type",
+            "description": "MIME media type detected via magic bytes"
+          },
+          "byte_size": {
+            "type": "integer",
+            "title": "Byte Size",
+            "description": "Exact file size in bytes"
+          },
+          "blake3": {
+            "type": "string",
+            "title": "Blake3",
+            "description": "BLAKE3 cryptographic digest (hex)"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256",
+            "description": "SHA-256 cryptographic digest (hex)"
+          },
+          "processing_state": {
+            "type": "string",
+            "title": "Processing State",
+            "description": "Current pipeline processing state",
+            "default": "INGESTED_STREAM_VERIFIED"
+          },
+          "pipeline_stage": {
+            "type": "string",
+            "title": "Pipeline Stage",
+            "description": "Current architectural stage",
+            "default": "S1_INGESTION_GATEWAY"
+          },
+          "ocr_status": {
+            "type": "string",
+            "title": "Ocr Status",
+            "description": "OCR pipeline status; not run during raw ingestion",
+            "default": "NOT_RUN"
+          },
+          "persistence_status": {
+            "type": "string",
+            "title": "Persistence Status",
+            "description": "Storage status; unpersisted in demo slice",
+            "default": "EPHEMERAL_SCRATCH_VERIFIED"
+          },
+          "simulated": {
+            "type": "boolean",
+            "title": "Simulated",
+            "description": "Always true in demo slice",
+            "default": true
+          },
+          "advisory": {
+            "type": "boolean",
+            "title": "Advisory",
+            "description": "Advisory decision-support indicator",
+            "default": true
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Processing summary message"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "application_id",
+          "document_id",
+          "detected_kind",
+          "detected_media_type",
+          "byte_size",
+          "blake3",
+          "sha256",
+          "message"
+        ],
+        "title": "DocumentIngestResponseModel"
+      },
+      "FindingCategory": {
+        "type": "string",
+        "enum": [
+          "REQUIRED_DOCUMENT",
+          "MISSING",
+          "EXPIRED",
+          "INCONSISTENT",
+          "INCOMPLETE",
+          "CALCULATION_MISMATCH",
+          "UNVERIFIED",
+          "TAMPER_INDICATOR"
+        ],
+        "title": "FindingCategory"
+      },
+      "FindingLifecycle": {
+        "type": "string",
+        "enum": [
+          "open",
+          "acknowledged",
+          "rectification_requested",
+          "dismissed",
+          "escalated",
+          "resolved"
+        ],
+        "title": "FindingLifecycle"
+      },
+      "FindingModel": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id",
+            "description": "Finding identifier"
+          },
+          "rule_id": {
+            "type": "string",
+            "title": "Rule Id",
+            "description": "Rule or detector identifier"
+          },
+          "rule_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule Version",
+            "description": "Rule version",
+            "default": "1.0.0"
+          },
+          "status": {
+            "$ref": "#/components/schemas/CheckStatus",
+            "description": "Rule-result status",
+            "default": "FAILED_CHECK"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FindingCategory"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Category",
+            "description": "Finding category"
+          },
+          "severity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FindingSeverity"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Severity",
+            "description": "Advisory severity",
+            "default": "medium"
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/FindingLifecycle",
+            "description": "Officer review state",
+            "default": "open"
+          },
+          "advisory": {
+            "type": "boolean",
+            "title": "Advisory",
+            "description": "Preliminary indicator requiring human verification",
+            "default": true
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "Plain-language explanation"
+          },
+          "evidence": {
+            "title": "Evidence",
+            "description": "Comparison evidence presenting both sides' values and provenance"
+          },
+          "dismissal_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dismissal Reason",
+            "description": "Officer reason if dismissed"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "rule_id",
+          "category",
+          "reason",
+          "evidence"
+        ],
+        "title": "FindingModel"
+      },
+      "FindingSeverity": {
+        "type": "string",
+        "enum": [
+          "info",
+          "low",
+          "medium",
+          "high"
+        ],
+        "title": "FindingSeverity"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponseModel": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "mode": {
+            "type": "string",
+            "title": "Mode",
+            "default": "demo"
+          },
+          "simulated": {
+            "type": "boolean",
+            "title": "Simulated",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "HealthResponseModel"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "ValidationResponseModel": {
+        "properties": {
+          "application_id": {
+            "type": "string",
+            "title": "Application Id",
+            "description": "Application identifier"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "Application category (e.g. EOA_RENEWAL)"
+          },
+          "workflow": {
+            "$ref": "#/components/schemas/ApplicationWorkflow",
+            "description": "Application workflow state"
+          },
+          "decision_support_only": {
+            "type": "boolean",
+            "title": "Decision Support Only",
+            "description": "Decision-support indicator",
+            "default": true
+          },
+          "simulated": {
+            "type": "boolean",
+            "title": "Simulated",
+            "description": "Synthetic data indicator",
+            "default": true
+          },
+          "rule_set": {
+            "type": "string",
+            "title": "Rule Set",
+            "description": "Rule set applied"
+          },
+          "rule_set_version": {
+            "type": "string",
+            "title": "Rule Set Version",
+            "description": "Rule set version",
+            "default": "1.0.0"
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/CoverageModel",
+            "description": "Evaluation coverage details"
+          },
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/CheckResultModel"
+            },
+            "type": "array",
+            "title": "Checks",
+            "description": "Passed or non-actionable check results"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/FindingModel"
+            },
+            "type": "array",
+            "title": "Findings",
+            "description": "Actionable findings requiring human review"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "application_id",
+          "category",
+          "workflow",
+          "rule_set",
+          "coverage",
+          "checks",
+          "findings"
+        ],
+        "title": "ValidationResponseModel"
+      }
+    }
+  }
+}

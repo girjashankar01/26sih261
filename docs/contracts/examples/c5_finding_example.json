@@ -1,0 +1,25 @@
+{
+  "id": "F-2026-0042",
+  "rule_id": "R-INTAKE-001",
+  "rule_version": "4.0.0",
+  "status": "FAILED_CHECK",
+  "category": "INCONSISTENT",
+  "severity": "medium",
+  "lifecycle": "open",
+  "advisory": true,
+  "reason": "Requested intake exceeds previously approved institutional record value; officer review required.",
+  "evidence": {
+    "submitted": {
+      "value": 540,
+      "source": "application_form",
+      "field": "requested_intake"
+    },
+    "compared_with": {
+      "value": 480,
+      "source": "synthetic_authorized_record",
+      "field": "approved_intake",
+      "simulated": true
+    },
+    "difference": 60
+  }
+}

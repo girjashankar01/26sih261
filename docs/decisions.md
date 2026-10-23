@@ -43,8 +43,72 @@ Date · decision · reason · owner · interfaces/files affected · unresolved f
   - `docker compose -f docker/compose.yml down`: container stopped and network removed cleanly
   - Verified that neither API nor UI claims live AICTE/issuer integration or legal authority.
 
-## Open questions
+## Phase 0 Contract & Status Closeout — 2026-10-24
+- Frozen API & Data Contracts:
+  - Defined 6 versioned JSON Schemas under `docs/contracts/` per Prototype Guide §3.4:
+    - `c1_unified_payload.schema.json` (lossless extraction representation)
+    - `c2_flag.schema.json` (forensics/tamper detector signal, advisory only)
+    - `c3_fact.schema.json` (typed, grounded fact extractions with parse_state and gate calibration rules)
+    - `c4_check_result.schema.json` (rule evaluation results with 5 states)
+    - `c5_finding.schema.json` (actionable non-pass findings with both-sides comparison evidence and lifecycle)
+    - `c6_verification_result.schema.json` (independent document verification statuses and registry comparison)
+    - `validation_response.schema.json` (top-level validation report for API endpoint)
+  - Created representative examples for all 6 contracts plus clean and defect validation responses under `docs/contracts/examples/`.
+  - Implemented typed Pydantic models in `backend/api/schemas.py` bound to endpoints in `backend/api/main.py`.
+  - Exported complete OpenAPI 3.1.0 specification to `docs/contracts/openapi.json`.
+- Separation of 4 State Dimensions (Guide §1.3):
+  - Check result status: `PASS`, `WARNING`, `FAILED_CHECK`, `NOT_CHECKED`, `NEEDS_REVIEW`.
+  - Verification status: `VERIFIED`, `MISMATCH_DETECTED`, `EXPIRED`, `VERIFICATION_PENDING`, `SOURCE_UNAVAILABLE`, `MANUAL_REVIEW_REQUIRED`, `NOT_SUPPORTED`, `NOT_CHECKED`.
+  - Finding lifecycle: `open`, `acknowledged`, `rectification_requested`, `dismissed`, `escalated`, `resolved`.
+  - Application workflow: `DRAFT`, `SUBMITTED`, `VALIDATING`, `NO_FINDINGS_IN_ENABLED_DEMO_CHECKS`, `NEEDS_RECTIFICATION`, `NEEDS_MANUAL_REVIEW`, `VALIDATED_NO_ISSUES`, `UNDER_OFFICER_REVIEW`, `OFFICER_DECISION_RECORDED`.
+- Workflow-Status Correction:
+  - Clean case no longer emits `VALIDATED_NO_ISSUES` because the prototype only evaluated 3 partial demo rules without OCR, forensics, or live issuer verifications.
+  - Now emits `NO_FINDINGS_IN_ENABLED_DEMO_CHECKS` with structured `coverage` metadata detailing 3 evaluated demo checks and listing unevaluated pipeline stages.
+  - Seeded-defect case retains `NEEDS_RECTIFICATION` reporting missing, expired, and inconsistent findings.
+  - Updated UI in `ui/index.html` to clearly render `NO FINDINGS IN ENABLED DEMO CHECKS` and display coverage details, ensuring passing demo checks cannot be mistaken for approval or regulatory decisions.
+- Docker Networking & Security Note:
+  - Updated `docker/compose.yml` to bind port strictly to localhost (`127.0.0.1:8000:8000`) on the default bridge network.
+  - Documented that the default bridge network allows outbound container traffic. There are no external provider calls in this demo, so outbound isolation is not claimed.
+  - True air-gapped/offline isolation requires the edge-gateway/reverse-proxy topology (guide §18.3) with an edge network and an `internal: true` network; this is tracked as a later platform/security task.
+- Verification Runs Executed:
+  - Python model validation test verified both demo fixtures match `ValidationResponseModel`.
+  - JSON Schema syntax check validated all 7 schemas and 8 examples.
+  - `docker compose -f docker/compose.yml config` validated cleanly with `host_ip: 127.0.0.1`.
+  - `docker compose -f docker/compose.yml up --build -d` built and launched container `docker-app-1`.
+  - `GET http://127.0.0.1:8000/health` returned HTTP 200 `{"status":"ok","mode":"demo","simulated":true}`.
+  - `GET http://127.0.0.1:8000/api/demo/applications/DEMO-CLEAN-001/validate` returned `NO_FINDINGS_IN_ENABLED_DEMO_CHECKS` with 4 passed checks, 0 findings, and coverage block.
+  - `GET http://127.0.0.1:8000/api/demo/applications/DEMO-ISSUES-001/validate` returned `NEEDS_RECTIFICATION` with 3 findings (missing, expired, inconsistent) and complete evidence.
+  - `docker compose -f docker/compose.yml down` stopped container and removed network cleanly.
+
+## Phase A Step 1 — Document Ingestion Gateway (S1) — 2026-10-24
+- Endpoint Implemented:
+  - Added `POST /applications/{application_id}/documents` for multipart document upload.
+  - Dependencies: Added `blake3==1.0.11` and `python-multipart==0.0.32` via `pyproject.toml`, resolved in `uv.lock`, and exported to `requirements.txt`.
+- Architecture & Processing Behavior:
+  - Streaming: Upload is streamed in 64 KB chunks directly to a temporary scratch file on disk; full file is never held in memory.
+  - Cryptographic Digests: Computes BLAKE3 and SHA-256 in a single pass over the stream.
+  - Size Limit: Enforces configurable `max_size` (default 10 MB) during streaming; immediately terminates stream with HTTP 413 `FILE_TOO_LARGE` if threshold is exceeded.
+  - Format Sniffing: Strictly sniffs magic bytes (`%PDF-`, `\x89PNG\r\n\x1a\n`, `\xff\xd8\xff`); ignores submitted filename and Content-Type header. Rejects unsupported formats with HTTP 415 `UNSUPPORTED_MEDIA_TYPE`.
+  - PDF Security: Inspects PDF xref/trailer structures for `/Encrypt`; rejects encrypted or password-protected PDFs with HTTP 422 `ENCRYPTED_PDF_REJECTED`.
+  - Zero-Data-Leakage Logging: Error messages and logs contain only status codes, identifiers, and format errors; uploaded payload data is never leaked.
+  - Scratch File Lifecycle: Scratch files are guaranteed unlinked on both success and error paths in `finally:`.
+  - Honest Pipeline States: Returns `processing_state: "INGESTED_STREAM_VERIFIED"`, `pipeline_stage: "S1_INGESTION_GATEWAY"`, `ocr_status: "NOT_RUN"`, and `persistence_status: "EPHEMERAL_SCRATCH_VERIFIED"`. No OCR, database persistence, or downstream extraction is claimed until implemented.
+- Contract & OpenAPI Updates:
+  - Created `docs/contracts/document_ingest_response.schema.json` and `docs/contracts/examples/document_ingest_response_example.json`.
+  - Registered `DocumentIngestResponseModel` in `backend/api/schemas.py`.
+  - Exported updated OpenAPI 3.1.0 specification to `docs/contracts/openapi.json`.
+- Verification Runs Executed:
+  - Unit tests (`tests/test_ingest.py`): 8 test cases executed via `uv run python -m unittest discover tests` (testing PDF, PNG, JPEG, spoofed bytes, empty file, size limit streaming abort, encrypted PDF, and scratch file cleanup). All 8 passed (0.056s).
+  - `docker compose -f docker/compose.yml config`: validated with `host_ip: 127.0.0.1`.
+  - `docker compose -f docker/compose.yml up --build -d`: container built and started.
+  - Live container multipart POST tests executed against `http://127.0.0.1:8000/applications/DEMO-CLEAN-001/documents`:
+    - Valid PDF: returned 201 Created with detected_kind `pdf` and matching BLAKE3/SHA-256.
+    - Valid PNG: returned 201 Created with detected_kind `png`.
+    - Spoofed text file: returned 415 with `UNSUPPORTED_MEDIA_TYPE`.
+    - Encrypted PDF: returned 422 with `ENCRYPTED_PDF_REJECTED`.
+  - `docker compose -f docker/compose.yml down`: container stopped and network removed cleanly.
+
+## Open questions & Next Steps
 - Which exact Handbook edition/category is the target, and who can review rule sources/effective dates?
-- Which next contracts should be frozen for the team's next vertical slice?
-- Does the team need Postgres persistence in its first judgeable demo, or is synthetic in-memory data sufficient?
-- In future offline isolation testing (guide §18.3), should we implement the Nginx gateway or retain direct port publishing for developer convenience?
+- Implementation of the Nginx reverse-proxy gateway for true offline container isolation (Guide §18.3).
+- Phase A Step 2: Ingestion persistence (storage vault object put & PostgreSQL `blobs`/`uploads` metadata records) or initial document classification (Branch A/B router).

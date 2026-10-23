@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aicte.gov.in/schemas/v4/c3_fact.schema.json",
+  "title": "C3 Typed Fact",
+  "description": "Typed, grounded extraction from document, form, or authorized record (Guide §3.4 C3, §12.2).",
+  "type": "object",
+  "required": [
+    "application_id",
+    "source",
+    "entity",
+    "key",
+    "value_type",
+    "value",
+    "parse_state",
+    "grounded",
+    "extractor",
+    "extractor_version"
+  ],
+  "properties": {
+    "application_id": { "type": "string" },
+    "document_id": { "type": ["string", "null"] },
+    "source": {
+      "type": "string",
+      "enum": ["doc", "application_form", "synthetic_record", "authority_registry"]
+    },
+    "entity": {
+      "type": "string",
+      "description": "Document or domain entity (e.g. FIRE_NOC, AFFIDAVIT, APPLICATION, INSTITUTION)"
+    },
+    "key": {
+      "type": "string",
+      "description": "Normalized field key (e.g. valid_till, requested_intake, approved_intake)"
+    },
+    "raw": {
+      "type": ["string", "null"],
+      "description": "Original raw text before type casting"
+    },
+    "value_type": {
+      "type": "string",
+      "enum": ["string", "date", "number", "money", "boolean", "null"]
+    },
+    "value": {
+      "description": "Typed value; null if parse_state != 'ok'"
+    },
+    "parse_state": {
+      "type": "string",
+      "enum": ["ok", "ambiguous", "invalid", "unavailable"],
+      "description": "If != 'ok', three-valued gate produces NEEDS_REVIEW or NOT_CHECKED; never PASS or hard failure"
+    },
+    "conf": {
+      "type": ["number", "null"],
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "Confidence score; null-safe"
+    },
+    "conf_kind": {
+      "type": "string",
+      "enum": ["regex_exact", "human", "engine_score_calibrated", "engine_score_uncalibrated", "heuristics"],
+      "description": "Uncalibrated confidence kind cannot support a hard FAILED_CHECK under the gate"
+    },
+    "grounded": {
+      "type": "boolean",
+      "description": "True if value is traceable to a specific bounding box/block on a document page"
+    },
+    "source_ref": { "type": ["string", "null"], "description": "Block or cell identifier (e.g. B14, T1_C2)" },
+    "page": { "type": ["integer", "null"], "minimum": 1 },
+    "bbox_norm": {
+      "type": ["array", "null"],
+      "items": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "bbox_precision": {
+      "type": ["string", "null"],
+      "enum": ["word", "line", "block", "table", null]
+    },
+    "extractor": { "type": "string" },
+    "extractor_version": { "type": "string" },
+    "needs_confirmation": { "type": "boolean", "default": false },
+    "simulated": { "type": "boolean", "description": "True for synthetic records or mock extractions" }
+  }
+}

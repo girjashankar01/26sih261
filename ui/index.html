@@ -14,7 +14,18 @@
       const response = await fetch(`/api/demo/applications/${encodeURIComponent(id)}/validate`);
       if (!response.ok) { report.textContent = 'Could not load report.'; return; }
       const data = await response.json();
-      report.innerHTML = `<div class="report-head"><div><div class="eyebrow">${esc(data.category)} · ${esc(data.application_id)}</div><h2>Validation report</h2></div><span class="badge">SIMULATED</span></div><p class="workflow">${esc(data.workflow.replaceAll('_',' '))}</p><p class="muted">Decision support only · ${esc(data.rule_set)}</p><h3>Findings (${data.findings.length})</h3>${data.findings.length ? data.findings.map(f => `<article class="finding"><b>${esc(f.rule_id)} · ${esc(f.category)}</b><p>${esc(f.reason)}</p><pre>${esc(JSON.stringify(f.evidence,null,2))}</pre></article>`).join('') : '<p class="pass">No issues found by these demo checks.</p>'}<h3>Passed checks (${data.checks.length})</h3><ul>${data.checks.map(c => `<li><b>${esc(c.rule_id)}</b> — ${esc(c.reason)}</li>`).join('')}</ul>`;
+      report.innerHTML = `
+        <div class="report-head">
+          <div><div class="eyebrow">${esc(data.category)} · ${esc(data.application_id)}</div><h2>Validation report</h2></div>
+          <span class="badge">SIMULATED</span>
+        </div>
+        <p class="workflow">${esc(data.workflow.replaceAll('_',' '))}</p>
+        <p class="muted">Decision support only · ${esc(data.rule_set)} v${esc(data.rule_set_version)} · ${esc(data.coverage ? data.coverage.summary : 'Partial demo coverage')}</p>
+        <h3>Findings (${data.findings.length})</h3>
+        ${data.findings.length ? data.findings.map(f => `<article class="finding"><b>${esc(f.rule_id)} · ${esc(f.category)} (${esc(f.severity)})</b><p>${esc(f.reason)}</p><pre>${esc(JSON.stringify(f.evidence,null,2))}</pre></article>`).join('') : '<p class="pass">No issues found within enabled demo checks (' + data.checks.length + ' passed). OCR, document forensics, and live issuer checks are not evaluated in this demo slice.</p>'}
+        <h3>Passed checks (${data.checks.length})</h3>
+        <ul>${data.checks.map(c => `<li><b>${esc(c.rule_id)}</b> — ${esc(c.reason)}</li>`).join('')}</ul>
+      `;
     }
     fetch('/api/demo/applications').then(r => r.json()).then(data => {
       applications.innerHTML = data.items.map(a => `<button data-id="${esc(a.id)}"><b>${esc(a.id)}</b><span>${esc(a.category.replaceAll('_',' '))}</span><small>${esc(a.submitted_on)} · synthetic</small></button>`).join('');

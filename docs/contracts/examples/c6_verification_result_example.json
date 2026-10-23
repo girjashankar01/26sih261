@@ -1,0 +1,25 @@
+{
+  "document_id": "doc-fire-noc-001",
+  "document_type": "fire_noc",
+  "adapter": "qr_registry_sim",
+  "source": "simulated_state_fire_registry",
+  "simulated": true,
+  "status": "EXPIRED",
+  "request_digest": "sha256:1a8f9b2c119f2c91a0ef3e2189281a719c8f8b1b229910d3e211832049182390",
+  "response_digest": "sha256:9f2c91a0ef3e2189281a719c8f8b1b229910d3e2118320491823901a8f9b2c11",
+  "checked_at": "2026-10-23T06:00:00Z",
+  "integrity": {
+    "signature": "NOT_CHECKED"
+  },
+  "trust": {
+    "class": "demo"
+  },
+  "compared": {
+    "valid_till": {
+      "submitted": "2026-03-31",
+      "returned": "2026-03-31",
+      "match": true
+    }
+  },
+  "reason": "Simulated registry states the validity period expired on 2026-03-31."
+}

@@ -1,0 +1,17 @@
+{
+  "application_id": "DEMO-CLEAN-001",
+  "document_id": "doc_9f2c91a0ef3e",
+  "doc_slot": "fire_noc",
+  "detected_kind": "pdf",
+  "detected_media_type": "application/pdf",
+  "byte_size": 24580,
+  "blake3": "9f2c91a0ef3e2189281a719c8f8b1b229910d3e2118320491823901a8f9b2c11",
+  "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "processing_state": "INGESTED_STREAM_VERIFIED",
+  "pipeline_stage": "S1_INGESTION_GATEWAY",
+  "ocr_status": "NOT_RUN",
+  "persistence_status": "EPHEMERAL_SCRATCH_VERIFIED",
+  "simulated": true,
+  "advisory": true,
+  "message": "Document successfully streamed, hashed, and validated against format rules."
+}

@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aicte.gov.in/schemas/v4/c1_unified_payload.schema.json",
+  "title": "C1 Unified Document Payload",
+  "description": "Lossless document representation emitted by Branch B ingestion pipeline (Guide §3.4 C1).",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "pipeline_version",
+    "blake3",
+    "sha256",
+    "kind",
+    "coordinate_space",
+    "pages",
+    "tables",
+    "blocks",
+    "markdown"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "description": "Schema version (e.g. 4.0)"
+    },
+    "pipeline_version": {
+      "type": "string",
+      "description": "Version of the ingestion/OCR pipeline that produced this payload"
+    },
+    "blake3": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Content-addressed BLAKE3 digest of original file"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 digest of original file"
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["pdf", "image", "office", "scanned"]
+    },
+    "coordinate_space": {
+      "type": "string",
+      "const": "original_page_norm_topleft",
+      "description": "All normalized bounding boxes are relative to original page top-left (0..1)"
+    },
+    "pages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["page", "label", "reasons", "engine"],
+        "properties": {
+          "page": { "type": "integer", "minimum": 1 },
+          "label": { "type": "string", "enum": ["digital", "scanned", "hybrid", "drawing", "blank", "office"] },
+          "reasons": { "type": "array", "items": { "type": "string" } },
+          "engine": { "type": "string" },
+          "level": { "type": "integer" },
+          "quality": {
+            "type": "object",
+            "required": ["score", "method", "calibrated"],
+            "properties": {
+              "score": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+              "method": { "type": "string" },
+              "calibrated": { "type": "boolean", "description": "False unless threshold was calibrated on evaluation set" }
+            }
+          },
+          "preprocess": { "type": "object" }
+        }
+      }
+    },
+    "tables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["table_id", "page", "bbox_norm", "n_rows", "n_cols", "cells", "markdown", "engine"],
+        "properties": {
+          "table_id": { "type": "string" },
+          "page": { "type": "integer", "minimum": 1 },
+          "bbox_norm": {
+            "type": "array",
+            "items": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+            "minItems": 4,
+            "maxItems": 4
+          },
+          "bbox_precision": { "type": "string", "enum": ["word", "line", "block", "table"] },
+          "n_rows": { "type": "integer", "minimum": 0 },
+          "n_cols": { "type": "integer", "minimum": 0 },
+          "cells": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["r", "c", "raw", "value"],
+              "properties": {
+                "r": { "type": "integer" },
+                "c": { "type": "integer" },
+                "raw": { "type": "string", "description": "Original unparsed text from cell" },
+                "value": { "type": ["string", "number", "null"] },
+                "kind": { "type": "string" },
+                "currency": { "type": "string" },
+                "repaired": { "type": "boolean", "default": false }
+              }
+            }
+          },
+          "markdown": { "type": "string" },
+          "engine": { "type": "string" }
+        }
+      }
+    },
+    "blocks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "page", "label", "text", "bbox_norm", "engine"],
+        "properties": {
+          "id": { "type": "string" },
+          "page": { "type": "integer", "minimum": 1 },
+          "label": { "type": "string" },
+          "text": { "type": "string" },
+          "bbox_norm": {
+            "type": "array",
+            "items": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+            "minItems": 4,
+            "maxItems": 4
+          },
+          "bbox_precision": { "type": "string", "enum": ["word", "line", "block", "table"] },
+          "engine": { "type": "string" }
+        }
+      }
+    },
+    "markdown": { "type": "string", "description": "Unified markdown view rendered from blocks and tables" },
+    "flags": { "type": "array", "items": { "type": "object" }, "default": [] },
+    "engines": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "egress": { "type": "array", "items": { "type": "string" }, "default": [] }
+  }
+}

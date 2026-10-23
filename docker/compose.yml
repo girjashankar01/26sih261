@@ -1,10 +1,22 @@
+# AICTE Application Validation Prototype — Compose configuration (Phase 0 / Phase A starter)
+#
+# Container networking and isolation note:
+# - The service port is bound specifically to host localhost (127.0.0.1:8000:8000) for security.
+# - The container currently attaches to the default bridge network to preserve host access on Docker Desktop.
+# - Notice: Default Docker bridge networks allow outbound container network traffic. There are NO external
+#   provider calls, live portal integrations, or external network accesses in this demo slice (all data is
+#   synthetic and in-memory). Outbound isolation must NOT be claimed without network-level enforcement.
+# - True air-gapped/offline network isolation requires an edge-gateway reverse proxy (e.g., Nginx) bridging
+#   an external edge network and an 'internal: true' network, as specified in Prototype Guide §18.3.
+#   Implementing that multi-service topology is tracked as a later platform/security workstream task.
+
 services:
   app:
     build:
       context: ..
       dockerfile: docker/Dockerfile
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     read_only: true
     tmpfs:
       - /tmp

@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aicte.gov.in/schemas/v4/c5_finding.schema.json",
+  "title": "C5 Finding",
+  "description": "Actionable non-pass discrepancy, anomaly indicator, or verification exception requiring human officer review (Guide §1.3, §3.4 C5, §12.2).",
+  "type": "object",
+  "required": [
+    "rule_id",
+    "status",
+    "category",
+    "severity",
+    "reason",
+    "evidence"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for this finding instance"
+    },
+    "rule_id": {
+      "type": "string",
+      "description": "Rule or detector code that triggered the finding"
+    },
+    "rule_version": {
+      "type": ["string", "integer"],
+      "description": "Version of the rule evaluated"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["FAILED_CHECK", "WARNING", "NEEDS_REVIEW"],
+      "description": "Rule-result status. Distinct from finding lifecycle."
+    },
+    "category": {
+      "type": "string",
+      "enum": ["MISSING", "EXPIRED", "INCONSISTENT", "INCOMPLETE", "CALCULATION_MISMATCH", "UNVERIFIED", "TAMPER_INDICATOR"],
+      "description": "Type of issue detected"
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["info", "low", "medium", "high"],
+      "description": "Advisory risk tier. High severity requires mandatory reason for dismissal."
+    },
+    "lifecycle": {
+      "type": "string",
+      "enum": ["open", "acknowledged", "rectification_requested", "dismissed", "escalated", "resolved"],
+      "default": "open",
+      "description": "Officer review lifecycle state for this finding"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Plain language reason for this finding"
+    },
+    "evidence": {
+      "type": ["object", "array"],
+      "description": "Evidence supporting the finding. Comparison findings MUST present both sides' values and their respective source/provenance (e.g. submitted vs compared_with, or left vs right) and label any simulated source explicitly."
+    },
+    "advisory": {
+      "type": "boolean",
+      "default": true,
+      "description": "Preliminary indicator requiring human verification; not proof of misconduct"
+    },
+    "dismissal_reason": {
+      "type": "string",
+      "description": "Mandatory explanation if an officer dismisses a high-severity finding"
+    }
+  }
+}

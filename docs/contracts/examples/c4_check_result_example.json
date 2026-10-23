@@ -1,0 +1,22 @@
+{
+  "rule_id": "R-EXP-001",
+  "rule_version": "4.0.0",
+  "status": "FAILED_CHECK",
+  "category": "EXPIRED",
+  "severity": "high",
+  "observed": "2026-03-31",
+  "expected": ">= 2026-10-12",
+  "advisory": true,
+  "evidence": [
+    {
+      "side": "left",
+      "doc_id": "doc-fire-noc-001",
+      "page": 1,
+      "bbox_norm": [0.52, 0.31, 0.71, 0.33],
+      "bbox_precision": "word",
+      "text": "31st March 2026"
+    }
+  ],
+  "reason": "valid_till 2026-03-31 is before the submission date 2026-10-12.",
+  "simulated": false
+}

@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aicte.gov.in/schemas/v4/document_ingest_response.schema.json",
+  "title": "Document Ingestion Response",
+  "description": "Response emitted by POST /applications/{id}/documents upon successful upload streaming and validation (Guide §4 S1).",
+  "type": "object",
+  "required": [
+    "application_id",
+    "document_id",
+    "detected_kind",
+    "detected_media_type",
+    "byte_size",
+    "blake3",
+    "sha256",
+    "processing_state",
+    "pipeline_stage",
+    "ocr_status",
+    "persistence_status",
+    "simulated",
+    "advisory",
+    "message"
+  ],
+  "properties": {
+    "application_id": {
+      "type": "string",
+      "description": "Identifier of the target application"
+    },
+    "document_id": {
+      "type": "string",
+      "description": "Generated unique document identifier"
+    },
+    "doc_slot": {
+      "type": ["string", "null"],
+      "description": "Assigned document slot (e.g. fire_noc, affidavit)"
+    },
+    "detected_kind": {
+      "type": "string",
+      "enum": ["pdf", "png", "jpeg"],
+      "description": "Document format identified strictly by magic bytes"
+    },
+    "detected_media_type": {
+      "type": "string",
+      "enum": ["application/pdf", "image/png", "image/jpeg"]
+    },
+    "byte_size": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Exact payload size in bytes"
+    },
+    "blake3": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "BLAKE3 cryptographic digest computed during upload streaming"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 cryptographic digest computed during upload streaming"
+    },
+    "processing_state": {
+      "type": "string",
+      "enum": ["INGESTED_STREAM_VERIFIED"],
+      "description": "Current processing state in ingestion gateway"
+    },
+    "pipeline_stage": {
+      "type": "string",
+      "const": "S1_INGESTION_GATEWAY"
+    },
+    "ocr_status": {
+      "type": "string",
+      "const": "NOT_RUN",
+      "description": "OCR is not run during initial raw ingestion"
+    },
+    "persistence_status": {
+      "type": "string",
+      "const": "EPHEMERAL_SCRATCH_VERIFIED",
+      "description": "Scratch file is verified and cleanly unlinked; no database row is claimed until persistence is implemented"
+    },
+    "simulated": {
+      "type": "boolean",
+      "const": true
+    },
+    "advisory": {
+      "type": "boolean",
+      "const": true
+    },
+    "message": {
+      "type": "string"
+    }
+  }
+}
