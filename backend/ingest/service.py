@@ -17,7 +17,11 @@ from backend.db.repository import (
     insert_blob,
     insert_upload,
 )
-from backend.storage.vault import VaultStorage, format_vault_key
+from backend.storage.vault import (
+    VaultStorage,
+    format_vault_key,
+    get_default_vault,
+)
 
 # Supported magic bytes signatures
 MAGIC_SIGNATURES = {
@@ -36,7 +40,7 @@ DEFAULT_MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB default
 CHUNK_SIZE = 64 * 1024  # 64 KB streaming chunks
 
 # Default storage vault instance
-default_vault = VaultStorage()
+default_vault = get_default_vault()
 
 
 class IngestError(HTTPException):
@@ -200,7 +204,7 @@ async def process_upload_stream(
                             processing_state="PERSISTED",
                             pipeline_stage="S1_INGESTION_GATEWAY",
                             ocr_status="NOT_RUN",
-                            persistence_status="VAULT_LOCAL",
+                            persistence_status=getattr(target_vault, "storage_type", "VAULT_LOCAL"),
                             is_new_blob=False,
                             idempotent_replay=True,
                             simulated=True,
@@ -284,7 +288,7 @@ async def process_upload_stream(
             processing_state="PERSISTED",
             pipeline_stage="S1_INGESTION_GATEWAY",
             ocr_status="NOT_RUN",
-            persistence_status="VAULT_LOCAL",
+            persistence_status=getattr(target_vault, "storage_type", "VAULT_LOCAL"),
             is_new_blob=is_new_blob,
             idempotent_replay=False,
             simulated=True,

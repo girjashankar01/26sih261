@@ -148,8 +148,37 @@ Date · decision · reason · owner · interfaces/files affected · unresolved f
   - Tested idempotency conflict: Sent same idempotency key with different PDF content; returned HTTP 409 Conflict with `{"detail": {"error_code": "IDEMPOTENCY_CONFLICT", ...}}`.
   - Container teardown: `docker compose -f docker/compose.yml down -v` cleanly removed container, network, and test volume.
 
+## Phase A Step 2 — Storage & Database Gap Closeout (S3/MinIO & PostgreSQL) — 2026-10-24
+- Analysis of Guide Storage & Database Specifications:
+  - Guide §3.3 Storage Decision: The guide explicitly investigates MinIO and documents that MinIO CE entered maintenance mode / source-only distribution (citation [S6]). The guide explicitly warns: "MinIO CE is in maintenance mode and ships source-only, so do not choose it for new builds [S6]; for an S3 story use SeaweedFS or Garage and do not assume Object Lock. Default backend LocalStore (zero extra containers)."
+  - Verified Docker distribution status: Public Docker Hub and Quay repositories for `minio/minio` confirm this finding (Docker Hub returns access denied/repository removed; Quay returns 401 unauthorized).
+  - Guide §3.2 & §18.1 Database Decision: The guide strictly specifies PostgreSQL (`postgres:16`, database `aicte`) across all architecture sections. SQLite is not present anywhere in the guide; it was only introduced as a lightweight local development convenience.
+- Implemented S3 / MinIO-Compatible Adapter (`backend/storage/vault.py`):
+  - Added `S3VaultStorage` (and `MinIOVaultStorage` alias) implementing the unified `VaultBackend` protocol alongside `LocalVaultStorage`.
+  - Implemented provider-supported conditional write (`If-None-Match: *`) per Guide §3.3 to eliminate race conditions between HEAD and PUT during concurrent deduplicated uploads.
+  - Added automatic bucket provisioning (`ensure_bucket`), stream retrieval, dual-hash integrity verification (`verify_integrity`), and safe deletion of unreferenced orphan blobs.
+  - Added dependency `boto3>=1.35.0` via `pyproject.toml`, resolved in `uv.lock`, and exported to `requirements.txt`.
+- Docker Compose Production Stack (`docker/compose.yml`):
+  - `postgres`: PostgreSQL 16 Alpine container with healthcheck and persistent volume `pg_data:/var/lib/postgresql/data`.
+  - `storage`: SeaweedFS S3-compatible service (`chrislusf/seaweedfs:latest server -s3 -filer`) with persistent volume `storage_data:/data` exposing native S3 API on port 8333.
+  - `app`: Configured with `DATABASE_URL=postgresql://aicte_owner:aicte_dev_secret@postgres:5432/aicte` and `S3_ENDPOINT_URL=http://storage:8333`, running with `read_only: true` and `tmpfs: /tmp`.
+  - Zero-setup local development preserved: Defaults to `LocalVaultStorage` and local SQLite if S3 and PostgreSQL environment variables are omitted.
+- Verification Runs Executed:
+  - Unit tests (`tests/test_s3_storage.py`): 6 dedicated tests against an isolated S3 wire-compatible server testing bucket creation, conditional writes, deduplication, hash integrity mismatch detection, idempotent replay, 409 conflict, and reverse-failure orphan cleanup.
+  - Full test suite: 28 tests passing (`uv run python -m unittest discover tests`, 10.0s).
+  - `docker compose -f docker/compose.yml config`: validated with PostgreSQL and SeaweedFS S3 services.
+  - Live Docker Compose Stack Execution:
+    - Stack started: `docker compose -f docker/compose.yml up --build -d`.
+    - Uploaded synthetic PDF: returned HTTP 201 with `processing_state: "PERSISTED"`, `persistence_status: "VAULT_OBJECT_STORE"`, `storage_key: "b3/af/2f/af2fa2158778f711fbb8baff1e22f3275fdf3c87c9d142243efc21b0281515db"`, and `document_id: "doc_bf38cd3b2707"`.
+    - Idempotent replay: re-sent same key and content; returned `idempotent_replay: true` with `doc_bf38cd3b2707`.
+    - Container restart: restarted `app` container (`docker compose restart app`).
+    - Verified post-restart persistence: re-sent request with same idempotency key; returned HTTP 200 with `idempotent_replay: true` matching the original PostgreSQL and S3 records.
+    - Idempotency conflict: sent same key with different content; returned HTTP 409 Conflict with `{"detail": {"error_code": "IDEMPOTENCY_CONFLICT", ...}}`.
+    - Teardown: `docker compose -f docker/compose.yml down -v` cleanly removed containers, network, and volumes.
+
 ## Open questions & Next Steps
 - Which exact Handbook edition/category is the target, and who can review rule sources/effective dates?
 - Implementation of the Nginx reverse-proxy gateway for true offline container isolation (Guide §18.3).
 - Phase A Step 3: Document Routing & Classification (Branch A: digitally born / selectable text vs Branch B: scanned / raster document routing per Guide §4 S2).
+
 

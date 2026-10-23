@@ -1,27 +1,61 @@
-# AICTE Application Validation Prototype — Compose configuration (Phase 0 / Phase A starter)
+# AICTE Application Validation Prototype — Compose configuration (Phase A Step 2)
+#
+# Architecture:
+# - app: FastAPI application service running on read-only filesystem with tmpfs /tmp
+# - postgres: PostgreSQL 16 metadata database (Guide §3.2, §18.1) storing blobs and uploads
+# - storage: S3-compatible persistent object store (SeaweedFS, Guide §3.3) for content-addressed vault blobs
 #
 # Container networking and isolation note:
-# - The service port is bound specifically to host localhost (127.0.0.1:8000:8000) for security.
-# - The container currently attaches to the default bridge network to preserve host access on Docker Desktop.
-# - Notice: Default Docker bridge networks allow outbound container network traffic. There are NO external
-#   provider calls, live portal integrations, or external network accesses in this demo slice (all data is
-#   synthetic and in-memory). Outbound isolation must NOT be claimed without network-level enforcement.
-# - True air-gapped/offline network isolation requires an edge-gateway reverse proxy (e.g., Nginx) bridging
-#   an external edge network and an 'internal: true' network, as specified in Prototype Guide §18.3.
-#   Implementing that multi-service topology is tracked as a later platform/security workstream task.
+# - Service port is bound specifically to host localhost (127.0.0.1:8000:8000) for security.
+# - Storage port 8333 is bound to 127.0.0.1:8333 for diagnostic/operator access.
+# - Containers attach to internal project network with named volumes for persistence.
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: aicte
+      POSTGRES_USER: aicte_owner
+      POSTGRES_PASSWORD: aicte_dev_secret
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aicte_owner -d aicte"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+
+  storage:
+    image: chrislusf/seaweedfs:latest
+    command: server -s3 -filer
+    volumes:
+      - storage_data:/data
+    ports:
+      - "127.0.0.1:8333:8333"
+
   app:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    ports:
-      - "127.0.0.1:8000:8000"
-    volumes:
-      - prototype_data:/app/data
     read_only: true
     tmpfs:
       - /tmp
+    environment:
+      DATABASE_URL: postgresql://aicte_owner:aicte_dev_secret@postgres:5432/aicte
+      VAULT_BACKEND: s3
+      S3_ENDPOINT_URL: http://storage:8333
+      S3_BUCKET: aicte-vault
+      AWS_ACCESS_KEY_ID: aicte_dev_key
+      AWS_SECRET_ACCESS_KEY: aicte_dev_secret
+      AWS_DEFAULT_REGION: us-east-1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      storage:
+        condition: service_started
+    ports:
+      - "127.0.0.1:8000:8000"
 
 volumes:
-  prototype_data:
+  pg_data:
+  storage_data:

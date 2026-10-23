@@ -5,6 +5,7 @@ description = "Synthetic decision-support prototype for SIH 2026 PS 26261"
 requires-python = "==3.12.*"
 dependencies = [
     "blake3>=1.0.11",
+    "boto3>=1.35.0",
     "fastapi==0.161.0",
     "psycopg[binary]==3.3.6",
     "python-multipart>=0.0.32",

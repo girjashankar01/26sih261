@@ -81,8 +81,8 @@
     },
     "persistence_status": {
       "type": "string",
-      "enum": ["VAULT_LOCAL", "EPHEMERAL_SCRATCH_VERIFIED"],
-      "description": "Storage status: persisted in local content-addressed vault"
+      "enum": ["VAULT_LOCAL", "VAULT_OBJECT_STORE", "EPHEMERAL_SCRATCH_VERIFIED"],
+      "description": "Storage status: persisted in local content-addressed vault or S3-compatible object store"
     },
     "is_new_blob": {
       "type": "boolean",
