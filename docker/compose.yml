@@ -17,6 +17,11 @@ services:
       dockerfile: docker/Dockerfile
     ports:
       - "127.0.0.1:8000:8000"
+    volumes:
+      - prototype_data:/app/data
     read_only: true
     tmpfs:
       - /tmp
+
+volumes:
+  prototype_data:

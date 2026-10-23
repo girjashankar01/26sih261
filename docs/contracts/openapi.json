@@ -83,8 +83,8 @@
     },
     "/applications/{application_id}/documents": {
       "post": {
-        "summary": "Upload and ingest a document for an application (Guide \u00a74 S1)",
-        "description": "Streams multipart upload to scratch storage, computes BLAKE3 and SHA-256 in one pass, enforces size limits, sniffs magic bytes (PDF, PNG, JPEG), rejects encrypted PDFs, and returns ingestion metadata.",
+        "summary": "Upload, persist, and register an application document (Guide \u00a74 S1)",
+        "description": "Streams multipart upload, computes BLAKE3 and SHA-256 in one pass, enforces size limits, sniffs magic bytes (PDF, PNG, JPEG), rejects encrypted PDFs, stores in content-addressed vault with deduplication, records blob and upload metadata in a database transaction, and supports idempotent replays via Idempotency-Key header.",
         "operationId": "upload_document_applications__application_id__documents_post",
         "parameters": [
           {
@@ -95,6 +95,24 @@
               "type": "string",
               "title": "Application Id"
             }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional idempotency key in header",
+              "title": "Idempotency-Key"
+            },
+            "description": "Optional idempotency key in header"
           }
         ],
         "requestBody": {
@@ -168,6 +186,18 @@
             ],
             "title": "Doc Slot",
             "description": "Optional document slot (e.g. fire_noc, affidavit)"
+          },
+          "idempotency_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idempotency Key",
+            "description": "Optional idempotency key in form"
           }
         },
         "type": "object",
@@ -464,11 +494,16 @@
             "title": "Sha256",
             "description": "SHA-256 cryptographic digest (hex)"
           },
+          "storage_key": {
+            "type": "string",
+            "title": "Storage Key",
+            "description": "Content-addressed key in vault storage"
+          },
           "processing_state": {
             "type": "string",
             "title": "Processing State",
             "description": "Current pipeline processing state",
-            "default": "INGESTED_STREAM_VERIFIED"
+            "default": "PERSISTED"
           },
           "pipeline_stage": {
             "type": "string",
@@ -485,8 +520,20 @@
           "persistence_status": {
             "type": "string",
             "title": "Persistence Status",
-            "description": "Storage status; unpersisted in demo slice",
-            "default": "EPHEMERAL_SCRATCH_VERIFIED"
+            "description": "Storage status: persisted in local content-addressed vault",
+            "default": "VAULT_LOCAL"
+          },
+          "is_new_blob": {
+            "type": "boolean",
+            "title": "Is New Blob",
+            "description": "True if blob was newly added; False if deduplicated",
+            "default": true
+          },
+          "idempotent_replay": {
+            "type": "boolean",
+            "title": "Idempotent Replay",
+            "description": "True if request replayed an existing idempotency key",
+            "default": false
           },
           "simulated": {
             "type": "boolean",
@@ -499,6 +546,11 @@
             "title": "Advisory",
             "description": "Advisory decision-support indicator",
             "default": true
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "description": "ISO 8601 UTC creation timestamp"
           },
           "message": {
             "type": "string",
@@ -516,6 +568,8 @@
           "byte_size",
           "blake3",
           "sha256",
+          "storage_key",
+          "created_at",
           "message"
         ],
         "title": "DocumentIngestResponseModel"

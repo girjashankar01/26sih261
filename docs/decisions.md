@@ -108,7 +108,48 @@ Date · decision · reason · owner · interfaces/files affected · unresolved f
     - Encrypted PDF: returned 422 with `ENCRYPTED_PDF_REJECTED`.
   - `docker compose -f docker/compose.yml down`: container stopped and network removed cleanly.
 
+## Phase A Step 2 — Vault Storage & Transactional Database Persistence — 2026-10-24
+- Content-Addressed Vault Storage (`backend/storage/vault.py`):
+  - Key scheme: Formatted as `b3/<aa>/<bb>/<blake3>` based on BLAKE3 digest (Guide §3.1).
+  - Atomic writes: Conditional placement (`if_absent=True`) writes to a sibling temporary file (`.tmp-...`) in the target directory and executes an atomic replace, preventing partial reads.
+  - Path traversal defense: Key resolution verifies that keys are relative POSIX paths without `..` traversal and that the resolved path is strictly relative to the vault root directory.
+  - Collision & integrity check: Deduplication detects existing blobs; on collision, verifies BLAKE3 hash integrity (`verify_integrity`). If existing data is corrupt, raises HTTP 500 `STORAGE_INTEGRITY_MISMATCH`.
+- Database Layer & Portability (`backend/db/connection.py`, `backend/db/repository.py`):
+  - Portable database abstraction supporting SQLite (default local zero-dependency storage at `data/prototype.db` or `:memory:`) and PostgreSQL (`psycopg 3.3.6`) via SQL parameter translation (`?` vs `%s`).
+  - Schema:
+    - `blobs`: `blake3` (PK), `sha256`, `byte_size`, `media_type`, `storage_key`, `created_at`.
+    - `uploads`: `id` (PK `doc_...`), `application_id`, `blake3` (FK to blobs), `doc_slot`, `idempotency_key` (UNIQUE), `created_at`.
+  - Transaction management: All database inserts execute inside a transactional context (`Database.transaction()`) with automatic commit on success and rollback on exceptions.
+- Idempotency & Failure Handling:
+  - Supports `Idempotency-Key` via request header or multipart form parameter.
+  - Checked after stream hashing:
+    - Same key + same BLAKE3 hash + same application ID: Returns original upload record with `idempotent_replay: true` and `processing_state: "PERSISTED"`.
+    - Same key + different content or application ID: Returns structured HTTP 409 `IDEMPOTENCY_CONFLICT`.
+  - Failure atomicity & reverse-failure cleanup:
+    - If vault write fails, DB transaction is not started.
+    - If vault write succeeds for a new blob (`is_new_blob=True`) but DB transaction fails, the service checks whether any other upload references that blob (`count_uploads_for_blob`). If unreferenced (`refs == 0`), the orphaned storage file is safely unlinked; if existing uploads reference it (`refs > 0`), the vault file is preserved.
+- Pipeline Status & Disclaimers:
+  - Upgraded status from ephemeral to `processing_state: "PERSISTED"` and `persistence_status: "VAULT_LOCAL"`.
+  - Retains `ocr_status: "NOT_RUN"`, `pipeline_stage: "S1_INGESTION_GATEWAY"`, `simulated: true`, and `advisory: true`. No OCR, extraction, or verification is claimed.
+- Docker Persistence:
+  - Updated `docker/compose.yml` with named volume `prototype_data:/app/data` so persisted database and vault files survive container restarts while keeping `read_only: true` on the container root filesystem.
+- Contract Updates:
+  - Updated `docs/contracts/document_ingest_response.schema.json` and `docs/contracts/examples/document_ingest_response_example.json` with storage key, persistence status, and idempotency fields.
+  - Re-exported OpenAPI specification in `docs/contracts/openapi.json`.
+- Verification Runs Executed:
+  - Unit tests (`tests/test_ingest.py`, `tests/test_storage.py`, `tests/test_persistence.py`): 22 test cases executed via `uv run python -m unittest discover tests`. All 22 passed (0.096s).
+    - Verified vault key formatting, atomic writes, reads, streaming, deduplication, path traversal rejection, and deletion.
+    - Verified database transaction commits, rollback on DB error, reverse-failure orphan cleanup, idempotency replay, and 409 conflict detection.
+  - `docker compose -f docker/compose.yml config`: validated with volume mount `prototype_data:/app/data`.
+  - Container build & startup: `docker compose -f docker/compose.yml up --build -d` built and started `docker-app-1`.
+  - Live container upload: Uploaded synthetic PDF with `Idempotency-Key: test-docker-persist-key-001`. Returned HTTP 201 with `processing_state: "PERSISTED"`, `storage_key: "b3/af/2f/af2fa2158778f711fbb8baff1e22f3275fdf3c87c9d142243efc21b0281515db"`, and `document_id: "doc_e8cce9bddf01"`.
+  - Live container restart verification: Restarted container via `docker compose -f docker/compose.yml restart app`.
+  - Re-sent upload with same idempotency key post-restart: Returned HTTP 200 with `idempotent_replay: true` and the original `doc_e8cce9bddf01`, confirming persistence of DB and vault data across container restarts.
+  - Tested idempotency conflict: Sent same idempotency key with different PDF content; returned HTTP 409 Conflict with `{"detail": {"error_code": "IDEMPOTENCY_CONFLICT", ...}}`.
+  - Container teardown: `docker compose -f docker/compose.yml down -v` cleanly removed container, network, and test volume.
+
 ## Open questions & Next Steps
 - Which exact Handbook edition/category is the target, and who can review rule sources/effective dates?
 - Implementation of the Nginx reverse-proxy gateway for true offline container isolation (Guide §18.3).
-- Phase A Step 2: Ingestion persistence (storage vault object put & PostgreSQL `blobs`/`uploads` metadata records) or initial document classification (Branch A/B router).
+- Phase A Step 3: Document Routing & Classification (Branch A: digitally born / selectable text vs Branch B: scanned / raster document routing per Guide §4 S2).
+

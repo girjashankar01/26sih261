@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://aicte.gov.in/schemas/v4/document_ingest_response.schema.json",
   "title": "Document Ingestion Response",
-  "description": "Response emitted by POST /applications/{id}/documents upon successful upload streaming and validation (Guide §4 S1).",
+  "description": "Response emitted by POST /applications/{id}/documents upon successful upload streaming, vault storage, and database persistence (Guide §4 S1).",
   "type": "object",
   "required": [
     "application_id",
@@ -12,12 +12,16 @@
     "byte_size",
     "blake3",
     "sha256",
+    "storage_key",
     "processing_state",
     "pipeline_stage",
     "ocr_status",
     "persistence_status",
+    "is_new_blob",
+    "idempotent_replay",
     "simulated",
     "advisory",
+    "created_at",
     "message"
   ],
   "properties": {
@@ -57,9 +61,13 @@
       "pattern": "^[0-9a-f]{64}$",
       "description": "SHA-256 cryptographic digest computed during upload streaming"
     },
+    "storage_key": {
+      "type": "string",
+      "description": "Content-addressed key in vault storage (e.g. b3/<aa>/<bb>/<blake3>)"
+    },
     "processing_state": {
       "type": "string",
-      "enum": ["INGESTED_STREAM_VERIFIED"],
+      "enum": ["PERSISTED", "INGESTED_STREAM_VERIFIED"],
       "description": "Current processing state in ingestion gateway"
     },
     "pipeline_stage": {
@@ -69,12 +77,20 @@
     "ocr_status": {
       "type": "string",
       "const": "NOT_RUN",
-      "description": "OCR is not run during initial raw ingestion"
+      "description": "OCR is not run during raw ingestion"
     },
     "persistence_status": {
       "type": "string",
-      "const": "EPHEMERAL_SCRATCH_VERIFIED",
-      "description": "Scratch file is verified and cleanly unlinked; no database row is claimed until persistence is implemented"
+      "enum": ["VAULT_LOCAL", "EPHEMERAL_SCRATCH_VERIFIED"],
+      "description": "Storage status: persisted in local content-addressed vault"
+    },
+    "is_new_blob": {
+      "type": "boolean",
+      "description": "True if blob was newly added; False if deduplicated against existing vault object"
+    },
+    "idempotent_replay": {
+      "type": "boolean",
+      "description": "True if request was an idempotent replay with same idempotency key and content"
     },
     "simulated": {
       "type": "boolean",
@@ -83,6 +99,10 @@
     "advisory": {
       "type": "boolean",
       "const": true
+    },
+    "created_at": {
+      "type": "string",
+      "description": "ISO 8601 UTC creation timestamp"
     },
     "message": {
       "type": "string"

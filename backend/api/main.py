@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, Header, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -54,20 +54,29 @@ def validate(application_id: str):
     "/applications/{application_id}/documents",
     response_model=DocumentIngestResponseModel,
     status_code=201,
-    summary="Upload and ingest a document for an application (Guide §4 S1)",
-    description="Streams multipart upload to scratch storage, computes BLAKE3 and SHA-256 in one pass, enforces size limits, sniffs magic bytes (PDF, PNG, JPEG), rejects encrypted PDFs, and returns ingestion metadata.",
+    summary="Upload, persist, and register an application document (Guide §4 S1)",
+    description="Streams multipart upload, computes BLAKE3 and SHA-256 in one pass, enforces size limits, sniffs magic bytes (PDF, PNG, JPEG), rejects encrypted PDFs, stores in content-addressed vault with deduplication, records blob and upload metadata in a database transaction, and supports idempotent replays via Idempotency-Key header.",
 )
 async def upload_document(
     application_id: str,
     file: UploadFile = File(..., description="Document file to upload (PDF, PNG, JPEG)"),
     doc_slot: str | None = Form(default=None, description="Optional document slot (e.g. fire_noc, affidavit)"),
+    idempotency_key_form: str | None = Form(default=None, alias="idempotency_key", description="Optional idempotency key in form"),
+    idempotency_key_header: str | None = Header(default=None, alias="Idempotency-Key", description="Optional idempotency key in header"),
 ):
     if not application_id or not application_id.strip():
         raise HTTPException(status_code=400, detail="Invalid application_id")
 
+    id_header = idempotency_key_header if isinstance(idempotency_key_header, str) else None
+    id_form = idempotency_key_form if isinstance(idempotency_key_form, str) else None
+    idempotency_key = (id_header or id_form or "").strip() or None
+
+    slot = doc_slot.strip() if isinstance(doc_slot, str) and doc_slot.strip() else None
+
     result = await process_upload_stream(
         upload_file=file,
         application_id=application_id.strip(),
-        doc_slot=doc_slot,
+        doc_slot=slot,
+        idempotency_key=idempotency_key,
     )
     return result

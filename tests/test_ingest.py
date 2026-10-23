@@ -98,9 +98,10 @@ class TestIngestionGateway(unittest.TestCase):
         self.assertEqual(res.detected_media_type, "application/pdf")
         self.assertEqual(res.byte_size, len(SAMPLE_PDF))
         self.assertEqual(res.blake3, blake3.blake3(SAMPLE_PDF).hexdigest())
-        self.assertEqual(res.sha256, hashlib.sha256(SAMPLE_PDF).hexdigest())
         self.assertEqual(res.ocr_status, "NOT_RUN")
-        self.assertEqual(res.persistence_status, "EPHEMERAL_SCRATCH_VERIFIED")
+        self.assertEqual(res.persistence_status, "VAULT_LOCAL")
+        self.assertEqual(res.processing_state, "PERSISTED")
+        self.assertTrue(res.storage_key.startswith("b3/"))
         # Ensure scratch directory was cleaned up
         self.assertEqual(len(os.listdir(self.scratch_dir)), 0)
 

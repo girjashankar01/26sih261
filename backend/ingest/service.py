@@ -4,9 +4,20 @@ import re
 import tempfile
 import uuid
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 import blake3
 from fastapi import HTTPException
+
+from backend.db.connection import Database, db as default_db
+from backend.db.repository import (
+    count_uploads_for_blob,
+    get_upload_by_idempotency_key,
+    init_db,
+    insert_blob,
+    insert_upload,
+)
+from backend.storage.vault import VaultStorage, format_vault_key
 
 # Supported magic bytes signatures
 MAGIC_SIGNATURES = {
@@ -23,6 +34,9 @@ MEDIA_TYPES = {
 
 DEFAULT_MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB default
 CHUNK_SIZE = 64 * 1024  # 64 KB streaming chunks
+
+# Default storage vault instance
+default_vault = VaultStorage()
 
 
 class IngestError(HTTPException):
@@ -45,12 +59,16 @@ class IngestResult:
     byte_size: int
     blake3: str
     sha256: str
+    storage_key: str
     processing_state: str
     pipeline_stage: str
     ocr_status: str
     persistence_status: str
+    is_new_blob: bool
+    idempotent_replay: bool
     simulated: bool
     advisory: bool
+    created_at: str
     message: str
 
 
@@ -79,16 +97,28 @@ async def process_upload_stream(
     upload_file,
     application_id: str,
     doc_slot: str | None = None,
+    idempotency_key: str | None = None,
     max_size: int = DEFAULT_MAX_UPLOAD_SIZE,
     scratch_dir: str | None = None,
+    vault: VaultStorage | None = None,
+    database: Database | None = None,
 ) -> IngestResult:
     """
     Stream upload to temporary scratch file, computing BLAKE3 + SHA-256 in one pass,
     enforcing max size during streaming, sniffing magic bytes, checking PDF encryption,
-    and unlinking temporary scratch file in all exit paths.
+    storing to content-addressed vault with deduplication, persisting to database within
+    a transaction, handling reverse-failure cleanup, and unlinking scratch files in all paths.
     """
-    document_id = f"doc_{uuid.uuid4().hex[:12]}"
+    target_vault = vault or default_vault
+    target_db = database or default_db
+
+    # Ensure schema initialized
+    init_db(target_db)
+
     tmp_path = None
+    is_new_blob = False
+    storage_key = None
+    b3_hex = None
 
     try:
         fd, tmp_path = tempfile.mkstemp(prefix="ingest_", suffix=".tmp", dir=scratch_dir)
@@ -115,7 +145,7 @@ async def process_upload_stream(
                     )
 
                 if len(header_bytes) < 16:
-                    header_bytes += chunk[:16 - len(header_bytes)]
+                    header_bytes += chunk[: 16 - len(header_bytes)]
 
                 hasher_b3.update(chunk)
                 hasher_sha.update(chunk)
@@ -148,6 +178,98 @@ async def process_upload_stream(
 
         b3_hex = hasher_b3.hexdigest()
         sha_hex = hasher_sha.hexdigest()
+        storage_key = format_vault_key(b3_hex)
+
+        # Handle Idempotency Key
+        if idempotency_key:
+            with target_db.connection() as check_conn:
+                existing = get_upload_by_idempotency_key(check_conn, idempotency_key, target_db)
+                if existing:
+                    if existing["blake3"] == b3_hex and existing["application_id"] == application_id:
+                        # Idempotent replay: same key, same content, same application
+                        return IngestResult(
+                            application_id=existing["application_id"],
+                            document_id=existing["id"],
+                            doc_slot=existing["doc_slot"],
+                            detected_kind=detected_kind,
+                            detected_media_type=existing["media_type"],
+                            byte_size=existing["byte_size"],
+                            blake3=existing["blake3"],
+                            sha256=existing["sha256"],
+                            storage_key=existing["storage_key"],
+                            processing_state="PERSISTED",
+                            pipeline_stage="S1_INGESTION_GATEWAY",
+                            ocr_status="NOT_RUN",
+                            persistence_status="VAULT_LOCAL",
+                            is_new_blob=False,
+                            idempotent_replay=True,
+                            simulated=True,
+                            advisory=True,
+                            created_at=existing["created_at"],
+                            message="Document previously ingested and verified with same idempotency key.",
+                        )
+                    else:
+                        raise IngestError(
+                            status_code=409,
+                            error_code="IDEMPOTENCY_CONFLICT",
+                            message="Idempotency key was previously used with different content or application.",
+                        )
+
+        # Store to content-addressed vault
+        is_new_blob = target_vault.put_file(storage_key, tmp_path, if_absent=True)
+        if not is_new_blob:
+            # Existing object with same key: verify hash integrity
+            if not target_vault.verify_integrity(storage_key, b3_hex):
+                raise IngestError(
+                    status_code=500,
+                    error_code="STORAGE_INTEGRITY_MISMATCH",
+                    message="Existing vault object failed cryptographic digest verification.",
+                )
+
+        # Database transaction: record blob and upload
+        document_id = f"doc_{uuid.uuid4().hex[:12]}"
+        created_at = datetime.now(timezone.utc).isoformat()
+
+        try:
+            with target_db.transaction() as tx_conn:
+                insert_blob(
+                    conn=tx_conn,
+                    blake3=b3_hex,
+                    sha256=sha_hex,
+                    byte_size=total_bytes,
+                    media_type=MEDIA_TYPES[detected_kind],
+                    storage_key=storage_key,
+                    created_at=created_at,
+                    database=target_db,
+                )
+                insert_upload(
+                    conn=tx_conn,
+                    id=document_id,
+                    application_id=application_id,
+                    blake3=b3_hex,
+                    doc_slot=doc_slot,
+                    idempotency_key=idempotency_key,
+                    created_at=created_at,
+                    database=target_db,
+                )
+        except Exception as db_err:
+            # Reverse failure case: storage succeeded, but DB failed!
+            # Clean up unreferenced object safely without deleting content used by another upload
+            if is_new_blob:
+                try:
+                    with target_db.connection() as check_conn:
+                        refs = count_uploads_for_blob(check_conn, b3_hex, target_db)
+                        if refs == 0:
+                            target_vault.delete(storage_key)
+                except Exception:
+                    pass
+            if isinstance(db_err, IngestError):
+                raise
+            raise IngestError(
+                status_code=500,
+                error_code="DATABASE_TRANSACTION_FAILED",
+                message="Database transaction failed while recording upload metadata.",
+            ) from db_err
 
         return IngestResult(
             application_id=application_id,
@@ -158,13 +280,17 @@ async def process_upload_stream(
             byte_size=total_bytes,
             blake3=b3_hex,
             sha256=sha_hex,
-            processing_state="INGESTED_STREAM_VERIFIED",
+            storage_key=storage_key,
+            processing_state="PERSISTED",
             pipeline_stage="S1_INGESTION_GATEWAY",
             ocr_status="NOT_RUN",
-            persistence_status="EPHEMERAL_SCRATCH_VERIFIED",
+            persistence_status="VAULT_LOCAL",
+            is_new_blob=is_new_blob,
+            idempotent_replay=False,
             simulated=True,
             advisory=True,
-            message="Document successfully streamed, hashed, and validated against format rules.",
+            created_at=created_at,
+            message="Document successfully streamed, hashed, persisted to vault, and recorded in database.",
         )
     finally:
         # Guarantee cleanup of temporary scratch file on both success and failure paths
