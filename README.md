@@ -1,16 +1,20 @@
 # AICTE Application Validation — SIH 2026 PS 26261
 
-Synthetic decision-support prototype. The current vertical slice demonstrates three deterministic checks on two synthetic EoA renewal cases. It is not integrated with AICTE or issuing authorities and makes no regulatory decision.
+Synthetic decision-support prototype for evaluating AICTE EoA renewal
+applications. Working towards the guide's Phase A milestone: one reliable
+end-to-end validation flow over synthetic data. No AICTE or issuing
+authorities are connected; all results require officer review.
 
 ## Start
 
-Requirements: Docker Desktop/Engine with Compose, or CPython 3.12.14 plus uv 0.13.5 for local development.
+Requirements: Docker Desktop/Engine with Compose, or CPython 3.12.14 plus
+uv 0.13.5 for local development.
 
 ```sh
 docker compose -f docker/compose.yml up --build
 ```
 
-Open `http://localhost:8000`. For local development:
+Open `http://localhost:8000`. For local development without Docker:
 
 ```sh
 uv python install 3.12.14
@@ -20,17 +24,56 @@ uv run uvicorn backend.api.main:app --reload
 
 ## Source material and agent instructions
 
-- The supplied SIH problem statement and `sih26261-prototype-guide-v4.2.md` are stored unchanged in `docs/reference/`.
-- Read root `AGENTS.md` for Antigravity and shared agent constraints. `CLAUDE.md` points Claude Code to the same constraints.
-- `docs/spec/phase-a.md` is the short implementation brief for this starter. Keep large reference documents out of always-loaded rule files.
-- `docs/decisions.md` records actual decisions, versions, verified setup, and open questions.
+- Problem statement and `sih26261-prototype-guide-v4.2.md` are in `docs/reference/` (read-only).
+- Root `AGENTS.md` holds shared agent constraints. `CLAUDE.md` points Claude Code to the same file.
+- `docs/spec/phase-a.md` is the implementation brief including the pipeline-stage status table.
+- `docs/decisions.md` records actual decisions, verified runs, and open deviations.
+- `docs/HANDOFF.md` holds the per-workstream task list and the S1–S13 status table.
 
-## Current slice and boundaries
+## Implemented pipeline stages (guide §2.2)
 
-- FastAPI endpoints: `/health`, `/api/demo/applications`, `/api/demo/applications/{id}/validate`, and `/api/docs`.
-- UI: simple application selector, findings, compared evidence, and visible simulated-data label.
-- Rules: required document, expiry date, requested intake versus synthetic record.
-- All application/record data is synthetic. `simulated: true` is returned for demo results.
-- No upload/OCR, rule activation, real verification, database persistence, login/RBAC, audit log, or infrastructure analysis is implemented yet.
+| Stage | Guide | Status |
+|---|---|---|
+| S1 Ingest | §4 | **Implemented** — streaming, dual hash, magic-byte sniff, size limit, vault, DB, idempotency |
+| S2 Forensics | §5 | **Not started** — next task |
+| S3 Route | §6 | **Implemented** — per-page classifier, document-level routing |
+| S4–S13 | §7–§15 | Not started |
 
-The dependency declarations are in `pyproject.toml`, exact resolved versions and hashes in `uv.lock`, and an exported pinned `requirements.txt` for tools that need that format. Make dependency changes with `uv add`/`uv remove`, then commit the updated lock and export.
+## Endpoints
+
+**Starter demo (Phase 0 / Phase A demo slice):**
+- `GET /health`
+- `GET /api/demo/applications`
+- `GET /api/demo/applications/{id}/validate`
+
+**S1 Ingest:**
+- `POST /applications/{id}/documents`
+
+**S3 Route:**
+- `POST /applications/{id}/documents/{doc_id}/route`
+- `GET  /applications/{id}/documents/{doc_id}/route`
+
+All application and record data is synthetic. `simulated: true` and
+`advisory: true` are returned for every pipeline result. Findings are
+preliminary indicators requiring officer review; the prototype does not
+approve or reject applications.
+
+## Storage configuration note
+
+The Docker Compose stack runs SeaweedFS as an S3-compatible store. Guide §3.3
+defines LocalStore as the Phase A default; the S3 adapter is a Phase C stretch
+item. The code defaults to `LocalVaultStorage` when `VAULT_BACKEND` is unset.
+The deviation and migration path are recorded in `docs/decisions.md`.
+
+## Dependency management
+
+Declarations are in `pyproject.toml`, exact resolved versions and hashes in
+`uv.lock`, and an exported pinned `requirements.txt` for tools that need it.
+Make dependency changes with `uv add`/`uv remove`, then commit the updated
+lock and re-export.
+
+## Tests
+
+```sh
+uv run python -m unittest discover tests
+```

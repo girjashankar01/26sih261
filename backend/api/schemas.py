@@ -187,7 +187,7 @@ class DocumentRouteResponseModel(BaseModel):
     page_counts: dict[str, int] = Field(..., description="Count of pages per label")
     page_verdicts: list[PageVerdictModel] = Field(default_factory=list, description="Per-page routing verdicts")
     processing_state: str = Field(default="ROUTED", description="Pipeline state")
-    pipeline_stage: str = Field(default="S2_ROUTER", description="Architectural pipeline stage (Guide §2.1)")
+    pipeline_stage: str = Field(default="S3_ROUTER", description="Architectural pipeline stage identifier; S3 Route per Guide §2.2")
     ocr_status: str = Field(default="NOT_RUN", description="OCR status; routing is not OCR")
     classification_status: str = Field(default="NOT_RUN", description="Document-type classification; routing is not document typing")
     simulated: bool = Field(default=True, description="Always true in demo prototype")

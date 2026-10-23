@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://aicte.gov.in/schemas/contracts/v1/document_route_response.schema.json",
   "title": "Document Route Response",
-  "description": "Output of Stage S2 Document Router and Page Classifier (Guide §4 S2, §6)",
+  "description": "Output of S3 Route (Guide §2.2, §6) — per-page classifier and document-level routing outcome",
   "type": "object",
   "required": [
     "application_id",
@@ -109,7 +109,7 @@
     },
     "pipeline_stage": {
       "type": "string",
-      "const": "S2_ROUTER"
+      "const": "S3_ROUTER"
     },
     "ocr_status": {
       "type": "string",

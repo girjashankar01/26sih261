@@ -1,14 +1,17 @@
-# AICTE Application Validation Prototype — Compose configuration (Phase A Step 2)
+# AICTE Application Validation Prototype — Compose configuration
 #
-# Architecture:
+# Architecture (Phase A milestone — guide §3.2, §3.3):
 # - app: FastAPI application service running on read-only filesystem with tmpfs /tmp
-# - postgres: PostgreSQL 16 metadata database (Guide §3.2, §18.1) storing blobs and uploads
-# - storage: S3-compatible persistent object store (SeaweedFS, Guide §3.3) for content-addressed vault blobs
+# - postgres: PostgreSQL 16 metadata database (Guide §3.2) storing blobs and uploads
+# - storage: SeaweedFS S3-compatible object store (Guide §3.3) for content-addressed vault blobs
 #
-# Container networking and isolation note:
+# Storage deviation: Guide §3.3 specifies LocalStore as the Phase A default;
+# SeaweedFS S3 is an early adoption of the Phase C stretch adapter.
+# See docs/decisions.md §Storage-Deviation for migration details.
+#
+# Container networking:
 # - Service port is bound specifically to host localhost (127.0.0.1:8000:8000) for security.
 # - Storage port 8333 is bound to 127.0.0.1:8333 for diagnostic/operator access.
-# - Containers attach to internal project network with named volumes for persistence.
 
 services:
   postgres:

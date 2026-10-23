@@ -363,7 +363,7 @@ class TestDocumentRouter(unittest.TestCase):
         self.assertEqual(route_res["routing_outcome"], "BRANCH_A_DIGITAL")
         self.assertEqual(route_res["total_pages"], 1)
         self.assertEqual(route_res["processing_state"], "ROUTED")
-        self.assertEqual(route_res["pipeline_stage"], "S2_ROUTER")
+        self.assertEqual(route_res["pipeline_stage"], "S3_ROUTER")
         self.assertEqual(route_res["ocr_status"], "NOT_RUN")
         self.assertEqual(route_res["classification_status"], "NOT_RUN")
 

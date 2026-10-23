@@ -51,7 +51,7 @@ class DocumentRouteResult:
     page_counts: dict[str, int]
     page_verdicts: list[dict[str, Any]]
     processing_state: str = "ROUTED"
-    pipeline_stage: str = "S2_ROUTER"
+    pipeline_stage: str = "S3_ROUTER"
     ocr_status: str = "NOT_RUN"
     classification_status: str = "NOT_RUN"
     simulated: bool = True
@@ -162,7 +162,7 @@ def route_document(
     """
     Route and classify a persisted document based on format and extractable text content.
     Reads document bytes from vault storage abstraction (no local container path dependencies).
-    Follows Guide §4 S2 and §6.1.
+    Implements S3 Route per Guide §2.2 and §6.
     """
     # 1. Empty document check
     if not raw_bytes or len(raw_bytes) == 0:

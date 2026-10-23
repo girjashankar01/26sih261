@@ -34,7 +34,7 @@
     }
   ],
   "processing_state": "ROUTED",
-  "pipeline_stage": "S2_ROUTER",
+  "pipeline_stage": "S3_ROUTER",
   "ocr_status": "NOT_RUN",
   "classification_status": "NOT_RUN",
   "simulated": true,

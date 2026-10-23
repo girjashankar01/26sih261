@@ -83,7 +83,7 @@
     },
     "/applications/{application_id}/documents": {
       "post": {
-        "summary": "Upload, persist, and register an application document (Guide \u00a74 S1)",
+        "summary": "Upload, persist, and register an application document (S1 Ingest, Guide \u00a74)",
         "description": "Streams multipart upload, computes BLAKE3 and SHA-256 in one pass, enforces size limits, sniffs magic bytes (PDF, PNG, JPEG), rejects encrypted PDFs, stores in content-addressed vault with deduplication, records blob and upload metadata in a database transaction, and supports idempotent replays via Idempotency-Key header.",
         "operationId": "upload_document_applications__application_id__documents_post",
         "parameters": [
@@ -197,8 +197,8 @@
         }
       },
       "post": {
-        "summary": "Route and classify a persisted document (Guide \u00a74 S2, \u00a76)",
-        "description": "Inspects extractable text, image coverage, and vector drawings using deterministic thresholds. Routes to Branch A (digital), Branch B (scanned raster), or Mixed. Does not perform OCR or document typing.",
+        "summary": "Route and classify a persisted document (S3 Route, Guide \u00a76)",
+        "description": "Inspects extractable text, image coverage, and vector drawings using deterministic thresholds. Routes to Branch A (digital), Branch B (scanned raster), or Mixed. Does not perform forensics (S2), OCR, or document typing.",
         "operationId": "route_document_endpoint_applications__application_id__documents__document_id__route_post",
         "parameters": [
           {
@@ -763,8 +763,8 @@
           "pipeline_stage": {
             "type": "string",
             "title": "Pipeline Stage",
-            "description": "Architectural pipeline stage (Guide \u00a72.1)",
-            "default": "S2_ROUTER"
+            "description": "Architectural pipeline stage identifier; S3 Route per Guide \u00a72.2",
+            "default": "S3_ROUTER"
           },
           "ocr_status": {
             "type": "string",

@@ -80,7 +80,9 @@ Date · decision · reason · owner · interfaces/files affected · unresolved f
   - `GET http://127.0.0.1:8000/api/demo/applications/DEMO-ISSUES-001/validate` returned `NEEDS_RECTIFICATION` with 3 findings (missing, expired, inconsistent) and complete evidence.
   - `docker compose -f docker/compose.yml down` stopped container and removed network cleanly.
 
-## Phase A Step 1 — Document Ingestion Gateway (S1) — 2026-10-24
+## S1 Ingest — Document Ingestion Gateway — 2026-10-24
+
+> Note on terminology: prior handoff summaries called this "Phase A Step 1". The guide uses "Phase A" as a milestone name (§20.1), not a prefix for individual stage tasks. This section records the implementation of guide stage S1 (§4).
 - Endpoint Implemented:
   - Added `POST /applications/{application_id}/documents` for multipart document upload.
   - Dependencies: Added `blake3==1.0.11` and `python-multipart==0.0.32` via `pyproject.toml`, resolved in `uv.lock`, and exported to `requirements.txt`.
@@ -108,7 +110,9 @@ Date · decision · reason · owner · interfaces/files affected · unresolved f
     - Encrypted PDF: returned 422 with `ENCRYPTED_PDF_REJECTED`.
   - `docker compose -f docker/compose.yml down`: container stopped and network removed cleanly.
 
-## Phase A Step 2 — Vault Storage & Transactional Database Persistence — 2026-10-24
+## S1 Ingest (continued) — Vault Storage and Transactional Database Persistence — 2026-10-24
+
+> Prior handoff called this "Phase A Step 2". This section continues the S1 Ingest implementation (guide §4).
 - Content-Addressed Vault Storage (`backend/storage/vault.py`):
   - Key scheme: Formatted as `b3/<aa>/<bb>/<blake3>` based on BLAKE3 digest (Guide §3.1).
   - Atomic writes: Conditional placement (`if_absent=True`) writes to a sibling temporary file (`.tmp-...`) in the target directory and executes an atomic replace, preventing partial reads.
@@ -148,7 +152,9 @@ Date · decision · reason · owner · interfaces/files affected · unresolved f
   - Tested idempotency conflict: Sent same idempotency key with different PDF content; returned HTTP 409 Conflict with `{"detail": {"error_code": "IDEMPOTENCY_CONFLICT", ...}}`.
   - Container teardown: `docker compose -f docker/compose.yml down -v` cleanly removed container, network, and test volume.
 
-## Phase A Step 2 — Storage & Database Gap Closeout (S3/MinIO & PostgreSQL) — 2026-10-24
+## S1 Ingest (gap closeout) — S3-Compatible Object Store and PostgreSQL — 2026-10-24
+
+> Prior handoff called this "Phase A Step 2 Storage Gap Closeout". This is an addendum to S1 Ingest covering the object-store adapter.
 - Analysis of Guide Storage & Database Specifications:
   - Guide §3.3 Storage Decision: The guide explicitly investigates MinIO and documents that MinIO CE entered maintenance mode / source-only distribution (citation [S6]). The guide explicitly warns: "MinIO CE is in maintenance mode and ships source-only, so do not choose it for new builds [S6]; for an S3 story use SeaweedFS or Garage and do not assume Object Lock. Default backend LocalStore (zero extra containers)."
   - Verified Docker distribution status: Public Docker Hub and Quay repositories for `minio/minio` confirm this finding (Docker Hub returns access denied/repository removed; Quay returns 401 unauthorized).
@@ -176,7 +182,9 @@ Date · decision · reason · owner · interfaces/files affected · unresolved f
     - Idempotency conflict: sent same key with different content; returned HTTP 409 Conflict with `{"detail": {"error_code": "IDEMPOTENCY_CONFLICT", ...}}`.
     - Teardown: `docker compose -f docker/compose.yml down -v` cleanly removed containers, network, and volumes.
 
-## Phase A Step 3 — Document Routing & Classification (S2) — 2026-10-24
+## S3 Route — Document Routing and Classification — 2026-10-24
+
+> Prior handoff called this "Phase A Step 3" and labelled it "S2_ROUTER". The guide's S2 is raw-byte forensics (§5); the router implementing per-page classification and branch routing is S3 Route (§6). All pipeline_stage identifiers have been corrected to `S3_ROUTER`.
 - Docker Compose Image Pinning:
   - Inspected `docker/compose.yml` for mutable `latest` tags.
   - Replaced mutable `chrislusf/seaweedfs:latest` with pinned version `chrislusf/seaweedfs:4.48` (image digest `sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d`).
@@ -211,7 +219,7 @@ Date · decision · reason · owner · interfaces/files affected · unresolved f
   - Created JSON Schema contract `docs/contracts/document_route_response.schema.json` and example `docs/contracts/examples/document_route_response_example.json`.
   - Re-exported OpenAPI specification in `docs/contracts/openapi.json`.
 - Honest Pipeline State & Confidentiality:
-  - Returns `processing_state: "ROUTED"`, `pipeline_stage: "S2_ROUTER"`, `ocr_status: "NOT_RUN"`, `classification_status: "NOT_RUN"`, `simulated: true`, `advisory: true`.
+  - Returns `processing_state: "ROUTED"`, `pipeline_stage: "S3_ROUTER"`, `ocr_status: "NOT_RUN"`, `classification_status: "NOT_RUN"`, `simulated: true`, `advisory: true`.
   - Zero-Data-Leakage: Log messages and errors contain only IDs, media types, page counts, and outcomes; document contents and extracted text strings are never logged.
 - Verification Runs Executed:
   - Unit tests (`tests/test_router.py`): 14 focused tests verifying text sanity heuristics, born-digital PDF, scanned PDF, hybrid PDF, CAD vector drawing, blank PDF, mixed PDF, raster PNG/JPEG routing, corrupt documents, empty documents, storage-backed integration, and 404 handling.
@@ -228,8 +236,8 @@ Date · decision · reason · owner · interfaces/files affected · unresolved f
 
 ## Open questions & Next Steps
 - Implementation of the Nginx reverse-proxy gateway for true offline container isolation (Guide §18.3).
-- Phase A Step 4: Branch B Preprocessing & OCR Ladder (Guide §4 S3, §7.1 - OpenCV deskew/dewarp, Tesseract OCR with confidence scoring and fallback ladder).
-- Phase A Step 5: Branch A Forensics & Digital Extraction (Guide §4 S4 - PyMuPDF structured text/table extraction, metadata anomaly detection, incremental update inspection).
+- Implement S2 Forensics (Guide §5): raw-byte forensics, magic-byte mismatch detector, PDF trailer/incremental update inspector, and metadata anomaly detection.
+- Implement S4 Branch A / Branch B pipelines (Guide §7–§9): digital extraction via PyMuPDF and OCR ladder via OpenCV/Tesseract.
 
 
 

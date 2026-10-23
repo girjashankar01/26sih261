@@ -59,7 +59,7 @@ def validate(application_id: str):
     "/applications/{application_id}/documents",
     response_model=DocumentIngestResponseModel,
     status_code=201,
-    summary="Upload, persist, and register an application document (Guide §4 S1)",
+    summary="Upload, persist, and register an application document (S1 Ingest, Guide §4)",
     description="Streams multipart upload, computes BLAKE3 and SHA-256 in one pass, enforces size limits, sniffs magic bytes (PDF, PNG, JPEG), rejects encrypted PDFs, stores in content-addressed vault with deduplication, records blob and upload metadata in a database transaction, and supports idempotent replays via Idempotency-Key header.",
 )
 async def upload_document(
@@ -90,8 +90,8 @@ async def upload_document(
 @app.post(
     "/applications/{application_id}/documents/{document_id}/route",
     response_model=DocumentRouteResponseModel,
-    summary="Route and classify a persisted document (Guide §4 S2, §6)",
-    description="Inspects extractable text, image coverage, and vector drawings using deterministic thresholds. Routes to Branch A (digital), Branch B (scanned raster), or Mixed. Does not perform OCR or document typing.",
+    summary="Route and classify a persisted document (S3 Route, Guide §6)",
+    description="Inspects extractable text, image coverage, and vector drawings using deterministic thresholds. Routes to Branch A (digital), Branch B (scanned raster), or Mixed. Does not perform forensics (S2), OCR, or document typing.",
 )
 @app.get(
     "/applications/{application_id}/documents/{document_id}/route",
