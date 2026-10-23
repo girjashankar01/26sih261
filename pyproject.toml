@@ -1,0 +1,15 @@
+[project]
+name = "aicte-application-validation-prototype"
+version = "0.1.0"
+description = "Synthetic decision-support prototype for SIH 2026 PS 26261"
+requires-python = "==3.12.*"
+dependencies = [
+    "fastapi==0.161.0",
+    "psycopg[binary]==3.3.6",
+    "PyYAML==6.0.3",
+    "uvicorn[standard]==0.54.0",
+]
+
+[tool.uv]
+package = false
+required-version = "==0.13.5"
