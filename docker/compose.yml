@@ -8,8 +8,3 @@ services:
     read_only: true
     tmpfs:
       - /tmp
-    networks: [internal]
-
-networks:
-  internal:
-    internal: true
