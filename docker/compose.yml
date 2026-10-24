@@ -1,17 +1,15 @@
 # AICTE Application Validation Prototype — Compose configuration
 #
-# Architecture (Phase A milestone — guide §3.2, §3.3):
+# Architecture (Guide §3.2, §3.3 LocalStore — Phase A default):
 # - app: FastAPI application service running on read-only filesystem with tmpfs /tmp
 # - postgres: PostgreSQL 16 metadata database (Guide §3.2) storing blobs and uploads
-# - storage: SeaweedFS S3-compatible object store (Guide §3.3) for content-addressed vault blobs
+# - vault: LocalStore content-addressed immutable filesystem vault mounted at /app/data/vault
 #
-# Storage deviation: Guide §3.3 specifies LocalStore as the Phase A default;
-# SeaweedFS S3 is an early adoption of the Phase C stretch adapter.
-# See docs/decisions.md §Storage-Deviation for migration details.
+# Zero extra storage containers (Guide §3.3).
+# S3-compatible storage (SeaweedFS) is deferred to Phase C (see docker/compose.s3.yml).
 #
 # Container networking:
 # - Service port is bound specifically to host localhost (127.0.0.1:8000:8000) for security.
-# - Storage port 8333 is bound to 127.0.0.1:8333 for diagnostic/operator access.
 
 services:
   postgres:
@@ -28,14 +26,6 @@ services:
       timeout: 3s
       retries: 10
 
-  storage:
-    image: chrislusf/seaweedfs:4.48
-    command: server -s3 -filer
-    volumes:
-      - storage_data:/data
-    ports:
-      - "127.0.0.1:8333:8333"
-
   app:
     build:
       context: ..
@@ -43,22 +33,19 @@ services:
     read_only: true
     tmpfs:
       - /tmp
+    volumes:
+      - vault_data:/app/data/vault
     environment:
       DATABASE_URL: postgresql://aicte_owner:aicte_dev_secret@postgres:5432/aicte
-      VAULT_BACKEND: s3
-      S3_ENDPOINT_URL: http://storage:8333
-      S3_BUCKET: aicte-vault
-      AWS_ACCESS_KEY_ID: aicte_dev_key
-      AWS_SECRET_ACCESS_KEY: aicte_dev_secret
-      AWS_DEFAULT_REGION: us-east-1
+      VAULT_BACKEND: local
     depends_on:
       postgres:
         condition: service_healthy
-      storage:
-        condition: service_started
     ports:
       - "127.0.0.1:8000:8000"
 
 volumes:
   pg_data:
+  vault_data:
+  # Retained so existing S3 volume is never orphaned or deleted
   storage_data:

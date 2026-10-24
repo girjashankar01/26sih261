@@ -194,3 +194,108 @@ class DocumentRouteResponseModel(BaseModel):
     advisory: bool = Field(default=True, description="Advisory decision-support indicator")
 
     model_config = ConfigDict(extra="allow")
+
+
+class ForensicFlagModel(BaseModel):
+    code: str = Field(..., description="Machine-readable indicator code")
+    severity: str = Field(..., description="Risk tier: info, low, medium, high")
+    reason: str = Field(..., description="Human-readable explanation")
+    evidence: dict[str, Any] = Field(..., description="Evidence payload with artifact_uri")
+    advisory: bool = Field(default=True, description="Always true; flags are preliminary indicators")
+    requires_human_review: bool = Field(default=True)
+    detector: dict[str, str] = Field(..., description="Detector name and version")
+    simulated: bool = Field(default=True)
+
+
+class SignatureInfoModel(BaseModel):
+    integrity: str = Field(..., description="INTACT_FULL_COVERAGE, MODIFIED_AFTER_SIGNING, BROKEN, NONE")
+    trust: str = Field(..., description="production, demo, untrusted")
+    source_verification: str = Field(..., description="UNVERIFIED, SIMULATED_SUCCESS, NOT_SUPPORTED")
+    name: str | None = Field(default=None)
+    signing_time: str | None = Field(default=None)
+
+
+class ForensicsMetaModel(BaseModel):
+    producer: str | None = Field(default=None)
+    creator: str | None = Field(default=None)
+    title: str | None = Field(default=None)
+    author: str | None = Field(default=None)
+    subject: str | None = Field(default=None)
+    creation_date: str | None = Field(default=None)
+    mod_date: str | None = Field(default=None)
+    incremental_updates_count: int = Field(default=1)
+    signatures: list[SignatureInfoModel] = Field(default_factory=list)
+
+
+class GeoMetaModel(BaseModel):
+    latitude: float | None = Field(default=None)
+    longitude: float | None = Field(default=None)
+    captured_at: str | None = Field(default=None)
+    make: str | None = Field(default=None)
+    model: str | None = Field(default=None)
+
+
+class QRResultModel(BaseModel):
+    detected: bool = Field(default=False)
+    issuer: str | None = Field(default=None)
+    reference: str | None = Field(default=None)
+    raw_text_masked: str | None = Field(default=None)
+
+
+class DetectorStatusModel(BaseModel):
+    name: str = Field(...)
+    version: str = Field(...)
+    status: str = Field(..., description="COMPLETED, NOT_CHECKED, DEFERRED")
+    reason: str | None = Field(default=None)
+
+
+class DocumentForensicsResponseModel(BaseModel):
+    application_id: str = Field(..., description="Application identifier")
+    document_id: str = Field(..., description="Document identifier")
+    doc_slot: str | None = Field(default=None, description="Assigned document slot")
+    detected_media_type: str = Field(..., description="MIME media type")
+    byte_size: int = Field(..., description="File size in bytes")
+    blake3: str = Field(..., description="BLAKE3 digest")
+    sha256: str = Field(..., description="SHA-256 digest")
+    storage_key: str = Field(..., description="Storage vault key")
+    pipeline_stage: str = Field(default="S2_FORENSICS", description="Architectural pipeline stage identifier; S2 Forensics per Guide §2.2")
+    flags: list[ForensicFlagModel] = Field(default_factory=list, description="Advisory forensic flags (Guide §3.4 C2)")
+    meta: ForensicsMetaModel = Field(default_factory=ForensicsMetaModel)
+    geo: GeoMetaModel = Field(default_factory=GeoMetaModel)
+    qr: QRResultModel | None = Field(default=None)
+    detectors: list[DetectorStatusModel] = Field(default_factory=list)
+    simulated: bool = Field(default=True, description="Always true in demo prototype")
+    advisory: bool = Field(default=True, description="Advisory decision-support indicator")
+
+    model_config = ConfigDict(extra="allow")
+
+
+class C1UnifiedPayloadModel(BaseModel):
+    schema_version: str = Field(default="4.0", description="Schema version")
+    pipeline_version: str = Field(default="4.0.0", description="Pipeline version")
+    blake3: str = Field(..., description="BLAKE3 hash")
+    sha256: str = Field(..., description="SHA-256 hash")
+    kind: str = Field(..., description="pdf, image, office, or scanned")
+    coordinate_space: str = Field(default="original_page_norm_topleft")
+    pages: list[dict[str, Any]] = Field(default_factory=list)
+    tables: list[dict[str, Any]] = Field(default_factory=list)
+    blocks: list[dict[str, Any]] = Field(default_factory=list)
+    markdown: str = Field(default="")
+    flags: list[dict[str, Any]] = Field(default_factory=list)
+    engines: list[str] = Field(default_factory=list)
+    egress: list[str] = Field(default_factory=list)
+    idempotent_cached: bool | None = Field(default=None)
+
+    model_config = ConfigDict(extra="allow")
+
+
+class ExtractionFailureModel(BaseModel):
+    status: str = Field(..., description="NOT_CHECKED or NEEDS_REVIEW_OCR")
+    error_code: str = Field(..., description="Machine-readable error code")
+    reason: str = Field(..., description="Plain-language reason")
+    pipeline_stage: str = Field(default="S4_BRANCH_B")
+    page: int | None = Field(default=None)
+    preprocess: dict[str, Any] | None = Field(default=None)
+
+    model_config = ConfigDict(extra="allow")
+

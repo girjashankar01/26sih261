@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, Header, HTTPException, UploadFile
@@ -6,15 +7,19 @@ from fastapi.staticfiles import StaticFiles
 
 from backend.api.schemas import (
     DemoApplicationsListModel,
+    DocumentForensicsResponseModel,
     DocumentIngestResponseModel,
     DocumentRouteResponseModel,
     HealthResponseModel,
     ValidationResponseModel,
+    C1UnifiedPayloadModel,
 )
 from backend.db.connection import db as default_db
 from backend.db.repository import get_upload_by_id
+from backend.forensics import run_forensics
 from backend.ingest.service import process_upload_stream
 from backend.pipeline.router import route_document
+from backend.pipeline.branch_b import execute_branch_b
 from backend.records.demo import APPLICATIONS
 from backend.rules.evaluate import validate_application
 from backend.storage.vault import default_vault
@@ -137,4 +142,92 @@ async def route_document_endpoint(
     )
     from dataclasses import asdict
     return asdict(result) if hasattr(result, "__dataclass_fields__") else result
+
+
+@app.post(
+    "/applications/{application_id}/documents/{document_id}/forensics",
+    response_model=DocumentForensicsResponseModel,
+    summary="Execute raw-byte forensic analysis on a persisted document (S2 Forensics, Guide §5)",
+    description="Inspects PDF metadata, incremental updates, digital signatures, image EXIF/geo, and QR locators on immutable original bytes through vault storage. All flags are advisory preliminary indicators.",
+)
+@app.get(
+    "/applications/{application_id}/documents/{document_id}/forensics",
+    response_model=DocumentForensicsResponseModel,
+    summary="Retrieve raw-byte forensic analysis result for a persisted document",
+)
+async def forensics_document_endpoint(
+    application_id: str,
+    document_id: str,
+):
+    if not application_id or not application_id.strip():
+        raise HTTPException(status_code=400, detail="Invalid application_id")
+    if not document_id or not document_id.strip():
+        raise HTTPException(status_code=400, detail="Invalid document_id")
+
+    with default_db.connection() as conn:
+        record = get_upload_by_id(conn, document_id.strip(), default_db)
+
+    if not record or record.get("application_id") != application_id.strip():
+        raise HTTPException(
+            status_code=404,
+            detail={"error_code": "DOCUMENT_NOT_FOUND", "message": f"Document '{document_id}' not found for application '{application_id}'"},
+        )
+
+    storage_key = record["storage_key"]
+    if not default_vault.exists(storage_key):
+        raise HTTPException(
+            status_code=404,
+            detail={"error_code": "VAULT_OBJECT_NOT_FOUND", "message": f"Vault storage object '{storage_key}' not found"},
+        )
+
+    raw_bytes = default_vault.get_bytes(storage_key)
+
+    result = await asyncio.to_thread(
+        run_forensics,
+        raw_bytes=raw_bytes,
+        media_type=record["media_type"],
+        document_id=record["id"],
+        application_id=record["application_id"],
+        blake3=record["blake3"],
+        sha256=record["sha256"],
+        storage_key=storage_key,
+        doc_slot=record.get("doc_slot"),
+    )
+    return result.to_dict() if hasattr(result, "to_dict") else result
+
+
+@app.post(
+    "/applications/{application_id}/documents/{document_id}/extract",
+    summary="Execute S4 Branch B extraction pipeline (Guide §7–§9)",
+    description="Consumes S3 routes and persisted originals through storage abstraction. Runs raster preprocessing, single composed 3x3 coordinate transform, offline extraction engines, table cell normalisation, arithmetic verification, and produces C1 Unified Document Payload. Processing is cache-aware and idempotent.",
+)
+@app.get(
+    "/applications/{application_id}/documents/{document_id}/extract",
+    summary="Retrieve S4 Branch B extraction result for a document",
+)
+async def extract_document_endpoint(
+    application_id: str,
+    document_id: str,
+):
+    if not application_id or not application_id.strip():
+        raise HTTPException(status_code=400, detail="Invalid application_id")
+    if not document_id or not document_id.strip():
+        raise HTTPException(status_code=400, detail="Invalid document_id")
+
+    result = await asyncio.to_thread(
+        execute_branch_b,
+        application_id=application_id.strip(),
+        document_id=document_id.strip(),
+        database=default_db,
+        vault_backend=default_vault,
+    )
+
+    if isinstance(result, dict) and result.get("status") == "NOT_FOUND":
+        raise HTTPException(
+            status_code=404,
+            detail={"error_code": "DOCUMENT_NOT_FOUND", "message": result.get("reason")},
+        )
+
+    return result
+
 

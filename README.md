@@ -35,9 +35,12 @@ uv run uvicorn backend.api.main:app --reload
 | Stage | Guide | Status |
 |---|---|---|
 | S1 Ingest | §4 | **Implemented** — streaming, dual hash, magic-byte sniff, size limit, vault, DB, idempotency |
-| S2 Forensics | §5 | **Not started** — next task |
+| S2 Forensics | §5 | **Implemented** — raw-byte metadata, incremental updates, signatures, EXIF/geo, QR locator |
 | S3 Route | §6 | **Implemented** — per-page classifier, document-level routing |
-| S4–S13 | §7–§15 | Not started |
+| S4 Branch B | §7–§9 | **Not started** — next task (page rasters, deskew/dewarp, Docling/OCR ladder producing `UnifiedDoc` JSON) |
+| S5–S11 | §11 | Not started |
+| S12 Review | §17 | Not started |
+| S13 Audit | §15 | Not started |
 
 ## Endpoints
 
@@ -49,6 +52,10 @@ uv run uvicorn backend.api.main:app --reload
 **S1 Ingest:**
 - `POST /applications/{id}/documents`
 
+**S2 Forensics:**
+- `POST /applications/{id}/documents/{doc_id}/forensics`
+- `GET  /applications/{id}/documents/{doc_id}/forensics`
+
 **S3 Route:**
 - `POST /applications/{id}/documents/{doc_id}/route`
 - `GET  /applications/{id}/documents/{doc_id}/route`
@@ -58,12 +65,16 @@ All application and record data is synthetic. `simulated: true` and
 preliminary indicators requiring officer review; the prototype does not
 approve or reject applications.
 
-## Storage configuration note
+## Storage configuration
 
-The Docker Compose stack runs SeaweedFS as an S3-compatible store. Guide §3.3
-defines LocalStore as the Phase A default; the S3 adapter is a Phase C stretch
-item. The code defaults to `LocalVaultStorage` when `VAULT_BACKEND` is unset.
-The deviation and migration path are recorded in `docs/decisions.md`.
+Docker Compose and local development run on `LocalStore` (Guide §3.3 Phase A default),
+storing content-addressed blobs locally under `b3/<aa>/<bb>/<digest>` with zero extra
+storage containers.
+
+For Phase C stretch evaluation with an S3-compatible object store (SeaweedFS):
+```sh
+docker compose -f docker/compose.yml -f docker/compose.s3.yml up --build
+```
 
 ## Dependency management
 

@@ -21,11 +21,13 @@ Do not describe individual stage tasks as "Phase A Step N".
 
 | Stage | Guide section | Status |
 |---|---|---|
-| S1 Ingest | §4 | Implemented — streaming, dual hash, magic-byte sniff, size limit, vault storage, DB persistence, idempotency |
-| S2 Forensics | §5 | **Not started** — next task |
-| S3 Route | §6 | Implemented — per-page classifier, document-level routing outcome |
-| S4 Branch B | §7–§9 | Not started |
-| S5–S13 | §11–§15 | Not started |
+| S1 Ingest | §4 | **Implemented** — streaming, dual hash, magic-byte sniff, size limit, vault storage, DB persistence, idempotency |
+| S2 Forensics | §5 | **Implemented** — raw-byte metadata, incremental updates, signatures, EXIF/geo, QR locator; deferred detectors recorded as `NOT_CHECKED` |
+| S3 Route | §6 | **Implemented** — per-page classifier, document-level routing outcome |
+| S4 Branch B | §7–§9 | **Not started** — next task (page rasters, deskew/dewarp, Docling/OCR ladder producing `UnifiedDoc` JSON) |
+| S5–S11 | §11 | Not started |
+| S12 Review | §17 | Not started |
+| S13 Audit | §15 | Not started |
 
 ## Starter demo (committed at Phase 0)
 
@@ -39,9 +41,11 @@ served from the original demo endpoints:
 These implement `S8 Rules` in a very limited form (three checks against
 hardcoded synthetic records) without S1–S7 or S9–S13.
 
-## Routes added for S1 and S3
+## Routes added for S1, S2, and S3
 
 - `POST /applications/{application_id}/documents` — S1 Ingest
+- `POST /applications/{application_id}/documents/{document_id}/forensics` — S2 Forensics
+- `GET  /applications/{application_id}/documents/{document_id}/forensics` — S2 Forensics result
 - `POST /applications/{application_id}/documents/{document_id}/route` — S3 Route
 - `GET  /applications/{application_id}/documents/{document_id}/route` — S3 Route result
 
@@ -50,7 +54,7 @@ hardcoded synthetic records) without S1–S7 or S9–S13.
 Current endpoints return `PASS` or `FAILED_CHECK` only for checks with
 concrete values. Unavailable or ambiguous checks use `NOT_CHECKED` or
 `NEEDS_REVIEW`. This spec does not cover live regulatory rules, source
-adapters, authentication, officer actions, or S2 forensics.
+adapters, authentication, or officer actions.
 
 ## API contracts
 

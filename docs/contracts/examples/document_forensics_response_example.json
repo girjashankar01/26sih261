@@ -1,0 +1,88 @@
+{
+  "application_id": "APP-2026-0007",
+  "document_id": "doc_139c29c75222",
+  "doc_slot": "FIRE_NOC",
+  "detected_media_type": "application/pdf",
+  "byte_size": 24580,
+  "blake3": "2ed29c24b48b042036dfb24bee0fb6dcac61d2781850946ecf32647358321bea",
+  "sha256": "4b684c3e85e05452f1e292025fb9633e2dc40d99bcba58a74e50d75f9e8a7199",
+  "storage_key": "b3/2e/d2/2ed29c24b48b042036dfb24bee0fb6dcac61d2781850946ecf32647358321bea",
+  "pipeline_stage": "S2_FORENSICS",
+  "flags": [],
+  "meta": {
+    "producer": "ReportLab PDF Library v3.6.12",
+    "creator": "Karnataka State Fire & Emergency Services",
+    "title": "Fire Safety Certificate",
+    "author": null,
+    "subject": null,
+    "creation_date": "2024-03-15T10:30:00Z",
+    "mod_date": "2024-03-15T10:30:00Z",
+    "incremental_updates_count": 1,
+    "signatures": []
+  },
+  "geo": {
+    "latitude": null,
+    "longitude": null,
+    "captured_at": null,
+    "make": null,
+    "model": null
+  },
+  "qr": {
+    "detected": true,
+    "issuer": "MOCK_FIRE",
+    "reference": "FIRE/KA/2024/00123",
+    "raw_text_masked": "https://verify.mock-issuer.example/fire/FIRE/KA/2024/00123"
+  },
+  "detectors": [
+    {
+      "name": "pdf_metadata",
+      "version": "1.0.0",
+      "status": "COMPLETED",
+      "reason": null
+    },
+    {
+      "name": "pdf_signature",
+      "version": "1.0.0",
+      "status": "COMPLETED",
+      "reason": null
+    },
+    {
+      "name": "image_metadata_exif",
+      "version": "1.0.0",
+      "status": "COMPLETED",
+      "reason": null
+    },
+    {
+      "name": "qr_decode",
+      "version": "1.0.0",
+      "status": "COMPLETED",
+      "reason": null
+    },
+    {
+      "name": "font_inconsistency",
+      "version": "1.0.0",
+      "status": "NOT_CHECKED",
+      "reason": "Deferred to Phase B per Guide §5.4 / §20.1"
+    },
+    {
+      "name": "ela_jpeg",
+      "version": "1.0.0",
+      "status": "NOT_CHECKED",
+      "reason": "Deferred to Phase B per Guide §5.5 / §20.1"
+    },
+    {
+      "name": "mark_reuse",
+      "version": "1.0.0",
+      "status": "NOT_CHECKED",
+      "reason": "Deferred to Phase B per Guide §5.6b / §20.1"
+    },
+    {
+      "name": "text_layer_ocr_mismatch",
+      "version": "1.0.0",
+      "status": "NOT_CHECKED",
+      "reason": "Requires Branch B (S4) OCR outputs per Guide §5.8"
+    }
+  ],
+  "simulated": true,
+  "advisory": true
+}

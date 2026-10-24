@@ -243,6 +243,192 @@
           }
         }
       }
+    },
+    "/applications/{application_id}/documents/{document_id}/forensics": {
+      "get": {
+        "summary": "Retrieve raw-byte forensic analysis result for a persisted document",
+        "operationId": "forensics_document_endpoint_applications__application_id__documents__document_id__forensics_get",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentForensicsResponseModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Execute raw-byte forensic analysis on a persisted document (S2 Forensics, Guide \u00a75)",
+        "description": "Inspects PDF metadata, incremental updates, digital signatures, image EXIF/geo, and QR locators on immutable original bytes through vault storage. All flags are advisory preliminary indicators.",
+        "operationId": "forensics_document_endpoint_applications__application_id__documents__document_id__forensics_post",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentForensicsResponseModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications/{application_id}/documents/{document_id}/extract": {
+      "get": {
+        "summary": "Retrieve S4 Branch B extraction result for a document",
+        "operationId": "extract_document_endpoint_applications__application_id__documents__document_id__extract_get",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Execute S4 Branch B extraction pipeline (Guide \u00a77\u2013\u00a79)",
+        "description": "Consumes S3 routes and persisted originals through storage abstraction. Runs raster preprocessing, single composed 3x3 coordinate transform, offline extraction engines, table cell normalisation, arithmetic verification, and produces C1 Unified Document Payload. Processing is cache-aware and idempotent.",
+        "operationId": "extract_document_endpoint_applications__application_id__documents__document_id__extract_post",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -539,6 +725,153 @@
           "items"
         ],
         "title": "DemoApplicationsListModel"
+      },
+      "DetectorStatusModel": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "COMPLETED, NOT_CHECKED, DEFERRED"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "version",
+          "status"
+        ],
+        "title": "DetectorStatusModel"
+      },
+      "DocumentForensicsResponseModel": {
+        "properties": {
+          "application_id": {
+            "type": "string",
+            "title": "Application Id",
+            "description": "Application identifier"
+          },
+          "document_id": {
+            "type": "string",
+            "title": "Document Id",
+            "description": "Document identifier"
+          },
+          "doc_slot": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Doc Slot",
+            "description": "Assigned document slot"
+          },
+          "detected_media_type": {
+            "type": "string",
+            "title": "Detected Media Type",
+            "description": "MIME media type"
+          },
+          "byte_size": {
+            "type": "integer",
+            "title": "Byte Size",
+            "description": "File size in bytes"
+          },
+          "blake3": {
+            "type": "string",
+            "title": "Blake3",
+            "description": "BLAKE3 digest"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256",
+            "description": "SHA-256 digest"
+          },
+          "storage_key": {
+            "type": "string",
+            "title": "Storage Key",
+            "description": "Storage vault key"
+          },
+          "pipeline_stage": {
+            "type": "string",
+            "title": "Pipeline Stage",
+            "description": "Architectural pipeline stage identifier; S2 Forensics per Guide \u00a72.2",
+            "default": "S2_FORENSICS"
+          },
+          "flags": {
+            "items": {
+              "$ref": "#/components/schemas/ForensicFlagModel"
+            },
+            "type": "array",
+            "title": "Flags",
+            "description": "Advisory forensic flags (Guide \u00a73.4 C2)"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ForensicsMetaModel"
+          },
+          "geo": {
+            "$ref": "#/components/schemas/GeoMetaModel"
+          },
+          "qr": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QRResultModel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "detectors": {
+            "items": {
+              "$ref": "#/components/schemas/DetectorStatusModel"
+            },
+            "type": "array",
+            "title": "Detectors"
+          },
+          "simulated": {
+            "type": "boolean",
+            "title": "Simulated",
+            "description": "Always true in demo prototype",
+            "default": true
+          },
+          "advisory": {
+            "type": "boolean",
+            "title": "Advisory",
+            "description": "Advisory decision-support indicator",
+            "default": true
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "application_id",
+          "document_id",
+          "detected_media_type",
+          "byte_size",
+          "blake3",
+          "sha256",
+          "storage_key"
+        ],
+        "title": "DocumentForensicsResponseModel"
       },
       "DocumentIngestResponseModel": {
         "properties": {
@@ -953,6 +1286,220 @@
         ],
         "title": "FindingSeverity"
       },
+      "ForensicFlagModel": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "Machine-readable indicator code"
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity",
+            "description": "Risk tier: info, low, medium, high"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "Human-readable explanation"
+          },
+          "evidence": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Evidence",
+            "description": "Evidence payload with artifact_uri"
+          },
+          "advisory": {
+            "type": "boolean",
+            "title": "Advisory",
+            "description": "Always true; flags are preliminary indicators",
+            "default": true
+          },
+          "requires_human_review": {
+            "type": "boolean",
+            "title": "Requires Human Review",
+            "default": true
+          },
+          "detector": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Detector",
+            "description": "Detector name and version"
+          },
+          "simulated": {
+            "type": "boolean",
+            "title": "Simulated",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "severity",
+          "reason",
+          "evidence",
+          "detector"
+        ],
+        "title": "ForensicFlagModel"
+      },
+      "ForensicsMetaModel": {
+        "properties": {
+          "producer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Producer"
+          },
+          "creator": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Creator"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "author": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "creation_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Creation Date"
+          },
+          "mod_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mod Date"
+          },
+          "incremental_updates_count": {
+            "type": "integer",
+            "title": "Incremental Updates Count",
+            "default": 1
+          },
+          "signatures": {
+            "items": {
+              "$ref": "#/components/schemas/SignatureInfoModel"
+            },
+            "type": "array",
+            "title": "Signatures"
+          }
+        },
+        "type": "object",
+        "title": "ForensicsMetaModel"
+      },
+      "GeoMetaModel": {
+        "properties": {
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
+          "captured_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Captured At"
+          },
+          "make": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Make"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          }
+        },
+        "type": "object",
+        "title": "GeoMetaModel"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1019,6 +1566,98 @@
           "reason"
         ],
         "title": "PageVerdictModel"
+      },
+      "QRResultModel": {
+        "properties": {
+          "detected": {
+            "type": "boolean",
+            "title": "Detected",
+            "default": false
+          },
+          "issuer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issuer"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "raw_text_masked": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw Text Masked"
+          }
+        },
+        "type": "object",
+        "title": "QRResultModel"
+      },
+      "SignatureInfoModel": {
+        "properties": {
+          "integrity": {
+            "type": "string",
+            "title": "Integrity",
+            "description": "INTACT_FULL_COVERAGE, MODIFIED_AFTER_SIGNING, BROKEN, NONE"
+          },
+          "trust": {
+            "type": "string",
+            "title": "Trust",
+            "description": "production, demo, untrusted"
+          },
+          "source_verification": {
+            "type": "string",
+            "title": "Source Verification",
+            "description": "UNVERIFIED, SIMULATED_SUCCESS, NOT_SUPPORTED"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "signing_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signing Time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "integrity",
+          "trust",
+          "source_verification"
+        ],
+        "title": "SignatureInfoModel"
       },
       "ValidationError": {
         "properties": {

@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aicte.gov.in/schemas/contracts/v1/document_forensics_response.schema.json",
+  "title": "Document Forensics Response",
+  "description": "Output of S2 Forensics (Guide §2.2, §5) — raw-byte metadata, signature integrity, EXIF/geo, and QR locator",
+  "type": "object",
+  "required": [
+    "application_id",
+    "document_id",
+    "detected_media_type",
+    "byte_size",
+    "blake3",
+    "sha256",
+    "storage_key",
+    "pipeline_stage",
+    "flags",
+    "meta",
+    "geo",
+    "qr",
+    "detectors",
+    "simulated",
+    "advisory"
+  ],
+  "properties": {
+    "application_id": {
+      "type": "string",
+      "description": "Application identifier"
+    },
+    "document_id": {
+      "type": "string",
+      "description": "Document identifier"
+    },
+    "doc_slot": {
+      "type": ["string", "null"],
+      "description": "Optional assigned document slot"
+    },
+    "detected_media_type": {
+      "type": "string",
+      "description": "Detected MIME media type"
+    },
+    "byte_size": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Size in bytes"
+    },
+    "blake3": {
+      "type": "string",
+      "description": "BLAKE3 digest"
+    },
+    "sha256": {
+      "type": "string",
+      "description": "SHA-256 digest"
+    },
+    "storage_key": {
+      "type": "string",
+      "description": "Storage vault key"
+    },
+    "pipeline_stage": {
+      "type": "string",
+      "const": "S2_FORENSICS"
+    },
+    "flags": {
+      "type": "array",
+      "description": "Advisory tamper and anomaly signals (Guide §3.4 C2)",
+      "items": {
+        "$ref": "c2_flag.schema.json"
+      }
+    },
+    "meta": {
+      "type": "object",
+      "description": "Extracted document metadata and structural indicators",
+      "required": ["incremental_updates_count", "signatures"],
+      "properties": {
+        "producer": { "type": ["string", "null"] },
+        "creator": { "type": ["string", "null"] },
+        "title": { "type": ["string", "null"] },
+        "author": { "type": ["string", "null"] },
+        "subject": { "type": ["string", "null"] },
+        "creation_date": { "type": ["string", "null"] },
+        "mod_date": { "type": ["string", "null"] },
+        "incremental_updates_count": { "type": "integer", "minimum": 0 },
+        "signatures": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["integrity", "trust", "source_verification"],
+            "properties": {
+              "name": { "type": ["string", "null"] },
+              "signing_time": { "type": ["string", "null"] },
+              "integrity": {
+                "type": "string",
+                "enum": ["INTACT_FULL_COVERAGE", "MODIFIED_AFTER_SIGNING", "BROKEN", "NONE"]
+              },
+              "trust": {
+                "type": "string",
+                "enum": ["production", "demo", "untrusted"]
+              },
+              "source_verification": {
+                "type": "string",
+                "enum": ["UNVERIFIED", "SIMULATED_SUCCESS", "NOT_SUPPORTED"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "geo": {
+      "type": "object",
+      "description": "Geospatial metadata extracted from EXIF (Guide §5.3)",
+      "properties": {
+        "latitude": { "type": ["number", "null"] },
+        "longitude": { "type": ["number", "null"] },
+        "captured_at": { "type": ["string", "null"] },
+        "make": { "type": ["string", "null"] },
+        "model": { "type": ["string", "null"] }
+      }
+    },
+    "qr": {
+      "type": ["object", "null"],
+      "description": "QR code locator result matching configured issuer patterns (Guide §5.7)",
+      "properties": {
+        "detected": { "type": "boolean" },
+        "issuer": { "type": ["string", "null"] },
+        "reference": { "type": ["string", "null"] },
+        "raw_text_masked": { "type": ["string", "null"] }
+      }
+    },
+    "detectors": {
+      "type": "array",
+      "description": "Execution status of individual forensic detectors (Guide §5)",
+      "items": {
+        "type": "object",
+        "required": ["name", "version", "status"],
+        "properties": {
+          "name": { "type": "string" },
+          "version": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["COMPLETED", "NOT_CHECKED", "DEFERRED"]
+          },
+          "reason": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "simulated": {
+      "type": "boolean",
+      "const": true
+    },
+    "advisory": {
+      "type": "boolean",
+      "const": true
+    }
+  }
+}

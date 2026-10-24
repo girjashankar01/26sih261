@@ -1,0 +1,193 @@
+{
+  "schema_version": "4.0",
+  "pipeline_version": "4.0.0",
+  "blake3": "24a309e45ea2f84676387b3ae210b31c1e9a5a7e7433e29af2d7da9510119805",
+  "sha256": "40fc93aeefe45e1025b1b6c5485a1395f66c81ed90240d61ed048baa9b0bfd7b",
+  "kind": "pdf",
+  "coordinate_space": "original_page_norm_topleft",
+  "pages": [
+    {
+      "page": 1,
+      "label": "digital",
+      "reasons": [
+        "visible, sane text layer"
+      ],
+      "engine": "docling_no_ocr"
+    }
+  ],
+  "tables": [
+    {
+      "table_id": "T1_1",
+      "page": 1,
+      "bbox_norm": [
+        0.1008,
+        0.1992,
+        0.7227,
+        0.3054
+      ],
+      "bbox_precision": "table",
+      "n_rows": 3,
+      "n_cols": 5,
+      "cells": [
+        {
+          "r": 0,
+          "c": 0,
+          "raw": "Programme",
+          "value": null,
+          "kind": "text",
+          "repaired": false
+        },
+        {
+          "r": 0,
+          "c": 1,
+          "raw": "",
+          "value": null,
+          "kind": "text",
+          "repaired": false
+        },
+        {
+          "r": 0,
+          "c": 2,
+          "raw": "ApprovedIntake",
+          "value": null,
+          "kind": "text",
+          "repaired": false
+        },
+        {
+          "r": 0,
+          "c": 3,
+          "raw": "",
+          "value": null,
+          "kind": "text",
+          "repaired": false
+        },
+        {
+          "r": 0,
+          "c": 4,
+          "raw": "TuitionFee",
+          "value": null,
+          "kind": "text",
+          "repaired": false
+        },
+        {
+          "r": 1,
+          "c": 0,
+          "raw": "ComputerScience",
+          "value": null,
+          "kind": "text",
+          "repaired": false
+        },
+        {
+          "r": 1,
+          "c": 1,
+          "raw": "",
+          "value": null,
+          "kind": "text",
+          "repaired": false
+        },
+        {
+          "r": 1,
+          "c": 2,
+          "raw": "180",
+          "value": "180",
+          "kind": "number",
+          "repaired": false
+        },
+        {
+          "r": 1,
+          "c": 3,
+          "raw": "",
+          "value": null,
+          "kind": "text",
+          "repaired": false
+        },
+        {
+          "r": 1,
+          "c": 4,
+          "raw": "125000\n\u00b7 , ,",
+          "value": null,
+          "kind": "text",
+          "repaired": false
+        },
+        {
+          "r": 2,
+          "c": 0,
+          "raw": "MechanicalEngg",
+          "value": null,
+          "kind": "text",
+          "repaired": false
+        },
+        {
+          "r": 2,
+          "c": 1,
+          "raw": "",
+          "value": null,
+          "kind": "text",
+          "repaired": false
+        },
+        {
+          "r": 2,
+          "c": 2,
+          "raw": "120",
+          "value": "120",
+          "kind": "number",
+          "repaired": false
+        },
+        {
+          "r": 2,
+          "c": 3,
+          "raw": "",
+          "value": null,
+          "kind": "text",
+          "repaired": false
+        },
+        {
+          "r": 2,
+          "c": 4,
+          "raw": "95000\n\u00b7 ,",
+          "value": null,
+          "kind": "text",
+          "repaired": false
+        }
+      ],
+      "markdown": "| Programme |  | ApprovedIntake |  | TuitionFee |\n| --- | --- | --- | --- | --- |\n| ComputerScience |  | 180 |  | 125000 \u00b7 , , |\n| MechanicalEngg |  | 120 |  | 95000 \u00b7 , |",
+      "engine": "docling_no_ocr"
+    }
+  ],
+  "blocks": [
+    {
+      "id": "B1_1",
+      "page": 1,
+      "label": "title",
+      "text": "AICTE Institute Extension of Approval 2026-2027",
+      "bbox_norm": [
+        0.084,
+        0.0676,
+        0.5967,
+        0.0905
+      ],
+      "bbox_precision": "block",
+      "engine": "docling_no_ocr"
+    },
+    {
+      "id": "B1_2",
+      "page": 1,
+      "label": "title",
+      "text": "Faculty and infrastructure checklist summary report.",
+      "bbox_norm": [
+        0.084,
+        0.1166,
+        0.5083,
+        0.1345
+      ],
+      "bbox_precision": "block",
+      "engine": "docling_no_ocr"
+    }
+  ],
+  "markdown": "# Page 1\n\n| Programme |  | ApprovedIntake |  | TuitionFee |\n| --- | --- | --- | --- | --- |\n| ComputerScience |  | 180 |  | 125000 \u00b7 , , |\n| MechanicalEngg |  | 120 |  | 95000 \u00b7 , |\n\nAICTE Institute Extension of Approval 2026-2027\n\nFaculty and infrastructure checklist summary report.",
+  "flags": [],
+  "engines": [
+    "docling_no_ocr"
+  ],
+  "egress": []
+}
