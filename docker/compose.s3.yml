@@ -1,0 +1,25 @@
+# AICTE Application Validation Prototype — S3 Storage Compose Override (Phase C Stretch, Guide §3.3)
+#
+# Usage:
+#   docker compose -f docker/compose.yml -f docker/compose.s3.yml up --build
+
+services:
+  storage:
+    image: chrislusf/seaweedfs:4.48
+    command: server -s3 -filer
+    volumes:
+      - storage_data:/data
+    ports:
+      - "127.0.0.1:8333:8333"
+
+  app:
+    environment:
+      VAULT_BACKEND: s3
+      S3_ENDPOINT_URL: http://storage:8333
+      S3_BUCKET: aicte-vault
+      AWS_ACCESS_KEY_ID: aicte_dev_key
+      AWS_SECRET_ACCESS_KEY: aicte_dev_secret
+      AWS_DEFAULT_REGION: us-east-1
+    depends_on:
+      storage:
+        condition: service_started

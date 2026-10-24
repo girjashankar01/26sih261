@@ -245,16 +245,22 @@ Date · decision · reason · owner · interfaces/files affected · unresolved f
        - Token matching for editing tools: `photoshop`, `gimp`, `canva`, `ilovepdf`, `sejda`, `smallpdf`, `pixlr`, `corel`, `foxit phantom`, `nitro`, `pdfescape`, `pdf-xchange editor`, `acrobat pro`. Matches emit `EDITING_TOOL_IN_METADATA` (severity: `medium`, advisory: `true`, requires_human_review: `true`).
        - Incremental updates: counts raw `%%EOF` markers. Count > 1 emits `INCREMENTAL_UPDATE_PRESENT` (severity: `low`, advisory: `true`).
        - Never flags `CreationDate != ModDate` alone.
-    2. `pdf_signature` (v1.0.0, Guide §5.2):
-       - Checks raw bytes for `/Type /Sig` and `/ByteRange`.
-       - Full coverage emits `SIG_INTACT` (severity: `info`, `integrity: "INTACT_FULL_COVERAGE"`, `trust: "demo"`).
-       - Trailing modifications beyond covered byte range emit `SIG_MODIFIED_AFTER_SIGNING` (severity: `high`).
-       - Malformed byte ranges emit `SIG_BROKEN` (severity: `high`).
+    2. `pdf_signature` (v2.0.0, Guide §5.2):
+       - Cryptographic signature validation on raw bytes using `pyHanko` with network fetching disabled (`allow_fetching=False`).
+       - Output maintains three distinct fields: `integrity`, `trust`, and `source_verification`.
+       - Structure alone never emits `SIG_INTACT`. A demo root CA (`AICTE Demo Stand-in Root CA`) is configured in `backend/forensics/trust_roots.py`.
+       - Full cryptographic coverage with demo root emits `SIG_INTACT` (severity: `info`, `integrity: "INTACT_FULL_COVERAGE"`, `trust: "demo"`).
+       - Cryptographically intact against untrusted/unknown CA emits `SIG_UNTRUSTED_ROOT` (severity: `medium`, `integrity: "INTACT_FULL_COVERAGE"`, `trust: "untrusted"`).
+       - Unauthorized post-signing modifications or trailing bytes beyond signature byte range emit `SIG_MODIFIED_AFTER_SIGNING` (severity: `high`, `integrity: "MODIFIED_AFTER_SIGNING"`, `trust: "untrusted"`).
+       - Invalid cryptographic envelope or corrupted digest emits `SIG_BROKEN` (severity: `high`, `integrity: "BROKEN"`, `trust: "untrusted"`).
        - **Unsigned PDF is not a flag**; returns `signatures: []` without raising any anomaly flag.
-    3. `image_metadata_exif` (v1.0.0, Guide §5.3):
-       - Parses EXIF metadata and GPS IFD tags from JPEG/PNG images using Pillow.
+    3. `image_metadata_exif` (v2.0.0, Guide §5.3):
+       - Executes one-shot `exiftool -json -n -G1 -- <scratch_path>` with fixed argument list, `shell=False`, timeout=20s, and no network access.
+       - If ExifTool binary is not found in PATH, detector raises error and is recorded as `NOT_CHECKED` with reason; pure-Python fallbacks avoided to ensure strict guide compliance.
        - Extracts camera make, model, timestamp, and decimal latitude/longitude.
-       - Software tags containing editing tool signatures emit `EDITING_SOFTWARE_SIGNATURE` (severity: `medium`).
+       - Detects editing software tokens in Software/History tags, emitting `EDITING_SOFTWARE_SIGNATURE` (severity: `medium`).
+       - Detects revision history entries, emitting `XMP_REVISION_HISTORY_PRESENT` (severity: `low`).
+       - Detects declared algorithmic/AI generation in `DigitalSourceType`, emitting `AI_GENERATION_DECLARED` (severity: `medium`).
        - UI wording: "no declared AI/editing metadata found", never "not AI-generated". Absence of EXIF is not evidence of tampering.
     4. `qr_decode` (v1.0.0, Guide §5.7):
        - Treats QR codes strictly as locators, never trusted URLs.
@@ -277,20 +283,21 @@ Date · decision · reason · owner · interfaces/files affected · unresolved f
   - Added JSON Schema contract `docs/contracts/document_forensics_response.schema.json` and example `docs/contracts/examples/document_forensics_response_example.json` matching Appendix B worked run (`fire_noc.pdf`).
   - Re-exported OpenAPI specification in `docs/contracts/openapi.json`.
 - Dependencies:
-  - Added `opencv-python-headless>=5.0.0.93` and `qrcode[pil]>=8.2` via `pyproject.toml`, resolved in `uv.lock`, and exported to pinned `requirements.txt`.
+  - Added `pyhanko>=0.38.0`, `opencv-python-headless>=5.0.0.93`, and `qrcode[pil]>=8.2` via `pyproject.toml`, resolved in `uv.lock`, and exported to pinned `requirements.txt`.
+  - Added `libimage-exiftool-perl` to `docker/Dockerfile` for pinned ExifTool availability in containers.
 - Verification Runs Executed:
-  - Focused forensics tests (`tests/test_forensics.py`): 13 tests verifying clean PDF, editing tools in metadata, incremental updates, unsigned PDF (no flag), intact signature, modified signature, EXIF geo/make/model, EXIF editing software, allowlisted QR locator (`MOCK_FIRE`), unrecognized QR, deferred detector statuses, API endpoint execution, and 404 handling.
-  - Full test suite: 55 tests passing across all test modules (`uv run python -m unittest discover tests`, 10.75s).
+  - Focused forensics tests (`tests/test_forensics.py`): 16 tests verifying clean PDF, editing tools in metadata, incremental updates, unsigned PDF (no flag), pyHanko demo root signed, intact but untrusted root signed, structurally present but cryptographically broken signature, modified after signing, EXIF geo/make/model, EXIF editing software, ExifTool missing -> NOT_CHECKED, allowlisted QR locator (`MOCK_FIRE`), unrecognized QR, deferred detector statuses, API endpoint execution, and 404 handling.
+  - Full test suite: 58 tests passing across all test modules (`uv run python -m unittest discover tests`, 11.82s).
   - Docker Compose validation: `docker compose -f docker/compose.yml config` passes cleanly.
 
-## Storage Architecture and Scope Deviation Note
-- Guide §3.3 specifies `LocalStore` as the Phase A default (zero extra containers).
-- Local development is already 100% `LocalStore` via `LocalVaultStorage` when `VAULT_BACKEND` is unset.
-- Docker Compose currently runs SeaweedFS S3 (`VAULT_BACKEND=s3`), which is an early adoption of the Phase C stretch adapter.
-- Migration to LocalStore in Compose:
-  1. Export any objects in SeaweedFS to the host `data/vault/` directory.
-  2. Add a writable volume mount for `/app/data/vault` in `docker/compose.yml` (since container root is `read_only: true`).
-  3. Remove `storage` service from `compose.yml` and unset `VAULT_BACKEND`.
+## Phase A Storage Alignment: LocalStore Default (Guide §3.3)
+- Guide §3.3 defines `LocalStore` as the Phase A default (zero extra storage containers, local content-addressed filesystem vault under `b3/<aa>/<bb>/<digest>`).
+- Existing objects in `data/vault/` verified: all 3 blobs verified against BLAKE3 digests.
+- Docker Compose (`docker/compose.yml`) switched to `LocalStore` default:
+  - Removed `storage` service (zero extra containers per Guide §3.3).
+  - App service configured with `VAULT_BACKEND=local` and dedicated volume mount `vault_data:/app/data/vault` for read-only container root compliance.
+  - `storage_data` volume preserved in `volumes:` declaration to avoid deleting or orphaning any existing volumes.
+  - Phase C stretch S3 adapter preserved in `docker/compose.s3.yml` for optional SeaweedFS S3 override.
 
 ## Open questions & Next Steps
 - Implementation of the Nginx reverse-proxy gateway for true offline container isolation (Guide §18.3).

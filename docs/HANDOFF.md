@@ -34,15 +34,11 @@ API/domain owner before parallel implementation.
 > With S1 Ingest, S2 Forensics, and S3 Route in place, the pipeline fork now requires
 > Branch B raster preprocessing (deskew/dewarp) and Docling/OCR engine ladder.
 
-## Storage architecture and migration note
+## Storage architecture (Guide §3.3)
 
-- **Phase A Default (Guide §3.3):** `LocalStore` (zero extra containers, local content-addressed filesystem vault under `b3/<aa>/<bb>/<digest>`).
-- **Local development:** Uses `LocalVaultStorage` by default when `VAULT_BACKEND` is unset, matching Guide §3.3.
-- **Docker Compose:** Currently runs SeaweedFS S3 with pinned `chrislusf/seaweedfs:4.48`. This is an early adoption of the Phase C stretch S3 adapter.
-- **Migration to LocalStore in Compose:** To switch Compose to LocalStore safely without risking access loss or data orphans:
-  1. Export any objects in SeaweedFS to the host `data/vault/` filesystem.
-  2. Add a writable volume mount for `/app/data/vault` in `docker/compose.yml` (since container root is `read_only: true`).
-  3. Remove `storage` service from `compose.yml` and unset `VAULT_BACKEND` (or set `VAULT_BACKEND=local`).
+- **Phase A Default:** `LocalStore` (zero extra containers, local content-addressed filesystem vault under `b3/<aa>/<bb>/<digest>`).
+- **Local development & Docker Compose:** Both use `LocalVaultStorage` by default, strictly conforming to Guide §3.3.
+- **Phase C Stretch:** S3-compatible storage via SeaweedFS is preserved in `docker/compose.s3.yml` as an optional override; `storage_data` volume is declared to preserve any existing data.
 
 ## Integration routine
 

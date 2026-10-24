@@ -338,6 +338,97 @@
           }
         }
       }
+    },
+    "/applications/{application_id}/documents/{document_id}/extract": {
+      "get": {
+        "summary": "Retrieve S4 Branch B extraction result for a document",
+        "operationId": "extract_document_endpoint_applications__application_id__documents__document_id__extract_get",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Execute S4 Branch B extraction pipeline (Guide \u00a77\u2013\u00a79)",
+        "description": "Consumes S3 routes and persisted originals through storage abstraction. Runs raster preprocessing, single composed 3x3 coordinate transform, offline extraction engines, table cell normalisation, arithmetic verification, and produces C1 Unified Document Payload. Processing is cache-aware and idempotent.",
+        "operationId": "extract_document_endpoint_applications__application_id__documents__document_id__extract_post",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {

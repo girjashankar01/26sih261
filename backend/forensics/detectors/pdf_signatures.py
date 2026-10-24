@@ -1,68 +1,138 @@
 """
 PDF Digital Signature Detector (Guide §5.2).
-Cryptographic verification on raw bytes.
+Performs cryptographic validation on raw bytes using pyHanko.
+Strictly disables network fetching (allow_fetching=False).
 Outputs three separate fields: integrity, trust, source_verification.
 An unsigned PDF is NOT a flag.
 """
-import re
+import asyncio
+import concurrent.futures
+import io
+import logging
 from typing import Any
-import pymupdf
+
+from pyhanko.pdf_utils.reader import PdfFileReader
+from pyhanko.sign.validation import validate_pdf_signature, ValidationContext
+from pyhanko.sign.validation.status import PdfSignatureStatus
 
 from backend.forensics.models import ForensicFlag, SignatureInfo
+from backend.forensics.trust_roots import (
+    get_demo_validation_context,
+    get_untrusted_validation_context,
+    DEMO_ASN1_CERT,
+)
+
+logger = logging.getLogger("aicte.forensics.signatures")
 
 DETECTOR_NAME = "pdf_signature"
-DETECTOR_VERSION = "1.0.0"
+DETECTOR_VERSION = "2.0.0"
 
-BYTE_RANGE_REGEX = re.compile(rb"/ByteRange\s*\[\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s*\]")
+
+def _safe_validate_sig(sig: Any, vc: ValidationContext) -> PdfSignatureStatus:
+    """Run pyHanko signature validation safely whether in an event loop or worker thread."""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+
+    if loop is not None and loop.is_running():
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+            return pool.submit(validate_pdf_signature, sig, vc).result()
+    return validate_pdf_signature(sig, vc)
+
+
+def _determine_integrity(status: PdfSignatureStatus, is_entire_file: bool) -> str:
+    """Determine cryptographic integrity status from pyHanko status object."""
+    cov = getattr(status.coverage, "name", str(status.coverage))
+
+    if not (status.intact and status.valid):
+        return "BROKEN"
+    if cov != "ENTIRE_FILE" or not is_entire_file:
+        return "MODIFIED_AFTER_SIGNING"
+    return "INTACT_FULL_COVERAGE"
+
+
+def _signature_flag(status: PdfSignatureStatus, is_entire_file: bool) -> tuple[str, str, str]:
+    """
+    Map pyHanko status to advisory flag per Guide §5.2.
+    Returns (code, severity, reason).
+    """
+    cov = getattr(status.coverage, "name", str(status.coverage))
+    mod = getattr(status.modification_level, "name", str(status.modification_level))
+
+    if not (status.intact and status.valid):
+        return (
+            "SIG_BROKEN",
+            "high",
+            "Cryptographic signature verification failed: signature digest or cryptographic envelope is invalid or broken.",
+        )
+    if cov != "ENTIRE_FILE" or not is_entire_file:
+        if mod in ("FORM_FILLING", "ANNOTATIONS"):
+            return (
+                "SIG_LATER_REVISIONS_BENIGN",
+                "low",
+                "Document has benign post-signing revisions (form filling or annotations).",
+            )
+        return (
+            "SIG_MODIFIED_AFTER_SIGNING",
+            "high",
+            "Document was modified after signing with unauthorized revisions or trailing bytes beyond signature coverage.",
+        )
+    if not status.trusted:
+        return (
+            "SIG_UNTRUSTED_ROOT",
+            "medium",
+            "Signature is cryptographically intact, but certificate chain does not anchor to a configured trust root.",
+        )
+    return (
+        "SIG_INTACT",
+        "info",
+        "Cryptographically intact digital signature verified against demo stand-in root (not live issuer verification).",
+    )
 
 
 def detect_pdf_signatures(
     raw_bytes: bytes,
     document_id: str,
+    validation_context: ValidationContext | None = None,
 ) -> tuple[list[SignatureInfo], list[ForensicFlag]]:
     """
-    Inspect raw PDF bytes for digital signature dictionaries.
-    If unsigned, returns empty list without raising a flag.
-    If signed, returns (signatures, flags).
+    Cryptographically validate digital signatures in raw PDF bytes using pyHanko.
+    Returns (signatures, flags).
+    Guide §5.2: An unsigned PDF is not a flag.
     """
     signatures: list[SignatureInfo] = []
     flags: list[ForensicFlag] = []
 
-    # Quick check for signature dictionary presence in raw bytes
-    has_sig_type = b"/Type /Sig" in raw_bytes or b"/Type/Sig" in raw_bytes
-    byte_range_matches = list(BYTE_RANGE_REGEX.finditer(raw_bytes))
-
-    if not has_sig_type and not byte_range_matches:
-        # Document is unsigned. Guide §5.2: "An unsigned PDF is not a flag."
+    try:
+        reader = PdfFileReader(io.BytesIO(raw_bytes))
+        embedded_sigs = reader.embedded_signatures
+    except Exception as err:
+        # Corrupt PDF or reader failure
+        logger.warning(f"Failed to read PDF structure for doc {document_id}: {err}")
         return signatures, flags
 
-    # Inspect signature objects
-    file_len = len(raw_bytes)
+    if not embedded_sigs:
+        # Guide §5.2: "An unsigned PDF is not a flag."
+        return signatures, flags
 
-    try:
-        doc = pymupdf.open(stream=raw_bytes, filetype="pdf")
-        sig_fields = []
-        for page in doc:
-            for widget in page.widgets():
-                if widget.field_type == pymupdf.PDF_WIDGET_TYPE_SIGNATURE:
-                    sig_fields.append(widget)
-        doc.close()
-    except Exception:
-        sig_fields = []
+    vc = validation_context or get_demo_validation_context()
 
-    # If byte range found, analyze coverage and integrity
-    for idx, match in enumerate(byte_range_matches):
-        p1, l1, p2, l2 = [int(x) for x in match.groups()]
-        covered_bytes = p2 + l2
+    for idx, sig in enumerate(embedded_sigs):
+        field_name = sig.field_name or f"Signature{idx + 1}"
+        try:
+            status = _safe_validate_sig(sig, vc)
+            total_covered = sig.byte_range[2] + sig.byte_range[3] if sig.byte_range and len(sig.byte_range) >= 4 else len(raw_bytes)
+            is_entire_file = (total_covered == len(raw_bytes)) and (getattr(status.coverage, "name", str(status.coverage)) == "ENTIRE_FILE")
 
-        signer_name = None
-        if idx < len(sig_fields):
-            signer_name = sig_fields[idx].field_value or sig_fields[idx].field_name
+            integrity = _determine_integrity(status, is_entire_file)
 
-        if covered_bytes == file_len:
-            # Full file coverage
-            integrity = "INTACT_FULL_COVERAGE"
-            trust = "demo"
+            # Determine trust class: production, demo, or untrusted
+            if status.trusted and integrity == "INTACT_FULL_COVERAGE":
+                trust = "demo"  # In Phase A demo environment, trusted roots are demo roots
+            else:
+                trust = "untrusted"
+
             source_verification = "UNVERIFIED"
 
             signatures.append(
@@ -70,80 +140,46 @@ def detect_pdf_signatures(
                     integrity=integrity,
                     trust=trust,
                     source_verification=source_verification,
-                    name=signer_name or f"Signature{idx + 1}",
+                    name=field_name,
+                    signing_time=str(sig.self_reported_timestamp) if getattr(sig, "self_reported_timestamp", None) else None,
                 )
             )
 
+            code, severity, reason = _signature_flag(status, is_entire_file)
             flags.append(
                 ForensicFlag(
-                    code="SIG_INTACT",
-                    severity="info",
-                    reason="Cryptographically intact digital signature detected (stand-in/demo trust root).",
+                    code=code,
+                    severity=severity,
+                    reason=reason,
                     evidence={
                         "artifact_uri": f"forensics://documents/{document_id}/signatures/{idx}",
-                        "value": f"signer='{signer_name or 'Unknown'}', coverage=ENTIRE_FILE",
+                        "value": f"field='{field_name}', integrity={integrity}, trust={trust}",
                     },
                     advisory=True,
                     requires_human_review=True,
                     detector={"name": DETECTOR_NAME, "version": DETECTOR_VERSION},
                 )
             )
-        elif covered_bytes < file_len:
-            # Trailing modifications exist after signature coverage
-            trailing_len = file_len - covered_bytes
-            integrity = "MODIFIED_AFTER_SIGNING"
-            trust = "untrusted"
-            source_verification = "UNVERIFIED"
 
+        except Exception as sig_err:
+            logger.warning(f"Cryptographic signature validation failed on {field_name} in doc {document_id}: {sig_err}")
+            # If pyHanko fails cryptographically on a malformed signature
             signatures.append(
                 SignatureInfo(
-                    integrity=integrity,
-                    trust=trust,
-                    source_verification=source_verification,
-                    name=signer_name or f"Signature{idx + 1}",
+                    integrity="BROKEN",
+                    trust="untrusted",
+                    source_verification="UNVERIFIED",
+                    name=field_name,
                 )
             )
-
-            flags.append(
-                ForensicFlag(
-                    code="SIG_MODIFIED_AFTER_SIGNING",
-                    severity="high",
-                    reason=(
-                        f"PDF was modified after signing ({trailing_len} bytes appended beyond /ByteRange). "
-                        "Preliminary indicator requiring officer verification."
-                    ),
-                    evidence={
-                        "artifact_uri": f"forensics://documents/{document_id}/signatures/{idx}",
-                        "value": f"covered_bytes={covered_bytes}, file_length={file_len}",
-                    },
-                    advisory=True,
-                    requires_human_review=True,
-                    detector={"name": DETECTOR_NAME, "version": DETECTOR_VERSION},
-                )
-            )
-        else:
-            # Invalid byte range calculation
-            integrity = "BROKEN"
-            trust = "untrusted"
-            source_verification = "UNVERIFIED"
-
-            signatures.append(
-                SignatureInfo(
-                    integrity=integrity,
-                    trust=trust,
-                    source_verification=source_verification,
-                    name=signer_name or f"Signature{idx + 1}",
-                )
-            )
-
             flags.append(
                 ForensicFlag(
                     code="SIG_BROKEN",
                     severity="high",
-                    reason="Digital signature byte range definition is malformed or invalid.",
+                    reason=f"Signature '{field_name}' failed cryptographic decoding: {type(sig_err).__name__}",
                     evidence={
                         "artifact_uri": f"forensics://documents/{document_id}/signatures/{idx}",
-                        "value": f"invalid_range=[{p1}, {l1}, {p2}, {l2}]",
+                        "value": str(sig_err),
                     },
                     advisory=True,
                     requires_human_review=True,

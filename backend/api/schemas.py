@@ -269,3 +269,33 @@ class DocumentForensicsResponseModel(BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
+
+class C1UnifiedPayloadModel(BaseModel):
+    schema_version: str = Field(default="4.0", description="Schema version")
+    pipeline_version: str = Field(default="4.0.0", description="Pipeline version")
+    blake3: str = Field(..., description="BLAKE3 hash")
+    sha256: str = Field(..., description="SHA-256 hash")
+    kind: str = Field(..., description="pdf, image, office, or scanned")
+    coordinate_space: str = Field(default="original_page_norm_topleft")
+    pages: list[dict[str, Any]] = Field(default_factory=list)
+    tables: list[dict[str, Any]] = Field(default_factory=list)
+    blocks: list[dict[str, Any]] = Field(default_factory=list)
+    markdown: str = Field(default="")
+    flags: list[dict[str, Any]] = Field(default_factory=list)
+    engines: list[str] = Field(default_factory=list)
+    egress: list[str] = Field(default_factory=list)
+    idempotent_cached: bool | None = Field(default=None)
+
+    model_config = ConfigDict(extra="allow")
+
+
+class ExtractionFailureModel(BaseModel):
+    status: str = Field(..., description="NOT_CHECKED or NEEDS_REVIEW_OCR")
+    error_code: str = Field(..., description="Machine-readable error code")
+    reason: str = Field(..., description="Plain-language reason")
+    pipeline_stage: str = Field(default="S4_BRANCH_B")
+    page: int | None = Field(default=None)
+    preprocess: dict[str, Any] | None = Field(default=None)
+
+    model_config = ConfigDict(extra="allow")
+

@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, Header, HTTPException, UploadFile
@@ -11,12 +12,14 @@ from backend.api.schemas import (
     DocumentRouteResponseModel,
     HealthResponseModel,
     ValidationResponseModel,
+    C1UnifiedPayloadModel,
 )
 from backend.db.connection import db as default_db
 from backend.db.repository import get_upload_by_id
 from backend.forensics import run_forensics
 from backend.ingest.service import process_upload_stream
 from backend.pipeline.router import route_document
+from backend.pipeline.branch_b import execute_branch_b
 from backend.records.demo import APPLICATIONS
 from backend.rules.evaluate import validate_application
 from backend.storage.vault import default_vault
@@ -179,7 +182,8 @@ async def forensics_document_endpoint(
 
     raw_bytes = default_vault.get_bytes(storage_key)
 
-    result = run_forensics(
+    result = await asyncio.to_thread(
+        run_forensics,
         raw_bytes=raw_bytes,
         media_type=record["media_type"],
         document_id=record["id"],
@@ -190,5 +194,40 @@ async def forensics_document_endpoint(
         doc_slot=record.get("doc_slot"),
     )
     return result.to_dict() if hasattr(result, "to_dict") else result
+
+
+@app.post(
+    "/applications/{application_id}/documents/{document_id}/extract",
+    summary="Execute S4 Branch B extraction pipeline (Guide §7–§9)",
+    description="Consumes S3 routes and persisted originals through storage abstraction. Runs raster preprocessing, single composed 3x3 coordinate transform, offline extraction engines, table cell normalisation, arithmetic verification, and produces C1 Unified Document Payload. Processing is cache-aware and idempotent.",
+)
+@app.get(
+    "/applications/{application_id}/documents/{document_id}/extract",
+    summary="Retrieve S4 Branch B extraction result for a document",
+)
+async def extract_document_endpoint(
+    application_id: str,
+    document_id: str,
+):
+    if not application_id or not application_id.strip():
+        raise HTTPException(status_code=400, detail="Invalid application_id")
+    if not document_id or not document_id.strip():
+        raise HTTPException(status_code=400, detail="Invalid document_id")
+
+    result = await asyncio.to_thread(
+        execute_branch_b,
+        application_id=application_id.strip(),
+        document_id=document_id.strip(),
+        database=default_db,
+        vault_backend=default_vault,
+    )
+
+    if isinstance(result, dict) and result.get("status") == "NOT_FOUND":
+        raise HTTPException(
+            status_code=404,
+            detail={"error_code": "DOCUMENT_NOT_FOUND", "message": result.get("reason")},
+        )
+
+    return result
 
 

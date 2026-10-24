@@ -101,23 +101,23 @@ def run_forensics(
             meta.signatures = [s.to_dict() for s in signatures]
             flags.extend(sig_flags)
             detector_statuses.append(
-                DetectorStatus(name="pdf_signature", version="1.0.0", status="COMPLETED")
+                DetectorStatus(name="pdf_signature", version="2.0.0", status="COMPLETED")
             )
         except Exception as err:
             logger.warning(f"Forensic detector pdf_signature failed for doc {document_id}: {err}")
             detector_statuses.append(
                 DetectorStatus(
                     name="pdf_signature",
-                    version="1.0.0",
+                    version="2.0.0",
                     status="NOT_CHECKED",
-                    reason=f"Detector error: {type(err).__name__}",
+                    reason=f"Detector error: {type(err).__name__} - {err}",
                 )
             )
     else:
         detector_statuses.append(
             DetectorStatus(
                 name="pdf_signature",
-                version="1.0.0",
+                version="2.0.0",
                 status="NOT_CHECKED",
                 reason="Not applicable to non-PDF media",
             )
@@ -130,23 +130,23 @@ def run_forensics(
             geo = exif_geo
             flags.extend(exif_flags)
             detector_statuses.append(
-                DetectorStatus(name="image_metadata_exif", version="1.0.0", status="COMPLETED")
+                DetectorStatus(name="image_metadata_exif", version="2.0.0", status="COMPLETED")
             )
         except Exception as err:
             logger.warning(f"Forensic detector image_metadata_exif failed for doc {document_id}: {err}")
             detector_statuses.append(
                 DetectorStatus(
                     name="image_metadata_exif",
-                    version="1.0.0",
+                    version="2.0.0",
                     status="NOT_CHECKED",
-                    reason=f"Detector error: {type(err).__name__}",
+                    reason=f"{type(err).__name__}: {err}",
                 )
             )
     else:
         detector_statuses.append(
             DetectorStatus(
                 name="image_metadata_exif",
-                version="1.0.0",
+                version="2.0.0",
                 status="NOT_CHECKED",
                 reason="EXIF analysis deferred to embedded raster extraction in Phase B",
             )

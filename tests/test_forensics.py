@@ -1,19 +1,84 @@
 import asyncio
+import datetime
 import io
 import os
+import re
 import shutil
 import tempfile
 import unittest
+from unittest.mock import patch
+
+from asn1crypto.keys import PrivateKeyInfo
+from asn1crypto.x509 import Certificate as Asn1Cert
+from cryptography import x509 as cx509
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.x509.oid import NameOID
+from fastapi import HTTPException
+from PIL import Image, ExifTags
 import pymupdf
 import qrcode
-from PIL import Image, ExifTags
-from fastapi import HTTPException
+from pyhanko.pdf_utils.incremental_writer import IncrementalPdfFileWriter
+from pyhanko.sign import fields, signers
+from pyhanko_certvalidator.registry import SimpleCertificateStore
 
 from backend.api.main import forensics_document_endpoint
 from backend.db.connection import Database
 from backend.db.repository import init_db, insert_blob, insert_upload
 from backend.forensics.runner import run_forensics
+from backend.forensics.trust_roots import DEMO_ASN1_CERT, DEMO_ASN1_KEY
 from backend.storage.vault import LocalVaultStorage
+
+
+def _create_demo_signed_pdf(pdf_bytes: bytes, field_name: str = "SigDemo") -> bytes:
+    """Helper to generate cryptographically signed PDF using demo root."""
+    store = SimpleCertificateStore.from_certs([DEMO_ASN1_CERT])
+    signer = signers.SimpleSigner(
+        signing_cert=DEMO_ASN1_CERT,
+        signing_key=DEMO_ASN1_KEY,
+        cert_registry=store,
+    )
+    w = IncrementalPdfFileWriter(io.BytesIO(pdf_bytes))
+    fields.append_signature_field(w, sig_field_spec=fields.SigFieldSpec(sig_field_name=field_name))
+    out = io.BytesIO()
+    signers.sign_pdf(w, signers.PdfSignatureMetadata(field_name=field_name), signer=signer, output=out)
+    return out.getvalue()
+
+
+def _create_untrusted_signed_pdf(pdf_bytes: bytes, field_name: str = "SigUntrusted") -> bytes:
+    """Helper to generate signed PDF using an untrusted external CA."""
+    other_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    other_name = cx509.Name([cx509.NameAttribute(NameOID.COMMON_NAME, "Untrusted Third Party Root")])
+    other_cert = (
+        cx509.CertificateBuilder()
+        .subject_name(other_name)
+        .issuer_name(other_name)
+        .public_key(other_key.public_key())
+        .serial_number(9999)
+        .not_valid_before(datetime.datetime(2025, 1, 1, tzinfo=datetime.timezone.utc))
+        .not_valid_after(datetime.datetime(2035, 1, 1, tzinfo=datetime.timezone.utc))
+        .add_extension(cx509.BasicConstraints(ca=True, path_length=None), critical=True)
+        .sign(other_key, hashes.SHA256())
+    )
+    other_asn1_cert = Asn1Cert.load(other_cert.public_bytes(serialization.Encoding.DER))
+    other_key_der = other_key.private_bytes(
+        serialization.Encoding.DER,
+        serialization.PrivateFormat.PKCS8,
+        serialization.NoEncryption(),
+    )
+    other_asn1_key = PrivateKeyInfo.load(other_key_der)
+
+    store = SimpleCertificateStore.from_certs([other_asn1_cert])
+    signer = signers.SimpleSigner(
+        signing_cert=other_asn1_cert,
+        signing_key=other_asn1_key,
+        cert_registry=store,
+    )
+    w = IncrementalPdfFileWriter(io.BytesIO(pdf_bytes))
+    fields.append_signature_field(w, sig_field_spec=fields.SigFieldSpec(sig_field_name=field_name))
+    out = io.BytesIO()
+    signers.sign_pdf(w, signers.PdfSignatureMetadata(field_name=field_name), signer=signer, output=out)
+    return out.getvalue()
 
 
 class TestForensics(unittest.TestCase):
@@ -48,7 +113,6 @@ class TestForensics(unittest.TestCase):
         pdf_bytes = doc.tobytes()
         doc.close()
         if append_eof:
-            # Simulate incremental update revision marker
             pdf_bytes += b"\n% Additional Revision Data\n%%EOF\n"
         return pdf_bytes
 
@@ -72,7 +136,6 @@ class TestForensics(unittest.TestCase):
         self.assertTrue(res.advisory)
         self.assertTrue(res.simulated)
 
-        # Check completed detectors
         completed = [d["name"] for d in res.detectors if d["status"] == "COMPLETED"]
         self.assertIn("pdf_metadata", completed)
         self.assertIn("pdf_signature", completed)
@@ -116,6 +179,7 @@ class TestForensics(unittest.TestCase):
         self.assertGreater(res.meta["incremental_updates_count"], 1)
 
     def test_unsigned_pdf_is_not_a_flag(self):
+        # Guide §5.2: "An unsigned PDF is not a flag."
         pdf_bytes = self._create_minimal_pdf()
         res = run_forensics(
             raw_bytes=pdf_bytes,
@@ -126,45 +190,91 @@ class TestForensics(unittest.TestCase):
             sha256="dummy_sha",
             storage_key="b3/00/00/dummy",
         )
-        # Guide §5.2: "An unsigned PDF is not a flag."
         sig_flags = [f for f in res.flags if "SIG_" in f["code"]]
         self.assertEqual(sig_flags, [])
         self.assertEqual(res.meta["signatures"], [])
 
-    def test_intact_signature(self):
-        # Construct synthetic PDF with /ByteRange covering entire file
+    def test_demo_root_signed_pdf(self):
+        # Cryptographically valid against stand-in demo root
         base_pdf = self._create_minimal_pdf()
-        sig_block = b"\n/Type /Sig /ByteRange [ 0 100 100 200 ]\n"
-        signed_pdf = base_pdf + sig_block
-        # Patch byte range to match exact length
-        total_len = len(signed_pdf)
-        p1, l1 = 0, total_len // 2
-        p2, l2 = l1, total_len - l1
-        br_str = f"/ByteRange [ {p1} {l1} {p2} {l2} ]".encode("ascii")
-        signed_pdf = signed_pdf.replace(b"/ByteRange [ 0 100 100 200 ]", br_str.ljust(len("/ByteRange [ 0 100 100 200 ]".encode("ascii"))))
+        signed_pdf = _create_demo_signed_pdf(base_pdf)
 
         res = run_forensics(
             raw_bytes=signed_pdf,
             media_type="application/pdf",
-            document_id="doc_signed",
+            document_id="doc_demo_sig",
             application_id="APP-001",
             blake3="dummy_b3",
             sha256="dummy_sha",
             storage_key="b3/00/00/dummy",
         )
-        self.assertGreater(len(res.meta["signatures"]), 0)
+        self.assertEqual(len(res.meta["signatures"]), 1)
         sig = res.meta["signatures"][0]
         self.assertEqual(sig["integrity"], "INTACT_FULL_COVERAGE")
         self.assertEqual(sig["trust"], "demo")
+        self.assertEqual(sig["source_verification"], "UNVERIFIED")
+
         flag_codes = [f["code"] for f in res.flags]
         self.assertIn("SIG_INTACT", flag_codes)
+        sig_flag = next(f for f in res.flags if f["code"] == "SIG_INTACT")
+        self.assertEqual(sig_flag["severity"], "info")
+        self.assertTrue(sig_flag["advisory"])
+
+    def test_intact_but_untrusted_signature(self):
+        # Cryptographically intact, but certificate chain does not anchor to demo root
+        base_pdf = self._create_minimal_pdf()
+        signed_pdf = _create_untrusted_signed_pdf(base_pdf)
+
+        res = run_forensics(
+            raw_bytes=signed_pdf,
+            media_type="application/pdf",
+            document_id="doc_untrusted_sig",
+            application_id="APP-001",
+            blake3="dummy_b3",
+            sha256="dummy_sha",
+            storage_key="b3/00/00/dummy",
+        )
+        self.assertEqual(len(res.meta["signatures"]), 1)
+        sig = res.meta["signatures"][0]
+        self.assertEqual(sig["integrity"], "INTACT_FULL_COVERAGE")
+        self.assertEqual(sig["trust"], "untrusted")
+
+        flag_codes = [f["code"] for f in res.flags]
+        self.assertIn("SIG_UNTRUSTED_ROOT", flag_codes)
+        sig_flag = next(f for f in res.flags if f["code"] == "SIG_UNTRUSTED_ROOT")
+        self.assertEqual(sig_flag["severity"], "medium")
+
+    def test_structurally_present_but_invalid_signature(self):
+        # Signature dictionary present, but corrupted cryptographic payload
+        base_pdf = self._create_minimal_pdf()
+        signed_pdf = _create_demo_signed_pdf(base_pdf)
+        # Corrupt cryptographic payload inside /Contents
+        corrupt_pdf = re.sub(rb"([0-9a-fA-F]{24})", rb"000000000000000000000000", signed_pdf, count=1)
+
+        res = run_forensics(
+            raw_bytes=corrupt_pdf,
+            media_type="application/pdf",
+            document_id="doc_corrupt_sig",
+            application_id="APP-001",
+            blake3="dummy_b3",
+            sha256="dummy_sha",
+            storage_key="b3/00/00/dummy",
+        )
+        self.assertEqual(len(res.meta["signatures"]), 1)
+        sig = res.meta["signatures"][0]
+        self.assertEqual(sig["integrity"], "BROKEN")
+        self.assertEqual(sig["trust"], "untrusted")
+
+        flag_codes = [f["code"] for f in res.flags]
+        self.assertIn("SIG_BROKEN", flag_codes)
+        sig_flag = next(f for f in res.flags if f["code"] == "SIG_BROKEN")
+        self.assertEqual(sig_flag["severity"], "high")
 
     def test_signature_modified_after_signing(self):
+        # Valid signature, but trailing content appended beyond ByteRange
         base_pdf = self._create_minimal_pdf()
-        sig_block = b"\n/Type /Sig /ByteRange [ 0 50 50 100 ]\n"
-        signed_pdf = base_pdf + sig_block
-        # Append extra trailing modification bytes beyond covered length (150)
-        tampered_pdf = signed_pdf + b"\n% Extra Tampered Form Data Appended\n"
+        signed_pdf = _create_demo_signed_pdf(base_pdf)
+        tampered_pdf = signed_pdf + b"\n% Post-signing unauthorized addition\n"
 
         res = run_forensics(
             raw_bytes=tampered_pdf,
@@ -175,9 +285,11 @@ class TestForensics(unittest.TestCase):
             sha256="dummy_sha",
             storage_key="b3/00/00/dummy",
         )
+        self.assertEqual(len(res.meta["signatures"]), 1)
         sig = res.meta["signatures"][0]
         self.assertEqual(sig["integrity"], "MODIFIED_AFTER_SIGNING")
         self.assertEqual(sig["trust"], "untrusted")
+
         flag_codes = [f["code"] for f in res.flags]
         self.assertIn("SIG_MODIFIED_AFTER_SIGNING", flag_codes)
         mod_flag = next(f for f in res.flags if f["code"] == "SIG_MODIFIED_AFTER_SIGNING")
@@ -239,8 +351,28 @@ class TestForensics(unittest.TestCase):
         flag_codes = [f["code"] for f in res.flags]
         self.assertIn("EDITING_SOFTWARE_SIGNATURE", flag_codes)
 
+    def test_exiftool_missing_reports_not_checked(self):
+        # When ExifTool is not in PATH, detector reports NOT_CHECKED rather than faking clean
+        img = Image.new("RGB", (50, 50), color="green")
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG")
+        jpeg_bytes = buf.getvalue()
+
+        with patch("shutil.which", return_value=None):
+            res = run_forensics(
+                raw_bytes=jpeg_bytes,
+                media_type="image/jpeg",
+                document_id="doc_no_tool",
+                application_id="APP-001",
+                blake3="dummy_b3",
+                sha256="dummy_sha",
+                storage_key="b3/00/00/dummy",
+            )
+        status_exif = next(d for d in res.detectors if d["name"] == "image_metadata_exif")
+        self.assertEqual(status_exif["status"], "NOT_CHECKED")
+        self.assertIn("ExifTool binary not found", status_exif["reason"])
+
     def test_qr_decode_allowlisted_mock_fire(self):
-        # Generate QR code matching Appendix B worked run
         target_url = "https://verify.mock-issuer.example/fire/FIRE/KA/2024/00123"
         qr = qrcode.QRCode(box_size=10, border=2)
         qr.add_data(target_url)
@@ -267,7 +399,6 @@ class TestForensics(unittest.TestCase):
         self.assertEqual(res.flags, [])
 
     def test_qr_decode_unrecognized_pattern(self):
-        # Unknown/untrusted domain QR code
         untrusted_url = "https://malicious-external-site.example/steal?id=123"
         qr = qrcode.QRCode(box_size=10, border=2)
         qr.add_data(untrusted_url)
@@ -315,10 +446,8 @@ class TestForensics(unittest.TestCase):
 
     def test_api_forensics_endpoint(self):
         import hashlib
-        from unittest.mock import patch
         import blake3
 
-        # Seed test document in isolated test vault and database
         pdf_bytes = self._create_minimal_pdf(creator="Karnataka Fire Dept", producer="ReportLab")
         b3_hex = blake3.blake3(pdf_bytes).hexdigest()
         sha_hex = hashlib.sha256(pdf_bytes).hexdigest()
@@ -348,7 +477,6 @@ class TestForensics(unittest.TestCase):
                 database=self.db,
             )
 
-        # Test forensics_document_endpoint with patched vault and database
         with patch("backend.api.main.default_vault", self.vault), patch("backend.api.main.default_db", self.db):
             data = asyncio.run(
                 forensics_document_endpoint(
@@ -365,7 +493,6 @@ class TestForensics(unittest.TestCase):
         self.assertTrue(data["advisory"])
 
     def test_api_forensics_document_not_found(self):
-        from unittest.mock import patch
         with patch("backend.api.main.default_vault", self.vault), patch("backend.api.main.default_db", self.db):
             with self.assertRaises(HTTPException) as ctx:
                 asyncio.run(

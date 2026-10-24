@@ -22,8 +22,24 @@ CREATE TABLE IF NOT EXISTS uploads (
     FOREIGN KEY (blake3) REFERENCES blobs(blake3)
 );
 
+CREATE TABLE IF NOT EXISTS extractions (
+    id TEXT PRIMARY KEY,
+    application_id TEXT NOT NULL,
+    document_id TEXT NOT NULL,
+    blake3 TEXT NOT NULL,
+    pipeline_version TEXT NOT NULL,
+    config_hash TEXT NOT NULL,
+    payload_storage_key TEXT NOT NULL,
+    status TEXT NOT NULL,
+    quality_score REAL,
+    created_at TEXT NOT NULL,
+    UNIQUE(blake3, pipeline_version, config_hash)
+);
+
 CREATE INDEX IF NOT EXISTS idx_uploads_app_id ON uploads(application_id);
 CREATE INDEX IF NOT EXISTS idx_uploads_blake3 ON uploads(blake3);
+CREATE INDEX IF NOT EXISTS idx_extractions_app_doc ON extractions(application_id, document_id);
+CREATE INDEX IF NOT EXISTS idx_extractions_lookup ON extractions(blake3, pipeline_version, config_hash);
 """
 
 
@@ -157,6 +173,101 @@ def insert_upload(
         VALUES (?, ?, ?, ?, ?, ?);
     """)
     params = (id, application_id, blake3, doc_slot, idempotency_key, created_at)
+    if d.is_postgres:
+        with conn.cursor() as cur:
+            cur.execute(sql, params)
+    else:
+        conn.execute(sql, params)
+
+
+def get_extraction_by_cache_key(
+    conn: Any,
+    blake3: str,
+    pipeline_version: str,
+    config_hash: str,
+    database: Database | None = None,
+) -> dict | None:
+    """Lookup cached extraction record by (blake3, pipeline_version, config_hash)."""
+    d = database or default_db
+    sql = d.adapt_sql("""
+        SELECT id, application_id, document_id, blake3, pipeline_version, config_hash,
+               payload_storage_key, status, quality_score, created_at
+        FROM extractions
+        WHERE blake3 = ? AND pipeline_version = ? AND config_hash = ?;
+    """)
+    params = (blake3, pipeline_version, config_hash)
+    if d.is_postgres:
+        with conn.cursor() as cur:
+            cur.execute(sql, params)
+            row = cur.fetchone()
+            if not row:
+                return None
+            desc = [col.name for col in cur.description]
+            return dict(zip(desc, row))
+    else:
+        cur = conn.execute(sql, params)
+        row = cur.fetchone()
+        return dict(row) if row else None
+
+
+def get_extraction_by_doc(
+    conn: Any,
+    application_id: str,
+    document_id: str,
+    database: Database | None = None,
+) -> dict | None:
+    """Lookup latest extraction record for an application document."""
+    d = database or default_db
+    sql = d.adapt_sql("""
+        SELECT id, application_id, document_id, blake3, pipeline_version, config_hash,
+               payload_storage_key, status, quality_score, created_at
+        FROM extractions
+        WHERE application_id = ? AND document_id = ?
+        ORDER BY created_at DESC
+        LIMIT 1;
+    """)
+    params = (application_id, document_id)
+    if d.is_postgres:
+        with conn.cursor() as cur:
+            cur.execute(sql, params)
+            row = cur.fetchone()
+            if not row:
+                return None
+            desc = [col.name for col in cur.description]
+            return dict(zip(desc, row))
+    else:
+        cur = conn.execute(sql, params)
+        row = cur.fetchone()
+        return dict(row) if row else None
+
+
+def insert_extraction(
+    conn: Any,
+    id: str,
+    application_id: str,
+    document_id: str,
+    blake3: str,
+    pipeline_version: str,
+    config_hash: str,
+    payload_storage_key: str,
+    status: str,
+    quality_score: float | None,
+    created_at: str,
+    database: Database | None = None,
+) -> None:
+    """Insert or update extraction record."""
+    d = database or default_db
+    sql = d.adapt_sql("""
+        INSERT INTO extractions (
+            id, application_id, document_id, blake3, pipeline_version, config_hash,
+            payload_storage_key, status, quality_score, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT (blake3, pipeline_version, config_hash) DO NOTHING;
+    """)
+    params = (
+        id, application_id, document_id, blake3, pipeline_version, config_hash,
+        payload_storage_key, status, quality_score, created_at
+    )
     if d.is_postgres:
         with conn.cursor() as cur:
             cur.execute(sql, params)
