@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aicte.gov.in/schemas/v4/c6_verification_result.schema.json",
+  "title": "C6 Document Verification Result",
+  "description": "Output of document verification adapter or registry gateway (Guide §1.3, §3.4 C6). Distinct from rule check result.",
+  "type": "object",
+  "required": [
+    "document_id",
+    "adapter",
+    "source",
+    "simulated",
+    "status",
+    "checked_at",
+    "reason"
+  ],
+  "properties": {
+    "document_id": {
+      "type": "string",
+      "description": "Identifier of the verified document"
+    },
+    "document_type": {
+      "type": "string",
+      "description": "Classification of the document (e.g. fire_noc, building_plan, affidavit)"
+    },
+    "adapter": {
+      "type": "string",
+      "description": "Adapter implementation name (e.g. qr_registry_sim, digilocker_mock, manual_officer)"
+    },
+    "source": {
+      "type": "string",
+      "description": "Issuing authority or registry source queried (e.g. mock-issuer registry, simulated state fire service)"
+    },
+    "simulated": {
+      "type": "boolean",
+      "description": "MUST be true for any mocked, simulated, or sandbox issuer connection"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "VERIFIED",
+        "MISMATCH_DETECTED",
+        "EXPIRED",
+        "VERIFICATION_PENDING",
+        "SOURCE_UNAVAILABLE",
+        "MANUAL_REVIEW_REQUIRED",
+        "NOT_SUPPORTED",
+        "NOT_CHECKED"
+      ],
+      "description": "Document verification status per Guide §1.3. Separate from rule check results."
+    },
+    "request_digest": {
+      "type": "string",
+      "description": "Hash of outgoing query payload for non-repudiation"
+    },
+    "response_digest": {
+      "type": "string",
+      "description": "Hash of response body received from source"
+    },
+    "checked_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp of verification query"
+    },
+    "integrity": {
+      "type": "object",
+      "properties": {
+        "signature": {
+          "type": "string",
+          "enum": ["VERIFIED", "INVALID", "NOT_CHECKED", "NOT_SUPPORTED"]
+        }
+      }
+    },
+    "trust": {
+      "type": "object",
+      "properties": {
+        "class": {
+          "type": "string",
+          "enum": ["demo", "sandbox", "authorized_issuer", "unknown"]
+        }
+      }
+    },
+    "compared": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["submitted", "returned", "match"],
+        "properties": {
+          "submitted": { "description": "Value extracted from applicant's document" },
+          "returned": { "description": "Value returned by issuer registry" },
+          "match": { "type": "boolean" }
+        }
+      },
+      "description": "Field-by-field comparison between document and issuer registry response"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Plain explanation of verification outcome"
+    }
+  }
+}

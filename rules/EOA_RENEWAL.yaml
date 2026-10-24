@@ -1,0 +1,11 @@
+id: EOA_RENEWAL
+version: demo-v1
+status: synthetic_demo
+description: Illustrative checklist for the synthetic starter; not an AICTE rule set.
+checks:
+  - id: DEMO-DOC-001
+    type: required_document
+  - id: DEMO-DATE-001
+    type: expiry_before_submission
+  - id: DEMO-INTAKE-001
+    type: requested_intake_exceeds_record

@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aicte.gov.in/schemas/v4/c2_flag.schema.json",
+  "title": "C2 Tamper / Anomaly Flag",
+  "description": "Detector signal emitted by raw forensics Branch A (Guide §1.5, §3.4 C2). Advisory only.",
+  "type": "object",
+  "required": [
+    "code",
+    "severity",
+    "reason",
+    "evidence",
+    "advisory",
+    "requires_human_review",
+    "detector"
+  ],
+  "properties": {
+    "code": {
+      "type": "string",
+      "description": "Machine-readable indicator code (e.g. EDITING_TOOL_IN_METADATA, DUPLICATE_BLAKE3, ELA_ANOMALY)"
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["info", "low", "medium", "high"],
+      "description": "Risk tier of the indicator. Does not equate to legal guilt or fraud."
+    },
+    "reason": {
+      "type": "string",
+      "description": "Plain human-readable explanation of why the detector fired"
+    },
+    "evidence": {
+      "type": "object",
+      "required": ["artifact_uri"],
+      "properties": {
+        "page": { "type": "integer", "minimum": 1 },
+        "bbox_norm": {
+          "type": "array",
+          "items": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "bbox_precision": { "type": "string", "enum": ["word", "line", "block", "page"] },
+        "artifact_uri": { "type": "string", "description": "Relative URI to derived inspection artifact" },
+        "value": { "description": "Extracted string, number, or metadata value that triggered the flag" }
+      }
+    },
+    "advisory": {
+      "type": "boolean",
+      "const": true,
+      "description": "Flags are preliminary indicators requiring human verification; never automated accusations"
+    },
+    "requires_human_review": {
+      "type": "boolean",
+      "const": true
+    },
+    "detector": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" }
+      }
+    },
+    "simulated": {
+      "type": "boolean",
+      "description": "Must be true if produced by a mock detector fixture"
+    }
+  }
+}

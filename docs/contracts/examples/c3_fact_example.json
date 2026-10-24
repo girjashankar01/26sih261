@@ -1,0 +1,22 @@
+{
+  "application_id": "APP-2026-0007",
+  "document_id": "doc-fire-noc-001",
+  "source": "doc",
+  "entity": "FIRE_NOC",
+  "key": "valid_till",
+  "raw": "31st March 2026",
+  "value_type": "date",
+  "value": "2026-03-31",
+  "parse_state": "ok",
+  "conf": 1.0,
+  "conf_kind": "regex_exact",
+  "grounded": true,
+  "source_ref": "B14",
+  "page": 1,
+  "bbox_norm": [0.52, 0.31, 0.71, 0.33],
+  "bbox_precision": "word",
+  "extractor": "regex:valid_till",
+  "extractor_version": "4.0.0",
+  "needs_confirmation": false,
+  "simulated": false
+}

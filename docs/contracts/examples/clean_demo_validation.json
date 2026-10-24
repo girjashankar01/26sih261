@@ -1,0 +1,66 @@
+{
+  "application_id": "DEMO-CLEAN-001",
+  "category": "EOA_RENEWAL",
+  "workflow": "NO_FINDINGS_IN_ENABLED_DEMO_CHECKS",
+  "decision_support_only": true,
+  "simulated": true,
+  "rule_set": "EOA_RENEWAL-demo-v1",
+  "rule_set_version": "1.0.0",
+  "coverage": {
+    "mode": "demo_partial_checks",
+    "summary": "3 deterministic demo checks evaluated out of full AICTE validation lifecycle",
+    "rules_evaluated": 4,
+    "checks_not_evaluated": [
+      "ocr_and_layout_pipeline",
+      "document_forensics_and_tamper_detection",
+      "live_issuer_registry_verification",
+      "infrastructure_norms_checklist",
+      "officer_manual_review_and_decision"
+    ]
+  },
+  "checks": [
+    {
+      "rule_id": "DEMO-DOC-001",
+      "rule_version": "1.0.0",
+      "status": "PASS",
+      "reason": "'affidavit' is present.",
+      "evidence": {
+        "document_type": "affidavit",
+        "source": "submitted_documents"
+      }
+    },
+    {
+      "rule_id": "DEMO-DOC-001",
+      "rule_version": "1.0.0",
+      "status": "PASS",
+      "reason": "'fire_noc' is present.",
+      "evidence": {
+        "document_type": "fire_noc",
+        "source": "submitted_documents"
+      }
+    },
+    {
+      "rule_id": "DEMO-DATE-001",
+      "rule_version": "1.0.0",
+      "status": "PASS",
+      "reason": "'fire_noc' is within its stated validity date.",
+      "evidence": {
+        "document_type": "fire_noc",
+        "valid_till": "2027-03-31",
+        "submitted_on": "2026-10-12"
+      }
+    },
+    {
+      "rule_id": "DEMO-INTAKE-001",
+      "rule_version": "1.0.0",
+      "status": "PASS",
+      "reason": "Requested intake does not exceed the synthetic record value.",
+      "evidence": {
+        "submitted": 480,
+        "record": 480,
+        "simulated": true
+      }
+    }
+  ],
+  "findings": []
+}

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aicte.gov.in/schemas/v4/c4_check_result.schema.json",
+  "title": "C4 Check Result",
+  "description": "Deterministic rule evaluation result (Guide §1.3, §3.4 C4, §12.2). Distinct from document verification status.",
+  "type": "object",
+  "required": [
+    "rule_id",
+    "status",
+    "reason"
+  ],
+  "properties": {
+    "rule_id": {
+      "type": "string",
+      "description": "Unique rule identifier (e.g. DEMO-DOC-001, DEMO-DATE-001, DEMO-INTAKE-001, R-EXP-001)"
+    },
+    "rule_version": {
+      "type": ["string", "integer"],
+      "description": "Version of the rule evaluated (e.g. '1.0.0' or 1)"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["PASS", "WARNING", "FAILED_CHECK", "NOT_CHECKED", "NEEDS_REVIEW"],
+      "description": "Rule evaluation state. Never overloaded with document verification or workflow states."
+    },
+    "category": {
+      "type": "string",
+      "enum": ["REQUIRED_DOCUMENT", "MISSING", "EXPIRED", "INCONSISTENT", "INCOMPLETE", "CALCULATION_MISMATCH", "UNVERIFIED"],
+      "description": "Category of the check or discrepancy"
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["info", "low", "medium", "high"]
+    },
+    "observed": {
+      "description": "Observed value from submitted document or application"
+    },
+    "expected": {
+      "description": "Expected value or condition required by rule"
+    },
+    "advisory": {
+      "type": "boolean",
+      "default": true,
+      "description": "All automated checks are advisory decision-support inputs for officers"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Human-readable explanation of the check outcome"
+    },
+    "evidence": {
+      "type": ["object", "array"],
+      "description": "Supporting evidence. Comparison rules must attach evidence for both sides."
+    },
+    "simulated": {
+      "type": "boolean",
+      "description": "Explicitly true when rule runs against synthetic records or mock adapters"
+    }
+  }
+}

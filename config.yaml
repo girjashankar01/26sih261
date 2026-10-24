@@ -1,0 +1,7 @@
+app:
+  environment: demo
+  synthetic_data_only: true
+  external_services_enabled: false
+demo:
+  category: EOA_RENEWAL
+  rule_set_version: EOA_RENEWAL-demo-v1

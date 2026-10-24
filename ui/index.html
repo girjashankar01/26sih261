@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AICTE Validation Prototype</title><link rel="stylesheet" href="/static/style.css"></head>
+<body>
+  <header><div class="eyebrow">SIH 2026 · PS 26261</div><h1>Application validation</h1><p>Decision-support prototype</p></header>
+  <main><div class="notice"><b>Demo environment</b> — application and record data are synthetic. No AICTE or issuing-authority systems are connected. Findings require officer review.</div>
+    <section class="layout"><aside><h2>Demo applications</h2><div id="applications">Loading…</div></aside><section id="report" aria-live="polite"><p>Select an application to view its report.</p></section></section>
+  </main>
+  <script>
+    const esc = x => String(x ?? '—').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const applications = document.querySelector('#applications'), report = document.querySelector('#report');
+    async function show(id) {
+      report.innerHTML = '<p>Loading demo report…</p>';
+      const response = await fetch(`/api/demo/applications/${encodeURIComponent(id)}/validate`);
+      if (!response.ok) { report.textContent = 'Could not load report.'; return; }
+      const data = await response.json();
+      report.innerHTML = `
+        <div class="report-head">
+          <div><div class="eyebrow">${esc(data.category)} · ${esc(data.application_id)}</div><h2>Validation report</h2></div>
+          <span class="badge">SIMULATED</span>
+        </div>
+        <p class="workflow">${esc(data.workflow.replaceAll('_',' '))}</p>
+        <p class="muted">Decision support only · ${esc(data.rule_set)} v${esc(data.rule_set_version)} · ${esc(data.coverage ? data.coverage.summary : 'Partial demo coverage')}</p>
+        <h3>Findings (${data.findings.length})</h3>
+        ${data.findings.length ? data.findings.map(f => `<article class="finding"><b>${esc(f.rule_id)} · ${esc(f.category)} (${esc(f.severity)})</b><p>${esc(f.reason)}</p><pre>${esc(JSON.stringify(f.evidence,null,2))}</pre></article>`).join('') : '<p class="pass">No issues found within enabled demo checks (' + data.checks.length + ' passed). OCR, document forensics, and live issuer checks are not evaluated in this demo slice.</p>'}
+        <h3>Passed checks (${data.checks.length})</h3>
+        <ul>${data.checks.map(c => `<li><b>${esc(c.rule_id)}</b> — ${esc(c.reason)}</li>`).join('')}</ul>
+      `;
+    }
+    fetch('/api/demo/applications').then(r => r.json()).then(data => {
+      applications.innerHTML = data.items.map(a => `<button data-id="${esc(a.id)}"><b>${esc(a.id)}</b><span>${esc(a.category.replaceAll('_',' '))}</span><small>${esc(a.submitted_on)} · synthetic</small></button>`).join('');
+      applications.querySelectorAll('button').forEach(b => b.addEventListener('click', () => show(b.dataset.id)));
+      show(data.items[1]?.id ?? data.items[0]?.id);
+    }).catch(() => applications.textContent = 'Demo applications could not be loaded.');
+  </script>
+</body></html>

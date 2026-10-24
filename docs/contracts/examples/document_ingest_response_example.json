@@ -1,0 +1,21 @@
+{
+  "application_id": "DEMO-CLEAN-001",
+  "document_id": "doc_9f2c91a0ef3e",
+  "doc_slot": "fire_noc",
+  "detected_kind": "pdf",
+  "detected_media_type": "application/pdf",
+  "byte_size": 24580,
+  "blake3": "9f2c91a0ef3e2189281a719c8f8b1b229910d3e2118320491823901a8f9b2c11",
+  "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "storage_key": "b3/9f/2c/9f2c91a0ef3e2189281a719c8f8b1b229910d3e2118320491823901a8f9b2c11",
+  "processing_state": "PERSISTED",
+  "pipeline_stage": "S1_INGESTION_GATEWAY",
+  "ocr_status": "NOT_RUN",
+  "persistence_status": "VAULT_LOCAL",
+  "is_new_blob": true,
+  "idempotent_replay": false,
+  "simulated": true,
+  "advisory": true,
+  "created_at": "2026-10-24T00:50:00Z",
+  "message": "Document successfully streamed, hashed, persisted to vault, and recorded in database."
+}

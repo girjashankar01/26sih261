@@ -1,0 +1,75 @@
+{
+  "schema_version": "4.0",
+  "pipeline_version": "4.0.0",
+  "blake3": "9f2c91a0ef3e2189281a719c8f8b1b229910d3e2118320491823901a8f9b2c11",
+  "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "kind": "pdf",
+  "coordinate_space": "original_page_norm_topleft",
+  "pages": [
+    {
+      "page": 1,
+      "label": "digital",
+      "reasons": ["visible, sane text layer"],
+      "engine": "docling_no_ocr"
+    },
+    {
+      "page": 2,
+      "label": "scanned",
+      "reasons": ["full-page image, hidden OCR layer"],
+      "engine": "docling_rapidocr",
+      "level": 1,
+      "quality": {
+        "score": 0.91,
+        "method": "docling_layout_score",
+        "calibrated": false
+      }
+    }
+  ],
+  "tables": [
+    {
+      "table_id": "T1",
+      "page": 2,
+      "bbox_norm": [0.09, 0.28, 0.91, 0.55],
+      "bbox_precision": "block",
+      "n_rows": 2,
+      "n_cols": 3,
+      "cells": [
+        {
+          "r": 1,
+          "c": 2,
+          "raw": "₹ 12,50,000",
+          "value": "1250000",
+          "kind": "money",
+          "currency": "INR",
+          "repaired": false
+        },
+        {
+          "r": 2,
+          "c": 2,
+          "raw": "₹ 85,000",
+          "value": "85000",
+          "kind": "money",
+          "currency": "INR",
+          "repaired": false
+        }
+      ],
+      "markdown": "| Head | Year | Fee |\n|---|---|---|\n| Tuition | 2026 | 1250000 |",
+      "engine": "docling_rapidocr"
+    }
+  ],
+  "blocks": [
+    {
+      "id": "B14",
+      "page": 1,
+      "label": "text",
+      "text": "Total Built-up Area: 14,500 Sq.m",
+      "bbox_norm": [0.12, 0.43, 0.48, 0.46],
+      "bbox_precision": "block",
+      "engine": "docling_no_ocr"
+    }
+  ],
+  "markdown": "# Page 1\nTotal Built-up Area: 14,500 Sq.m",
+  "flags": [],
+  "engines": ["docling_no_ocr", "docling_rapidocr"],
+  "egress": []
+}

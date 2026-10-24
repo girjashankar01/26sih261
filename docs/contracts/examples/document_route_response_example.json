@@ -1,0 +1,42 @@
+{
+  "application_id": "DEMO-CLEAN-001",
+  "document_id": "doc_e8cce9bddf01",
+  "doc_slot": "fire_noc",
+  "detected_kind": "pdf",
+  "detected_media_type": "application/pdf",
+  "byte_size": 14500,
+  "blake3": "af2fa2158778f711fbb8baff1e22f3275fdf3c87c9d142243efc21b0281515db",
+  "sha256": "4fbf46bfd60851952a8a776c55e8af7a68f24412f56b00ee19355b8baf0ef28c",
+  "storage_key": "b3/af/2f/af2fa2158778f711fbb8baff1e22f3275fdf3c87c9d142243efc21b0281515db",
+  "routing_outcome": "BRANCH_A_DIGITAL",
+  "reason": "All pages contain visible, extractable text layer",
+  "total_pages": 1,
+  "page_counts": {
+    "digital": 1,
+    "scanned": 0,
+    "hybrid": 0,
+    "vector_drawing": 0,
+    "blank": 0
+  },
+  "page_verdicts": [
+    {
+      "page_index": 1,
+      "label": "digital",
+      "reason": "visible, sane text layer",
+      "metrics": {
+        "visible": 185,
+        "invisible": 0,
+        "sanity": 1.0,
+        "cover_max": 0.0,
+        "cover_sum": 0.0,
+        "paths": 2
+      }
+    }
+  ],
+  "processing_state": "ROUTED",
+  "pipeline_stage": "S3_ROUTER",
+  "ocr_status": "NOT_RUN",
+  "classification_status": "NOT_RUN",
+  "simulated": true,
+  "advisory": true
+}

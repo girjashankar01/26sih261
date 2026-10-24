@@ -1,0 +1,64 @@
+# AICTE Application Validation Prototype — Compose configuration
+#
+# Architecture (Phase A milestone — guide §3.2, §3.3):
+# - app: FastAPI application service running on read-only filesystem with tmpfs /tmp
+# - postgres: PostgreSQL 16 metadata database (Guide §3.2) storing blobs and uploads
+# - storage: SeaweedFS S3-compatible object store (Guide §3.3) for content-addressed vault blobs
+#
+# Storage deviation: Guide §3.3 specifies LocalStore as the Phase A default;
+# SeaweedFS S3 is an early adoption of the Phase C stretch adapter.
+# See docs/decisions.md §Storage-Deviation for migration details.
+#
+# Container networking:
+# - Service port is bound specifically to host localhost (127.0.0.1:8000:8000) for security.
+# - Storage port 8333 is bound to 127.0.0.1:8333 for diagnostic/operator access.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: aicte
+      POSTGRES_USER: aicte_owner
+      POSTGRES_PASSWORD: aicte_dev_secret
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aicte_owner -d aicte"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+
+  storage:
+    image: chrislusf/seaweedfs:4.48
+    command: server -s3 -filer
+    volumes:
+      - storage_data:/data
+    ports:
+      - "127.0.0.1:8333:8333"
+
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    read_only: true
+    tmpfs:
+      - /tmp
+    environment:
+      DATABASE_URL: postgresql://aicte_owner:aicte_dev_secret@postgres:5432/aicte
+      VAULT_BACKEND: s3
+      S3_ENDPOINT_URL: http://storage:8333
+      S3_BUCKET: aicte-vault
+      AWS_ACCESS_KEY_ID: aicte_dev_key
+      AWS_SECRET_ACCESS_KEY: aicte_dev_secret
+      AWS_DEFAULT_REGION: us-east-1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      storage:
+        condition: service_started
+    ports:
+      - "127.0.0.1:8000:8000"
+
+volumes:
+  pg_data:
+  storage_data:
