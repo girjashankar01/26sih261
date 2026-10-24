@@ -35,9 +35,12 @@ uv run uvicorn backend.api.main:app --reload
 | Stage | Guide | Status |
 |---|---|---|
 | S1 Ingest | §4 | **Implemented** — streaming, dual hash, magic-byte sniff, size limit, vault, DB, idempotency |
-| S2 Forensics | §5 | **Not started** — next task |
+| S2 Forensics | §5 | **Implemented** — raw-byte metadata, incremental updates, signatures, EXIF/geo, QR locator |
 | S3 Route | §6 | **Implemented** — per-page classifier, document-level routing |
-| S4–S13 | §7–§15 | Not started |
+| S4 Branch B | §7–§9 | **Not started** — next task (page rasters, deskew/dewarp, Docling/OCR ladder producing `UnifiedDoc` JSON) |
+| S5–S11 | §11 | Not started |
+| S12 Review | §17 | Not started |
+| S13 Audit | §15 | Not started |
 
 ## Endpoints
 
@@ -48,6 +51,10 @@ uv run uvicorn backend.api.main:app --reload
 
 **S1 Ingest:**
 - `POST /applications/{id}/documents`
+
+**S2 Forensics:**
+- `POST /applications/{id}/documents/{doc_id}/forensics`
+- `GET  /applications/{id}/documents/{doc_id}/forensics`
 
 **S3 Route:**
 - `POST /applications/{id}/documents/{doc_id}/route`

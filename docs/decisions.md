@@ -234,10 +234,69 @@ Date · decision · reason · owner · interfaces/files affected · unresolved f
       - PNG returned `BRANCH_B_SCANNED` with 1 scanned page and `processing_state: "ROUTED"`.
     - Called `GET /applications/DEMO-CLEAN-001/documents/{id}/route` post-restart: returned matching `BRANCH_A_DIGITAL`.
 
+## S2 Forensics — Raw-Byte Tamper and Anomaly Forensics — 2026-10-24
+
+- Implemented S2 Forensics (`backend/forensics/`):
+  - Architecture: Follows Guide §2.2 and §5 module contracts. Detectors execute on immutable original stored bytes via vault storage. Detectors return structured C2 flags, document metadata, geospatial metadata, and QR locator outputs.
+  - Detector Isolation & Fault Tolerance: `backend/forensics/runner.py` isolates exceptions per detector. Any detector failure is recorded as `NOT_CHECKED` with reason/error type; detector errors are never swallowed or reported as "no issues found".
+  - Active Detectors (Phase A minimum supporting Appendix B worked run):
+    1. `pdf_metadata` (v1.0.0, Guide §5.1):
+       - Parses Producer, Creator, Title, Author, CreationDate, and ModDate.
+       - Token matching for editing tools: `photoshop`, `gimp`, `canva`, `ilovepdf`, `sejda`, `smallpdf`, `pixlr`, `corel`, `foxit phantom`, `nitro`, `pdfescape`, `pdf-xchange editor`, `acrobat pro`. Matches emit `EDITING_TOOL_IN_METADATA` (severity: `medium`, advisory: `true`, requires_human_review: `true`).
+       - Incremental updates: counts raw `%%EOF` markers. Count > 1 emits `INCREMENTAL_UPDATE_PRESENT` (severity: `low`, advisory: `true`).
+       - Never flags `CreationDate != ModDate` alone.
+    2. `pdf_signature` (v1.0.0, Guide §5.2):
+       - Checks raw bytes for `/Type /Sig` and `/ByteRange`.
+       - Full coverage emits `SIG_INTACT` (severity: `info`, `integrity: "INTACT_FULL_COVERAGE"`, `trust: "demo"`).
+       - Trailing modifications beyond covered byte range emit `SIG_MODIFIED_AFTER_SIGNING` (severity: `high`).
+       - Malformed byte ranges emit `SIG_BROKEN` (severity: `high`).
+       - **Unsigned PDF is not a flag**; returns `signatures: []` without raising any anomaly flag.
+    3. `image_metadata_exif` (v1.0.0, Guide §5.3):
+       - Parses EXIF metadata and GPS IFD tags from JPEG/PNG images using Pillow.
+       - Extracts camera make, model, timestamp, and decimal latitude/longitude.
+       - Software tags containing editing tool signatures emit `EDITING_SOFTWARE_SIGNATURE` (severity: `medium`).
+       - UI wording: "no declared AI/editing metadata found", never "not AI-generated". Absence of EXIF is not evidence of tampering.
+    4. `qr_decode` (v1.0.0, Guide §5.7):
+       - Treats QR codes strictly as locators, never trusted URLs.
+       - Renders PDF page 1 at 150 DPI (falling back to 300 DPI) or decodes raster images using `cv2.QRCodeDetector`.
+       - Matches decoded string against allowlisted issuer patterns:
+         - `MOCK_FIRE`: `https://verify.mock-issuer.example/fire/(?P<ref>[A-Z0-9/\-]{6,40})`
+         - `MOCK_AFFILIATION`: `https://verify.mock-issuer.example/univ/(?P<ref>[A-Z0-9/\-]{6,40})`
+         - `MOCK_ACCREDITATION`: `https://verify.mock-issuer.example/nba/(?P<ref>[A-Z0-9/\-]{6,40})`
+       - Recognized QR extracts `{issuer, reference, raw_text_masked}`. **Zero outbound network calls are made.**
+       - Unrecognized QR emits `QR_NOT_RECOGNISED` (severity: `info`, advisory: `true`) and masks URL; never fetched.
+  - Deferred Detectors explicitly recorded as `NOT_CHECKED`:
+    - `font_inconsistency` (v1.0.0, Guide §5.4): Deferred to Phase B.
+    - `ela_jpeg` (v1.0.0, Guide §5.5): Deferred to Phase B.
+    - `mark_reuse` (v1.0.0, Guide §5.6b): Deferred to Phase B.
+    - `text_layer_ocr_mismatch` (v1.0.0, Guide §5.8): Requires Branch B (S4) OCR outputs.
+    - `ooxml_structure` (v1.0.0, Guide §5.9): Deferred to Phase B.
+    - `c2pa_provenance` (v1.0.0, Guide §5.3): Deferred to Phase C.
+- API Endpoints & Contracts:
+  - Added `POST /applications/{application_id}/documents/{document_id}/forensics` and `GET /applications/{application_id}/documents/{document_id}/forensics`.
+  - Added JSON Schema contract `docs/contracts/document_forensics_response.schema.json` and example `docs/contracts/examples/document_forensics_response_example.json` matching Appendix B worked run (`fire_noc.pdf`).
+  - Re-exported OpenAPI specification in `docs/contracts/openapi.json`.
+- Dependencies:
+  - Added `opencv-python-headless>=5.0.0.93` and `qrcode[pil]>=8.2` via `pyproject.toml`, resolved in `uv.lock`, and exported to pinned `requirements.txt`.
+- Verification Runs Executed:
+  - Focused forensics tests (`tests/test_forensics.py`): 13 tests verifying clean PDF, editing tools in metadata, incremental updates, unsigned PDF (no flag), intact signature, modified signature, EXIF geo/make/model, EXIF editing software, allowlisted QR locator (`MOCK_FIRE`), unrecognized QR, deferred detector statuses, API endpoint execution, and 404 handling.
+  - Full test suite: 55 tests passing across all test modules (`uv run python -m unittest discover tests`, 10.75s).
+  - Docker Compose validation: `docker compose -f docker/compose.yml config` passes cleanly.
+
+## Storage Architecture and Scope Deviation Note
+- Guide §3.3 specifies `LocalStore` as the Phase A default (zero extra containers).
+- Local development is already 100% `LocalStore` via `LocalVaultStorage` when `VAULT_BACKEND` is unset.
+- Docker Compose currently runs SeaweedFS S3 (`VAULT_BACKEND=s3`), which is an early adoption of the Phase C stretch adapter.
+- Migration to LocalStore in Compose:
+  1. Export any objects in SeaweedFS to the host `data/vault/` directory.
+  2. Add a writable volume mount for `/app/data/vault` in `docker/compose.yml` (since container root is `read_only: true`).
+  3. Remove `storage` service from `compose.yml` and unset `VAULT_BACKEND`.
+
 ## Open questions & Next Steps
 - Implementation of the Nginx reverse-proxy gateway for true offline container isolation (Guide §18.3).
-- Implement S2 Forensics (Guide §5): raw-byte forensics, magic-byte mismatch detector, PDF trailer/incremental update inspector, and metadata anomaly detection.
-- Implement S4 Branch A / Branch B pipelines (Guide §7–§9): digital extraction via PyMuPDF and OCR ladder via OpenCV/Tesseract.
+- Implement S4 Branch B Preprocessing & OCR Ladder (Guide §7–§9): OpenCV deskew/dewarp, Docling/OCR engine ladder with confidence scoring, and coordinate mapping to produce `UnifiedDoc` JSON.
+- Implement S4 Branch A Forensics & Digital Extraction (Guide §7): PyMuPDF digital parser with coordinate normalization.
+
 
 
 

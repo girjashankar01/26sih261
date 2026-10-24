@@ -7,10 +7,13 @@ dependencies = [
     "blake3>=1.0.11",
     "boto3>=1.35.0",
     "fastapi==0.161.0",
+    "opencv-python-headless>=5.0.0.93",
     "psycopg[binary]==3.3.6",
+    "pyhanko>=0.25.0",
     "pymupdf>=1.24.0",
     "python-multipart>=0.0.32",
     "PyYAML==6.0.3",
+    "qrcode[pil]>=8.0",
     "uvicorn[standard]==0.54.0",
 ]
 
