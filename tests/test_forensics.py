@@ -295,6 +295,7 @@ class TestForensics(unittest.TestCase):
         mod_flag = next(f for f in res.flags if f["code"] == "SIG_MODIFIED_AFTER_SIGNING")
         self.assertEqual(mod_flag["severity"], "high")
 
+    @unittest.skipUnless(shutil.which('exiftool'), 'ExifTool binary not installed in PATH')
     def test_image_exif_and_geo(self):
         # Create an in-memory JPEG with EXIF GPS and camera make
         img = Image.new("RGB", (100, 100), color="blue")
@@ -330,6 +331,7 @@ class TestForensics(unittest.TestCase):
         self.assertAlmostEqual(res.geo["latitude"], 12.973167, places=4)
         self.assertAlmostEqual(res.geo["longitude"], 77.596, places=2)
 
+    @unittest.skipUnless(shutil.which('exiftool'), 'ExifTool binary not installed in PATH')
     def test_image_editing_software_flag(self):
         img = Image.new("RGB", (50, 50), color="red")
         exif = img.getexif()

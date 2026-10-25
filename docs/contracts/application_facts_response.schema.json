@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aicte.gov.in/schemas/v4/application_facts_response.schema.json",
+  "title": "Application Facts Response",
+  "description": "Response emitted by GET /applications/{id}/facts returning aggregated C3 typed facts across form, records, and documents, along with entity resolution and document name aliases (Guide §11.4 S7).",
+  "type": "object",
+  "required": [
+    "application_id",
+    "pipeline_stage",
+    "simulated",
+    "decision_support_only",
+    "facts",
+    "facts_count"
+  ],
+  "properties": {
+    "application_id": {
+      "type": "string",
+      "description": "Application identifier"
+    },
+    "pipeline_stage": {
+      "type": "string",
+      "enum": ["S7_TYPED_FACTS"],
+      "description": "Architectural pipeline stage identifier"
+    },
+    "simulated": {
+      "type": "boolean",
+      "const": true,
+      "description": "Always true in demo prototype"
+    },
+    "decision_support_only": {
+      "type": "boolean",
+      "const": true,
+      "description": "Advisory indicator"
+    },
+    "canonical_institute": {
+      "type": ["object", "null"],
+      "properties": {
+        "aicte_id": { "type": "string" },
+        "name": { "type": "string" },
+        "source": { "type": "string" },
+        "address": { "type": ["string", "null"] },
+        "state": { "type": ["string", "null"] },
+        "simulated": { "type": "boolean" }
+      },
+      "required": ["aicte_id", "name"]
+    },
+    "aliases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "doc_type",
+          "extracted_name",
+          "canonical_name",
+          "match_status",
+          "core_extracted",
+          "core_canonical"
+        ],
+        "properties": {
+          "document_id": { "type": ["string", "null"] },
+          "doc_type": { "type": "string" },
+          "extracted_name": { "type": "string" },
+          "canonical_name": { "type": "string" },
+          "match_status": {
+            "type": "string",
+            "enum": ["MATCH", "LEGAL_FORM_DIFFERS", "PARTIAL", "DIFFERENT"]
+          },
+          "core_extracted": { "type": "string" },
+          "core_canonical": { "type": "string" },
+          "legal_forms_extracted": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "legal_forms_canonical": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "facts": {
+      "type": "array",
+      "items": {
+        "$ref": "c3_fact.schema.json"
+      }
+    },
+    "facts_count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,302 @@
+{
+  "$defs": {
+    "AggregationSummaryModel": {
+      "additionalProperties": true,
+      "properties": {
+        "total_documents": {
+          "description": "Total documents uploaded for application",
+          "title": "Total Documents",
+          "type": "integer"
+        },
+        "total_checks": {
+          "description": "Total rule checks evaluated",
+          "title": "Total Checks",
+          "type": "integer"
+        },
+        "passed_checks": {
+          "description": "Count of PASS checks",
+          "title": "Passed Checks",
+          "type": "integer"
+        },
+        "failed_checks": {
+          "description": "Count of FAILED_CHECK checks",
+          "title": "Failed Checks",
+          "type": "integer"
+        },
+        "needs_review_checks": {
+          "description": "Count of NEEDS_REVIEW or NOT_CHECKED checks",
+          "title": "Needs Review Checks",
+          "type": "integer"
+        },
+        "open_findings": {
+          "description": "Count of unresolved open actionable findings",
+          "title": "Open Findings",
+          "type": "integer"
+        },
+        "verifications_count": {
+          "description": "Count of issuing authority verification checks",
+          "title": "Verifications Count",
+          "type": "integer"
+        },
+        "infra_items_count": {
+          "description": "Count of physical infrastructure items evaluated",
+          "title": "Infra Items Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total_documents",
+        "total_checks",
+        "passed_checks",
+        "failed_checks",
+        "needs_review_checks",
+        "open_findings",
+        "verifications_count",
+        "infra_items_count"
+      ],
+      "title": "AggregationSummaryModel",
+      "type": "object"
+    },
+    "AlertModel": {
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "description": "Unique alert identifier",
+          "title": "Id",
+          "type": "string"
+        },
+        "application_id": {
+          "description": "Application identifier",
+          "title": "Application Id",
+          "type": "string"
+        },
+        "category": {
+          "description": "Alert category classification",
+          "title": "Category",
+          "type": "string"
+        },
+        "severity": {
+          "description": "Alert severity level",
+          "title": "Severity",
+          "type": "string"
+        },
+        "title": {
+          "description": "Human-readable alert title",
+          "title": "Title",
+          "type": "string"
+        },
+        "message": {
+          "description": "Detailed alert message",
+          "title": "Message",
+          "type": "string"
+        },
+        "created_at": {
+          "description": "ISO 8601 UTC timestamp",
+          "title": "Created At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "application_id",
+        "category",
+        "severity",
+        "title",
+        "message",
+        "created_at"
+      ],
+      "title": "AlertModel",
+      "type": "object"
+    },
+    "PriorityBreakdownModel": {
+      "additionalProperties": true,
+      "properties": {
+        "high": {
+          "default": 0,
+          "description": "Count of high-severity findings and flags",
+          "title": "High",
+          "type": "integer"
+        },
+        "medium": {
+          "default": 0,
+          "description": "Count of medium-severity findings and flags",
+          "title": "Medium",
+          "type": "integer"
+        },
+        "low": {
+          "default": 0,
+          "description": "Count of low-severity findings and flags",
+          "title": "Low",
+          "type": "integer"
+        },
+        "age_days": {
+          "default": 0,
+          "description": "Elapsed days since application submission",
+          "title": "Age Days",
+          "type": "integer"
+        },
+        "deadline_pressure": {
+          "default": 0,
+          "description": "Bonus score points based on deadline proximity",
+          "title": "Deadline Pressure",
+          "type": "integer"
+        }
+      },
+      "title": "PriorityBreakdownModel",
+      "type": "object"
+    },
+    "PriorityScoreModel": {
+      "additionalProperties": true,
+      "properties": {
+        "score": {
+          "description": "Queue order priority score",
+          "title": "Score",
+          "type": "integer"
+        },
+        "formula": {
+          "default": "100\u00b7high + 30\u00b7medium + 5\u00b7low + age_days + deadline_pressure",
+          "description": "Priority formula tooltip",
+          "title": "Formula",
+          "type": "string"
+        },
+        "breakdown": {
+          "$ref": "#/$defs/PriorityBreakdownModel",
+          "description": "Component breakdown of priority score"
+        }
+      },
+      "required": [
+        "score",
+        "breakdown"
+      ],
+      "title": "PriorityScoreModel",
+      "type": "object"
+    },
+    "ReviewLane": {
+      "enum": [
+        "NEEDS_SCRUTINY",
+        "NEEDS_VERIFICATION",
+        "NEEDS_EVIDENCE",
+        "FAST_REVIEW"
+      ],
+      "title": "ReviewLane",
+      "type": "string"
+    }
+  },
+  "additionalProperties": true,
+  "properties": {
+    "application_id": {
+      "description": "Application identifier",
+      "title": "Application Id",
+      "type": "string"
+    },
+    "pipeline_stage": {
+      "default": "S11_AGGREGATION",
+      "description": "Architectural pipeline stage",
+      "title": "Pipeline Stage",
+      "type": "string"
+    },
+    "category": {
+      "default": "EOA_RENEWAL",
+      "description": "Application category",
+      "title": "Category",
+      "type": "string"
+    },
+    "workflow_status": {
+      "description": "Application workflow state (NEEDS_RECTIFICATION, NEEDS_MANUAL_REVIEW, VALIDATED_NO_ISSUES)",
+      "title": "Workflow Status",
+      "type": "string"
+    },
+    "review_lane": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ReviewLane"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "description": "Assigned review lane for officer routing",
+      "title": "Review Lane"
+    },
+    "priority": {
+      "$ref": "#/$defs/PriorityScoreModel",
+      "description": "Queue priority score and calculation breakdown"
+    },
+    "summary": {
+      "$ref": "#/$defs/AggregationSummaryModel",
+      "description": "High-level counts summary"
+    },
+    "checks": {
+      "description": "C4 check results",
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Checks",
+      "type": "array"
+    },
+    "findings": {
+      "description": "C5 actionable findings",
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Findings",
+      "type": "array"
+    },
+    "verifications": {
+      "description": "C6 verification outcomes",
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Verifications",
+      "type": "array"
+    },
+    "infra_checklist": {
+      "description": "S10 infrastructure item results",
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Infra Checklist",
+      "type": "array"
+    },
+    "alerts": {
+      "description": "Structured alerts for officer attention",
+      "items": {
+        "$ref": "#/$defs/AlertModel"
+      },
+      "title": "Alerts",
+      "type": "array"
+    },
+    "simulated": {
+      "default": true,
+      "description": "Always true in demo prototype",
+      "title": "Simulated",
+      "type": "boolean"
+    },
+    "decision_support_only": {
+      "default": true,
+      "description": "Always true. Prototype does not make approvals.",
+      "title": "Decision Support Only",
+      "type": "boolean"
+    },
+    "created_at": {
+      "description": "ISO 8601 UTC timestamp of aggregation",
+      "title": "Created At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "application_id",
+    "workflow_status",
+    "review_lane",
+    "priority",
+    "summary",
+    "created_at"
+  ],
+  "title": "AggregationResponseModel",
+  "type": "object",
+  "": "https://aicte.gov.in/schemas/v4/aggregation_response.schema.json"
+}

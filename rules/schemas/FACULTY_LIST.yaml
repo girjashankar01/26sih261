@@ -1,0 +1,9 @@
+doc_type: FACULTY_LIST
+fields:
+  - {key: institution_name, type: name, required: true}
+  - {key: regular_count, type: number, required: true}
+rows:
+  - {key: faculty_name, type: name, required: true}
+  - {key: designation, type: text, required: true}
+  - {key: pan_or_faculty_id, type: id, required: true}
+  - {key: date_of_joining, type: date, required: false}

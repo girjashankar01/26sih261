@@ -429,10 +429,1331 @@
           }
         }
       }
+    },
+    "/applications/{application_id}/documents/{document_id}/type": {
+      "get": {
+        "summary": "Retrieve document typing result for an application document",
+        "operationId": "type_document_endpoint_applications__application_id__documents__document_id__type_get",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentTypeResponseModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Classify document type and checklist selection (S5 Typing, Guide \u00a711.1)",
+        "description": "Evaluates page 1 text and layout blocks against deterministic rules per document type. Incorporates bounded slot prior, grounds evidence to blocks and normalized bounding boxes, and flags DOC_TYPE_SLOT_MISMATCH if detected type differs from declared slot. Result is cached idempotently.",
+        "operationId": "type_document_endpoint_applications__application_id__documents__document_id__type_post",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentTypeResponseModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications/{application_id}/documents/{document_id}/fields": {
+      "get": {
+        "summary": "Retrieve extracted fields and completeness status for an application document",
+        "operationId": "extract_fields_endpoint_applications__application_id__documents__document_id__fields_get",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentFieldsResponseModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Extract schema-driven fields and ground bounding boxes (S6/S6b, Guide \u00a711.2, \u00a711.3)",
+        "description": "Loads field schema for classified document type, extracts values via regex/layout, enforces 4-digit date policy, grounds each value to block/word coordinates, checks completeness (COMPLETE vs INCOMPLETE), and records C3 typed facts in database.",
+        "operationId": "extract_fields_endpoint_applications__application_id__documents__document_id__fields_post",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentFieldsResponseModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications/{application_id}/facts": {
+      "get": {
+        "summary": "Retrieve aggregated typed facts and entity resolution for an application (S7, Guide \u00a711.4)",
+        "description": "Aggregates C3 typed facts across application form data, authorised synthetic records (institute, approved programmes, TER payment, deficiencies), and persisted document extractions. Resolves canonical institution and compares document name aliases using Guide \u00a711.4 core/legal form policy.",
+        "operationId": "get_application_facts_endpoint_applications__application_id__facts_get",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationFactsResponseModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications/{application_id}/validate": {
+      "get": {
+        "summary": "Retrieve S8 Rules Engine evaluation result for an application",
+        "operationId": "validate_application_endpoint_applications__application_id__validate_get",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationResponseModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Execute S8 Rules Engine evaluation on an application (Guide \u00a712)",
+        "description": "Loads active rule set, evaluates deterministic compliance and comparison rules against aggregated typed facts (C3) through the Three-Valued Gate, creates actionable findings (C5), and returns the validation report.",
+        "operationId": "validate_application_endpoint_applications__application_id__validate_post",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationResponseModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications/{application_id}/documents/{document_id}/verify": {
+      "get": {
+        "summary": "Retrieve document verification result",
+        "operationId": "verify_document_endpoint_applications__application_id__documents__document_id__verify_get",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/C6VerificationResultModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Execute document verification gateway query (S9, Guide \u00a713)",
+        "description": "Queries authoritative verification adapter (e.g. simulated QR registry, cryptographic digital signature, mock portal), computes field-by-field comparisons, records attempt, and yields C6 verification result with honest simulation labels.",
+        "operationId": "verify_document_endpoint_applications__application_id__documents__document_id__verify_post",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/C6VerificationResultModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications/{application_id}/infra": {
+      "get": {
+        "summary": "Evaluate infrastructure evidence checklist and location norms (S10, Guide \u00a714)",
+        "description": "Evaluates facility photo evidence inventory, geotagged metadata against registered campus coordinates, perceptual hash cross-institution deduplication, and form claims vs minimum area norms.",
+        "operationId": "get_application_infra_endpoint_applications__application_id__infra_get",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InfraChecklistResponseModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications/{application_id}/aggregate": {
+      "get": {
+        "summary": "Get unified application aggregation, status, review lanes, priority, and alerts (S11, Guide 11.7)",
+        "description": "Combines forensic signals (S2), deterministic rules and findings (S8), issuing authority verifications (S9), and infrastructure evidence (S10). Derives workflow status, assignable review lane, queue priority score, and actionable alerts.",
+        "operationId": "get_application_aggregation_endpoint_applications__application_id__aggregate_get",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "rule_set",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "EOA_RENEWAL",
+              "title": "Rule Set"
+            }
+          },
+          {
+            "name": "deadline_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Deadline Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AggregationResponseModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications/{application_id}/findings/{finding_id}/act": {
+      "post": {
+        "summary": "Record officer action on finding (S12 Review, Guide \u00a717)",
+        "description": "Records human officer action on an automated discrepancy finding (acknowledge, request_rectification, dismiss, escalate, resolve). Requires mandatory human reason, stores override beside original finding, and creates an S13 audit event.",
+        "operationId": "act_on_finding_endpoint_applications__application_id__findings__finding_id__act_post",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "finding_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Finding Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FindingActionRequestModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FindingActionResponseModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications/{application_id}/findings/actions": {
+      "get": {
+        "summary": "Get all recorded officer actions for an application (S12, Guide \u00a717)",
+        "description": "Retrieves chronological timeline of officer finding overrides and actions.",
+        "operationId": "get_finding_actions_endpoint_applications__application_id__findings_actions_get",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications/{application_id}/exports/deficiency-notice": {
+      "get": {
+        "summary": "Generate draft deficiency notice for institution (S12, Guide \u00a711.8)",
+        "description": "Compiles formal draft deficiency notice with two-sided evidence for open rectifiable findings. Strictly excludes internal anomaly flags or duplicate identities.",
+        "operationId": "get_deficiency_notice_endpoint_applications__application_id__exports_deficiency_notice_get",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "actor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "officer",
+              "title": "Actor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeficiencyNoticeResponseModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications/{application_id}/exports/inspection-brief": {
+      "get": {
+        "summary": "Generate physical ground inspection brief (S12, Guide \u00a711.8)",
+        "description": "Compiles facilities requiring physical ground verification, pending verifications, and advisory indicators under the advisory banner.",
+        "operationId": "get_inspection_brief_endpoint_applications__application_id__exports_inspection_brief_get",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "actor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "officer",
+              "title": "Actor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionBriefResponseModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications/{application_id}/report": {
+      "get": {
+        "summary": "Generate comprehensive application evaluation report (S12, Guide \u00a711.8)",
+        "description": "Complete evaluation report including full checklist transparency table, findings with action history, verifications, infra evaluations, and cryptographic audit chain head.",
+        "operationId": "get_application_report_endpoint_applications__application_id__report_get",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "rule_set",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "EOA_RENEWAL",
+              "title": "Rule Set"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationReportResponseModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audit/events": {
+      "get": {
+        "summary": "Retrieve audit trail log events (S13, Guide \u00a715.1)",
+        "description": "Retrieves tamper-evident sequential audit event log entries.",
+        "operationId": "get_audit_events_endpoint_audit_events_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "subject",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subject"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditEventsListResponseModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audit/verify": {
+      "get": {
+        "summary": "Verify cryptographic integrity of audit hash chain (S13, Guide \u00a715.1)",
+        "description": "Sequentially recomputes and verifies SHA-256 hash chain links from genesis to head. Fails visibly on any tampering.",
+        "operationId": "verify_audit_chain_endpoint_audit_verify_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditChainVerificationResponseModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audit/checkpoint": {
+      "post": {
+        "summary": "Create signed Ed25519 external checkpoint (S13, Guide \u00a715.1)",
+        "description": "Anchors current audit hash chain state with an asymmetric Ed25519 signature.",
+        "operationId": "create_audit_checkpoint_endpoint_audit_checkpoint_post",
+        "parameters": [
+          {
+            "name": "key_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "aicte-ed25519-2026-demo",
+              "title": "Key Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckpointModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audit/checkpoints": {
+      "get": {
+        "summary": "List signed audit checkpoints (S13, Guide \u00a715.1)",
+        "description": "Retrieves historical signed checkpoints for external audit anchoring.",
+        "operationId": "get_audit_checkpoints_endpoint_audit_checkpoints_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckpointsListResponseModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AggregationResponseModel": {
+        "properties": {
+          "application_id": {
+            "type": "string",
+            "title": "Application Id",
+            "description": "Application identifier"
+          },
+          "pipeline_stage": {
+            "type": "string",
+            "title": "Pipeline Stage",
+            "description": "Architectural pipeline stage",
+            "default": "S11_AGGREGATION"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "Application category",
+            "default": "EOA_RENEWAL"
+          },
+          "workflow_status": {
+            "type": "string",
+            "title": "Workflow Status",
+            "description": "Application workflow state (NEEDS_RECTIFICATION, NEEDS_MANUAL_REVIEW, VALIDATED_NO_ISSUES)"
+          },
+          "review_lane": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReviewLane"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Review Lane",
+            "description": "Assigned review lane for officer routing"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/PriorityScoreModel",
+            "description": "Queue priority score and calculation breakdown"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/AggregationSummaryModel",
+            "description": "High-level counts summary"
+          },
+          "checks": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Checks",
+            "description": "C4 check results"
+          },
+          "findings": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Findings",
+            "description": "C5 actionable findings"
+          },
+          "verifications": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Verifications",
+            "description": "C6 verification outcomes"
+          },
+          "infra_checklist": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Infra Checklist",
+            "description": "S10 infrastructure item results"
+          },
+          "alerts": {
+            "items": {
+              "$ref": "#/components/schemas/AlertModel"
+            },
+            "type": "array",
+            "title": "Alerts",
+            "description": "Structured alerts for officer attention"
+          },
+          "simulated": {
+            "type": "boolean",
+            "title": "Simulated",
+            "description": "Always true in demo prototype",
+            "default": true
+          },
+          "decision_support_only": {
+            "type": "boolean",
+            "title": "Decision Support Only",
+            "description": "Always true. Prototype does not make approvals.",
+            "default": true
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "description": "ISO 8601 UTC timestamp of aggregation"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "application_id",
+          "workflow_status",
+          "review_lane",
+          "priority",
+          "summary",
+          "created_at"
+        ],
+        "title": "AggregationResponseModel"
+      },
+      "AggregationSummaryModel": {
+        "properties": {
+          "total_documents": {
+            "type": "integer",
+            "title": "Total Documents",
+            "description": "Total documents uploaded for application"
+          },
+          "total_checks": {
+            "type": "integer",
+            "title": "Total Checks",
+            "description": "Total rule checks evaluated"
+          },
+          "passed_checks": {
+            "type": "integer",
+            "title": "Passed Checks",
+            "description": "Count of PASS checks"
+          },
+          "failed_checks": {
+            "type": "integer",
+            "title": "Failed Checks",
+            "description": "Count of FAILED_CHECK checks"
+          },
+          "needs_review_checks": {
+            "type": "integer",
+            "title": "Needs Review Checks",
+            "description": "Count of NEEDS_REVIEW or NOT_CHECKED checks"
+          },
+          "open_findings": {
+            "type": "integer",
+            "title": "Open Findings",
+            "description": "Count of unresolved open actionable findings"
+          },
+          "verifications_count": {
+            "type": "integer",
+            "title": "Verifications Count",
+            "description": "Count of issuing authority verification checks"
+          },
+          "infra_items_count": {
+            "type": "integer",
+            "title": "Infra Items Count",
+            "description": "Count of physical infrastructure items evaluated"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "total_documents",
+          "total_checks",
+          "passed_checks",
+          "failed_checks",
+          "needs_review_checks",
+          "open_findings",
+          "verifications_count",
+          "infra_items_count"
+        ],
+        "title": "AggregationSummaryModel"
+      },
+      "AlertModel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique alert identifier"
+          },
+          "application_id": {
+            "type": "string",
+            "title": "Application Id",
+            "description": "Application identifier"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "Alert category classification"
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity",
+            "description": "Alert severity level"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Human-readable alert title"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Detailed alert message"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "description": "ISO 8601 UTC timestamp"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "id",
+          "application_id",
+          "category",
+          "severity",
+          "title",
+          "message",
+          "created_at"
+        ],
+        "title": "AlertModel"
+      },
+      "ApplicationFactsResponseModel": {
+        "properties": {
+          "application_id": {
+            "type": "string",
+            "title": "Application Id",
+            "description": "Application identifier"
+          },
+          "pipeline_stage": {
+            "type": "string",
+            "title": "Pipeline Stage",
+            "description": "Architectural pipeline stage",
+            "default": "S7_TYPED_FACTS"
+          },
+          "simulated": {
+            "type": "boolean",
+            "title": "Simulated",
+            "description": "Always true in demo prototype",
+            "default": true
+          },
+          "decision_support_only": {
+            "type": "boolean",
+            "title": "Decision Support Only",
+            "description": "Decision-support advisory flag",
+            "default": true
+          },
+          "canonical_institute": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CanonicalInstituteModel"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Resolved canonical institute"
+          },
+          "aliases": {
+            "items": {
+              "$ref": "#/components/schemas/NameAliasModel"
+            },
+            "type": "array",
+            "title": "Aliases",
+            "description": "Document institution name aliases and comparison statuses"
+          },
+          "facts": {
+            "items": {
+              "$ref": "#/components/schemas/C3FactModel"
+            },
+            "type": "array",
+            "title": "Facts",
+            "description": "All aggregated C3 typed facts across form, records, and docs"
+          },
+          "facts_count": {
+            "type": "integer",
+            "title": "Facts Count",
+            "description": "Total count of aggregated facts"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "application_id",
+          "facts_count"
+        ],
+        "title": "ApplicationFactsResponseModel"
+      },
+      "ApplicationReportResponseModel": {
+        "properties": {
+          "report_id": {
+            "type": "string",
+            "title": "Report Id",
+            "description": "Unique evaluation report ID"
+          },
+          "application_id": {
+            "type": "string",
+            "title": "Application Id",
+            "description": "Application identifier"
+          },
+          "pipeline_stage": {
+            "type": "string",
+            "title": "Pipeline Stage",
+            "description": "Architectural pipeline stage",
+            "default": "S12_REPORT_VIEW"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "Application category",
+            "default": "EOA_RENEWAL"
+          },
+          "rule_set_version": {
+            "type": "string",
+            "title": "Rule Set Version",
+            "description": "Rule set version evaluated"
+          },
+          "data_snapshot_id": {
+            "type": "string",
+            "title": "Data Snapshot Id",
+            "description": "Cryptographic snapshot digest of input facts"
+          },
+          "audit_chain_head": {
+            "type": "string",
+            "title": "Audit Chain Head",
+            "description": "SHA-256 head hash of audit trail chain"
+          },
+          "documents_count": {
+            "type": "integer",
+            "title": "Documents Count",
+            "description": "Count of uploaded documents"
+          },
+          "checklist": {
+            "items": {
+              "$ref": "#/components/schemas/ChecklistReportItemModel"
+            },
+            "type": "array",
+            "title": "Checklist",
+            "description": "Complete evaluation checklist table"
+          },
+          "findings": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Findings",
+            "description": "Findings with officer action history"
+          },
+          "verifications": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Verifications",
+            "description": "Verification outcomes"
+          },
+          "infra_checklist": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Infra Checklist",
+            "description": "Physical infra evidence evaluations"
+          },
+          "advisory_banner": {
+            "type": "string",
+            "title": "Advisory Banner",
+            "description": "Advisory disclaimer"
+          },
+          "simulated": {
+            "type": "boolean",
+            "title": "Simulated",
+            "description": "Always true in demo slice",
+            "default": true
+          },
+          "decision_support_only": {
+            "type": "boolean",
+            "title": "Decision Support Only",
+            "description": "Decision support advisory flag",
+            "default": true
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "description": "ISO 8601 UTC timestamp"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "report_id",
+          "application_id",
+          "rule_set_version",
+          "data_snapshot_id",
+          "audit_chain_head",
+          "documents_count",
+          "advisory_banner",
+          "created_at"
+        ],
+        "title": "ApplicationReportResponseModel"
+      },
       "ApplicationWorkflow": {
         "type": "string",
         "enum": [
@@ -447,6 +1768,148 @@
           "OFFICER_DECISION_RECORDED"
         ],
         "title": "ApplicationWorkflow"
+      },
+      "AuditChainVerificationResponseModel": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "description": "True if hash chain integrity is 100% verified"
+          },
+          "head": {
+            "type": "string",
+            "title": "Head",
+            "description": "Current head SHA-256 hash of audit chain"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "Count of verified events in chain"
+          },
+          "first_bad_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Bad Id",
+            "description": "First tampered or invalid event ID if ok=False"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "Integrity failure reason if ok=False"
+          },
+          "verified_at": {
+            "type": "string",
+            "title": "Verified At",
+            "description": "ISO 8601 UTC timestamp of verification"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "ok",
+          "head",
+          "count",
+          "verified_at"
+        ],
+        "title": "AuditChainVerificationResponseModel"
+      },
+      "AuditEventModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Sequential audit event ID"
+          },
+          "ts": {
+            "type": "string",
+            "title": "Ts",
+            "description": "ISO 8601 UTC timestamp"
+          },
+          "actor": {
+            "type": "string",
+            "title": "Actor",
+            "description": "User or service actor"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action",
+            "description": "Action name"
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject",
+            "description": "Subject resource URI / ID"
+          },
+          "details": {
+            "title": "Details",
+            "description": "Event details payload"
+          },
+          "canonical": {
+            "type": "string",
+            "title": "Canonical",
+            "description": "Deterministic canonical JSON string"
+          },
+          "prev_hash": {
+            "type": "string",
+            "title": "Prev Hash",
+            "description": "SHA-256 hash of previous audit event"
+          },
+          "entry_hash": {
+            "type": "string",
+            "title": "Entry Hash",
+            "description": "SHA-256 hash of this canonical event"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "id",
+          "ts",
+          "actor",
+          "action",
+          "subject",
+          "details",
+          "canonical",
+          "prev_hash",
+          "entry_hash"
+        ],
+        "title": "AuditEventModel"
+      },
+      "AuditEventsListResponseModel": {
+        "properties": {
+          "total_events": {
+            "type": "integer",
+            "title": "Total Events",
+            "description": "Total audit events returned"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/AuditEventModel"
+            },
+            "type": "array",
+            "title": "Events",
+            "description": "Audit events"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "total_events"
+        ],
+        "title": "AuditEventsListResponseModel"
       },
       "Body_upload_document_applications__application_id__documents_post": {
         "properties": {
@@ -486,6 +1949,374 @@
           "file"
         ],
         "title": "Body_upload_document_applications__application_id__documents_post"
+      },
+      "C3FactModel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "application_id": {
+            "type": "string",
+            "title": "Application Id"
+          },
+          "document_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Id"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": "doc"
+          },
+          "entity": {
+            "type": "string",
+            "title": "Entity",
+            "description": "Document type or entity name (e.g. FIRE_NOC)"
+          },
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "Field key name"
+          },
+          "raw": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw"
+          },
+          "value_type": {
+            "type": "string",
+            "title": "Value Type"
+          },
+          "value": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "parse_state": {
+            "type": "string",
+            "title": "Parse State",
+            "description": "ok, ambiguous, invalid, unavailable"
+          },
+          "conf": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conf"
+          },
+          "conf_kind": {
+            "type": "string",
+            "title": "Conf Kind",
+            "default": "regex_exact"
+          },
+          "grounded": {
+            "type": "boolean",
+            "title": "Grounded"
+          },
+          "source_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Ref"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page"
+          },
+          "bbox_norm": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bbox Norm"
+          },
+          "bbox_precision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bbox Precision"
+          },
+          "extractor": {
+            "type": "string",
+            "title": "Extractor"
+          },
+          "extractor_version": {
+            "type": "string",
+            "title": "Extractor Version"
+          },
+          "needs_confirmation": {
+            "type": "boolean",
+            "title": "Needs Confirmation",
+            "default": false
+          },
+          "simulated": {
+            "type": "boolean",
+            "title": "Simulated",
+            "default": true
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "id",
+          "application_id",
+          "entity",
+          "key",
+          "value_type",
+          "parse_state",
+          "grounded",
+          "extractor",
+          "extractor_version"
+        ],
+        "title": "C3FactModel"
+      },
+      "C6VerificationResultModel": {
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "title": "Document Id",
+            "description": "Identifier of verified document"
+          },
+          "document_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Type",
+            "description": "Document type"
+          },
+          "adapter": {
+            "type": "string",
+            "title": "Adapter",
+            "description": "Verification adapter used"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "Registry source queried"
+          },
+          "simulated": {
+            "type": "boolean",
+            "title": "Simulated",
+            "description": "Always true in demo slice",
+            "default": true
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VerificationStatus"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Status",
+            "description": "Verification status dimension"
+          },
+          "request_digest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Digest",
+            "description": "Hash of query request payload"
+          },
+          "response_digest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Response Digest",
+            "description": "Hash of response received"
+          },
+          "checked_at": {
+            "type": "string",
+            "title": "Checked At",
+            "description": "ISO 8601 UTC timestamp of verification"
+          },
+          "integrity": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Integrity",
+            "description": "Cryptographic integrity"
+          },
+          "trust": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trust",
+            "description": "Trust class"
+          },
+          "compared": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Compared",
+            "description": "Field comparison results"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "Plain-language explanation of verification outcome"
+          },
+          "idempotent_cached": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idempotent Cached",
+            "description": "True if served from database cache"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "document_id",
+          "adapter",
+          "source",
+          "status",
+          "checked_at",
+          "reason"
+        ],
+        "title": "C6VerificationResultModel"
+      },
+      "CanonicalInstituteModel": {
+        "properties": {
+          "aicte_id": {
+            "type": "string",
+            "title": "Aicte Id",
+            "description": "AICTE permanent institute ID"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Canonical institution name from authorised record"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "Source of canonical record",
+            "default": "synthetic_record"
+          },
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address",
+            "description": "Institute registered address"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State",
+            "description": "Registered state"
+          },
+          "simulated": {
+            "type": "boolean",
+            "title": "Simulated",
+            "description": "Always true in demo prototype",
+            "default": true
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "aicte_id",
+          "name"
+        ],
+        "title": "CanonicalInstituteModel"
       },
       "CheckResultModel": {
         "properties": {
@@ -618,6 +2449,119 @@
         ],
         "title": "CheckStatus"
       },
+      "ChecklistReportItemModel": {
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "title": "Rule Id",
+            "description": "Rule identifier or PLANNED"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category",
+            "description": "Checklist item category"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Evaluation outcome: PASS, FAILED_CHECK, NEEDS_REVIEW, NOT_CHECKED, NOT_RUN"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "Explanation of evaluation"
+          },
+          "evaluated": {
+            "type": "boolean",
+            "title": "Evaluated",
+            "description": "True if evaluated in active demo rule set"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "rule_id",
+          "status",
+          "reason",
+          "evaluated"
+        ],
+        "title": "ChecklistReportItemModel"
+      },
+      "CheckpointModel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique checkpoint ID"
+          },
+          "upto_id": {
+            "type": "integer",
+            "title": "Upto Id",
+            "description": "Event ID up to which chain is anchored"
+          },
+          "head_hash": {
+            "type": "string",
+            "title": "Head Hash",
+            "description": "Head SHA-256 hash at upto_id"
+          },
+          "signature": {
+            "type": "string",
+            "title": "Signature",
+            "description": "Ed25519 signature of 'upto_id:head_hash'"
+          },
+          "key_id": {
+            "type": "string",
+            "title": "Key Id",
+            "description": "Identifier of trusted signing key"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "description": "ISO 8601 UTC timestamp"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "id",
+          "upto_id",
+          "head_hash",
+          "signature",
+          "key_id",
+          "created_at"
+        ],
+        "title": "CheckpointModel"
+      },
+      "CheckpointsListResponseModel": {
+        "properties": {
+          "total_checkpoints": {
+            "type": "integer",
+            "title": "Total Checkpoints",
+            "description": "Total checkpoints returned"
+          },
+          "checkpoints": {
+            "items": {
+              "$ref": "#/components/schemas/CheckpointModel"
+            },
+            "type": "array",
+            "title": "Checkpoints",
+            "description": "Checkpoints list"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "total_checkpoints"
+        ],
+        "title": "CheckpointsListResponseModel"
+      },
       "CoverageModel": {
         "properties": {
           "mode": {
@@ -652,6 +2596,150 @@
           "checks_not_evaluated"
         ],
         "title": "CoverageModel"
+      },
+      "DeficiencyItemModel": {
+        "properties": {
+          "finding_id": {
+            "type": "string",
+            "title": "Finding Id",
+            "description": "Finding identifier"
+          },
+          "rule_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule Id",
+            "description": "Triggering rule ID"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category",
+            "description": "Discrepancy category"
+          },
+          "observed": {
+            "title": "Observed",
+            "description": "Observed value from submission"
+          },
+          "expected": {
+            "title": "Expected",
+            "description": "Expected value from record or norm"
+          },
+          "action_required": {
+            "type": "string",
+            "title": "Action Required",
+            "description": "Clear instruction for rectification"
+          },
+          "handbook_reference": {
+            "type": "string",
+            "title": "Handbook Reference",
+            "description": "AICTE Handbook clause reference"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Deficiency status",
+            "default": "OPEN"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "finding_id",
+          "observed",
+          "expected",
+          "action_required",
+          "handbook_reference"
+        ],
+        "title": "DeficiencyItemModel"
+      },
+      "DeficiencyNoticeResponseModel": {
+        "properties": {
+          "notice_id": {
+            "type": "string",
+            "title": "Notice Id",
+            "description": "Unique deficiency notice draft ID"
+          },
+          "application_id": {
+            "type": "string",
+            "title": "Application Id",
+            "description": "Application identifier"
+          },
+          "document_type": {
+            "type": "string",
+            "title": "Document Type",
+            "description": "Document type",
+            "default": "DEFICIENCY_NOTICE_DRAFT"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Notice lifecycle state",
+            "default": "DRAFT"
+          },
+          "actor": {
+            "type": "string",
+            "title": "Actor",
+            "description": "Officer or system generator"
+          },
+          "deficiencies_count": {
+            "type": "integer",
+            "title": "Deficiencies Count",
+            "description": "Count of rectifiable deficiencies"
+          },
+          "deficiencies": {
+            "items": {
+              "$ref": "#/components/schemas/DeficiencyItemModel"
+            },
+            "type": "array",
+            "title": "Deficiencies",
+            "description": "Deficiency items with two-sided evidence"
+          },
+          "advisory_banner": {
+            "type": "string",
+            "title": "Advisory Banner",
+            "description": "Advisory disclaimer"
+          },
+          "simulated": {
+            "type": "boolean",
+            "title": "Simulated",
+            "description": "Always true in demo slice",
+            "default": true
+          },
+          "decision_support_only": {
+            "type": "boolean",
+            "title": "Decision Support Only",
+            "description": "Decision support advisory flag",
+            "default": true
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "description": "ISO 8601 UTC timestamp"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "notice_id",
+          "application_id",
+          "actor",
+          "deficiencies_count",
+          "advisory_banner",
+          "created_at"
+        ],
+        "title": "DeficiencyNoticeResponseModel"
       },
       "DemoApplicationItemModel": {
         "properties": {
@@ -760,6 +2848,87 @@
           "status"
         ],
         "title": "DetectorStatusModel"
+      },
+      "DocumentFieldsResponseModel": {
+        "properties": {
+          "application_id": {
+            "type": "string",
+            "title": "Application Id"
+          },
+          "document_id": {
+            "type": "string",
+            "title": "Document Id"
+          },
+          "doc_type": {
+            "type": "string",
+            "title": "Doc Type"
+          },
+          "completeness_status": {
+            "type": "string",
+            "title": "Completeness Status",
+            "description": "COMPLETE, INCOMPLETE, or NOT_CHECKED"
+          },
+          "missing_fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Fields"
+          },
+          "facts": {
+            "items": {
+              "$ref": "#/components/schemas/C3FactModel"
+            },
+            "type": "array",
+            "title": "Facts"
+          },
+          "pipeline_stage": {
+            "type": "string",
+            "title": "Pipeline Stage",
+            "default": "S6_EXTRACTION"
+          },
+          "idempotent_cached": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idempotent Cached"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "simulated": {
+            "type": "boolean",
+            "title": "Simulated",
+            "default": true
+          },
+          "advisory": {
+            "type": "boolean",
+            "title": "Advisory",
+            "default": true
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "application_id",
+          "document_id",
+          "doc_type",
+          "completeness_status"
+        ],
+        "title": "DocumentFieldsResponseModel"
       },
       "DocumentForensicsResponseModel": {
         "properties": {
@@ -1141,6 +3310,268 @@
           "page_counts"
         ],
         "title": "DocumentRouteResponseModel"
+      },
+      "DocumentTypeResponseModel": {
+        "properties": {
+          "application_id": {
+            "type": "string",
+            "title": "Application Id",
+            "description": "Application identifier"
+          },
+          "document_id": {
+            "type": "string",
+            "title": "Document Id",
+            "description": "Document identifier"
+          },
+          "doc_slot": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Doc Slot",
+            "description": "Slot name declared during upload"
+          },
+          "doc_type": {
+            "type": "string",
+            "title": "Doc Type",
+            "description": "Classified document type (e.g. FIRE_NOC, ACCREDITATION, EOA_LETTER, AFFIDAVIT) or UNCLASSIFIED"
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence",
+            "description": "Classification confidence score between 0.0 and 1.0"
+          },
+          "is_classified": {
+            "type": "boolean",
+            "title": "Is Classified",
+            "description": "True if accepted with high confidence; False if UNCLASSIFIED requiring manual typing"
+          },
+          "decision_reason": {
+            "type": "string",
+            "title": "Decision Reason",
+            "description": "Plain-language reason for classification or unclassified status"
+          },
+          "pipeline_stage": {
+            "type": "string",
+            "title": "Pipeline Stage",
+            "description": "Architectural pipeline stage identifier",
+            "default": "S5_TYPING"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/TypingEvidenceModel"
+            },
+            "type": "array",
+            "title": "Evidence",
+            "description": "Evidence items with matched phrases and bounding boxes"
+          },
+          "candidate_scores": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Candidate Scores",
+            "description": "Normalized score per candidate type"
+          },
+          "flags": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Flags",
+            "description": "Advisory flags such as DOC_TYPE_SLOT_MISMATCH"
+          },
+          "idempotent_cached": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idempotent Cached",
+            "description": "True if served from database cache"
+          },
+          "simulated": {
+            "type": "boolean",
+            "title": "Simulated",
+            "description": "Always true in demo prototype",
+            "default": true
+          },
+          "advisory": {
+            "type": "boolean",
+            "title": "Advisory",
+            "description": "Advisory decision-support indicator",
+            "default": true
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "application_id",
+          "document_id",
+          "doc_type",
+          "confidence",
+          "is_classified",
+          "decision_reason"
+        ],
+        "title": "DocumentTypeResponseModel"
+      },
+      "FindingActionRequestModel": {
+        "properties": {
+          "action": {
+            "type": "string",
+            "title": "Action",
+            "description": "Action to perform: acknowledge, request_rectification, dismiss, escalate, resolve"
+          },
+          "actor": {
+            "type": "string",
+            "title": "Actor",
+            "description": "Officer identifier performing action"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "Mandatory justification reason for dismiss/escalate/rectify"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Optional officer notes"
+          },
+          "user_role": {
+            "type": "string",
+            "title": "User Role",
+            "description": "Role of officer: officer, senior_officer",
+            "default": "officer"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "action",
+          "actor"
+        ],
+        "title": "FindingActionRequestModel"
+      },
+      "FindingActionResponseModel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique action event ID"
+          },
+          "application_id": {
+            "type": "string",
+            "title": "Application Id",
+            "description": "Application identifier"
+          },
+          "finding_id": {
+            "type": "string",
+            "title": "Finding Id",
+            "description": "Target finding identifier"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action",
+            "description": "Action performed"
+          },
+          "previous_state": {
+            "type": "string",
+            "title": "Previous State",
+            "description": "Previous finding lifecycle state"
+          },
+          "new_state": {
+            "type": "string",
+            "title": "New State",
+            "description": "New finding lifecycle state"
+          },
+          "actor": {
+            "type": "string",
+            "title": "Actor",
+            "description": "Officer identifier"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "Officer justification reason",
+            "default": ""
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Officer notes"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "description": "ISO 8601 UTC timestamp"
+          },
+          "audit_event_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audit Event Id",
+            "description": "Linked S13 audit event ID"
+          },
+          "audit_entry_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audit Entry Hash",
+            "description": "Linked S13 audit entry hash"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "id",
+          "application_id",
+          "finding_id",
+          "action",
+          "previous_state",
+          "new_state",
+          "actor",
+          "created_at"
+        ],
+        "title": "FindingActionResponseModel"
       },
       "FindingCategory": {
         "type": "string",
@@ -1534,6 +3965,390 @@
         "type": "object",
         "title": "HealthResponseModel"
       },
+      "InfraChecklistResponseModel": {
+        "properties": {
+          "application_id": {
+            "type": "string",
+            "title": "Application Id",
+            "description": "Application identifier"
+          },
+          "pipeline_stage": {
+            "type": "string",
+            "title": "Pipeline Stage",
+            "description": "Architectural pipeline stage",
+            "default": "S10_INFRA_CHECKLIST"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "Application category",
+            "default": "EOA_RENEWAL"
+          },
+          "simulated": {
+            "type": "boolean",
+            "title": "Simulated",
+            "description": "Always true in demo slice",
+            "default": true
+          },
+          "decision_support_only": {
+            "type": "boolean",
+            "title": "Decision Support Only",
+            "description": "Decision support advisory flag",
+            "default": true
+          },
+          "overall_status": {
+            "type": "string",
+            "title": "Overall Status",
+            "description": "Overall infra checklist state"
+          },
+          "campus_coordinates": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Campus Coordinates",
+            "description": "Campus reference coordinates"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/InfraItemResultModel"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "Item evaluation results"
+          },
+          "total_items": {
+            "type": "integer",
+            "title": "Total Items",
+            "description": "Total checklist items evaluated"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "application_id",
+          "overall_status",
+          "total_items"
+        ],
+        "title": "InfraChecklistResponseModel"
+      },
+      "InfraItemResultModel": {
+        "properties": {
+          "item_key": {
+            "type": "string",
+            "title": "Item Key",
+            "description": "Checklist item key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Human-readable label for facility"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "EVIDENCE_COMPLETE_FOR_REVIEW, ADDITIONAL_EVIDENCE_REQUIRED, POSSIBLE_DUPLICATE_EVIDENCE, LOCATION_METADATA_INCONSISTENT, INSPECTION_SUGGESTED, NOT_CHECKED"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "Plain-language evaluation reason"
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity",
+            "description": "Advisory severity",
+            "default": "info"
+          },
+          "evidence_count": {
+            "type": "integer",
+            "title": "Evidence Count",
+            "description": "Count of uploaded evidence files"
+          },
+          "flags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Flags",
+            "description": "Advisory flags"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "item_key",
+          "label",
+          "status",
+          "reason",
+          "evidence_count"
+        ],
+        "title": "InfraItemResultModel"
+      },
+      "InspectionBriefFacilityModel": {
+        "properties": {
+          "item_key": {
+            "type": "string",
+            "title": "Item Key",
+            "description": "Facility item key"
+          },
+          "facility": {
+            "type": "string",
+            "title": "Facility",
+            "description": "Facility name"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "Reason for ground verification"
+          },
+          "evidence_status": {
+            "type": "string",
+            "title": "Evidence Status",
+            "description": "Automated evidence checklist state"
+          },
+          "inspection_focus": {
+            "type": "string",
+            "title": "Inspection Focus",
+            "description": "Instructions for physical inspection team"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "item_key",
+          "facility",
+          "reason",
+          "evidence_status",
+          "inspection_focus"
+        ],
+        "title": "InspectionBriefFacilityModel"
+      },
+      "InspectionBriefResponseModel": {
+        "properties": {
+          "brief_id": {
+            "type": "string",
+            "title": "Brief Id",
+            "description": "Unique inspection brief ID"
+          },
+          "application_id": {
+            "type": "string",
+            "title": "Application Id",
+            "description": "Application identifier"
+          },
+          "document_type": {
+            "type": "string",
+            "title": "Document Type",
+            "description": "Document type",
+            "default": "PHYSICAL_INSPECTION_BRIEF"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Status",
+            "default": "READY_FOR_INSPECTION_TEAM"
+          },
+          "actor": {
+            "type": "string",
+            "title": "Actor",
+            "description": "Officer or system generator"
+          },
+          "campus_coordinates": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Campus Coordinates",
+            "description": "Registered campus coordinates"
+          },
+          "facilities_to_inspect_count": {
+            "type": "integer",
+            "title": "Facilities To Inspect Count",
+            "description": "Count of facilities requiring ground check"
+          },
+          "facilities_to_inspect": {
+            "items": {
+              "$ref": "#/components/schemas/InspectionBriefFacilityModel"
+            },
+            "type": "array",
+            "title": "Facilities To Inspect",
+            "description": "Facilities list"
+          },
+          "pending_verifications_count": {
+            "type": "integer",
+            "title": "Pending Verifications Count",
+            "description": "Count of document verifications requiring ground check"
+          },
+          "pending_verifications": {
+            "items": {
+              "$ref": "#/components/schemas/InspectionBriefVerificationModel"
+            },
+            "type": "array",
+            "title": "Pending Verifications",
+            "description": "Verifications list"
+          },
+          "advisory_banner": {
+            "type": "string",
+            "title": "Advisory Banner",
+            "description": "Advisory disclaimer"
+          },
+          "simulated": {
+            "type": "boolean",
+            "title": "Simulated",
+            "description": "Always true in demo slice",
+            "default": true
+          },
+          "decision_support_only": {
+            "type": "boolean",
+            "title": "Decision Support Only",
+            "description": "Decision support advisory flag",
+            "default": true
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "description": "ISO 8601 UTC timestamp"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "brief_id",
+          "application_id",
+          "actor",
+          "facilities_to_inspect_count",
+          "pending_verifications_count",
+          "advisory_banner",
+          "created_at"
+        ],
+        "title": "InspectionBriefResponseModel"
+      },
+      "InspectionBriefVerificationModel": {
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "title": "Document Id",
+            "description": "Document identifier"
+          },
+          "adapter": {
+            "type": "string",
+            "title": "Adapter",
+            "description": "Verification adapter used"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Verification status"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "Verification outcome explanation"
+          },
+          "inspection_focus": {
+            "type": "string",
+            "title": "Inspection Focus",
+            "description": "Instructions for physical verification"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "document_id",
+          "adapter",
+          "status",
+          "reason",
+          "inspection_focus"
+        ],
+        "title": "InspectionBriefVerificationModel"
+      },
+      "NameAliasModel": {
+        "properties": {
+          "document_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Id",
+            "description": "Source document ID"
+          },
+          "doc_type": {
+            "type": "string",
+            "title": "Doc Type",
+            "description": "Document type (e.g. FIRE_NOC, ACCREDITATION)"
+          },
+          "extracted_name": {
+            "type": "string",
+            "title": "Extracted Name",
+            "description": "Institution name extracted from document"
+          },
+          "canonical_name": {
+            "type": "string",
+            "title": "Canonical Name",
+            "description": "Canonical institution name from record"
+          },
+          "match_status": {
+            "type": "string",
+            "title": "Match Status",
+            "description": "MATCH, LEGAL_FORM_DIFFERS, PARTIAL, DIFFERENT"
+          },
+          "core_extracted": {
+            "type": "string",
+            "title": "Core Extracted",
+            "description": "Normalized core tokens of extracted name"
+          },
+          "core_canonical": {
+            "type": "string",
+            "title": "Core Canonical",
+            "description": "Normalized core tokens of canonical name"
+          },
+          "legal_forms_extracted": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Legal Forms Extracted",
+            "description": "Extracted legal form tokens"
+          },
+          "legal_forms_canonical": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Legal Forms Canonical",
+            "description": "Canonical legal form tokens"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "doc_type",
+          "extracted_name",
+          "canonical_name",
+          "match_status",
+          "core_extracted",
+          "core_canonical"
+        ],
+        "title": "NameAliasModel"
+      },
       "PageVerdictModel": {
         "properties": {
           "page_index": {
@@ -1566,6 +4381,69 @@
           "reason"
         ],
         "title": "PageVerdictModel"
+      },
+      "PriorityBreakdownModel": {
+        "properties": {
+          "high": {
+            "type": "integer",
+            "title": "High",
+            "description": "Count of high-severity findings and flags",
+            "default": 0
+          },
+          "medium": {
+            "type": "integer",
+            "title": "Medium",
+            "description": "Count of medium-severity findings and flags",
+            "default": 0
+          },
+          "low": {
+            "type": "integer",
+            "title": "Low",
+            "description": "Count of low-severity findings and flags",
+            "default": 0
+          },
+          "age_days": {
+            "type": "integer",
+            "title": "Age Days",
+            "description": "Elapsed days since application submission",
+            "default": 0
+          },
+          "deadline_pressure": {
+            "type": "integer",
+            "title": "Deadline Pressure",
+            "description": "Bonus score points based on deadline proximity",
+            "default": 0
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "PriorityBreakdownModel"
+      },
+      "PriorityScoreModel": {
+        "properties": {
+          "score": {
+            "type": "integer",
+            "title": "Score",
+            "description": "Queue order priority score"
+          },
+          "formula": {
+            "type": "string",
+            "title": "Formula",
+            "description": "Priority formula tooltip",
+            "default": "100\u00b7high + 30\u00b7medium + 5\u00b7low + age_days + deadline_pressure"
+          },
+          "breakdown": {
+            "$ref": "#/components/schemas/PriorityBreakdownModel",
+            "description": "Component breakdown of priority score"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "score",
+          "breakdown"
+        ],
+        "title": "PriorityScoreModel"
       },
       "QRResultModel": {
         "properties": {
@@ -1610,6 +4488,16 @@
         },
         "type": "object",
         "title": "QRResultModel"
+      },
+      "ReviewLane": {
+        "type": "string",
+        "enum": [
+          "NEEDS_SCRUTINY",
+          "NEEDS_VERIFICATION",
+          "NEEDS_EVIDENCE",
+          "FAST_REVIEW"
+        ],
+        "title": "ReviewLane"
       },
       "SignatureInfoModel": {
         "properties": {
@@ -1658,6 +4546,59 @@
           "source_verification"
         ],
         "title": "SignatureInfoModel"
+      },
+      "TypingEvidenceModel": {
+        "properties": {
+          "phrase": {
+            "type": "string",
+            "title": "Phrase",
+            "description": "Matched keyword or pattern string"
+          },
+          "pattern": {
+            "type": "string",
+            "title": "Pattern",
+            "description": "Pattern identifier or regex"
+          },
+          "weight": {
+            "type": "number",
+            "title": "Weight",
+            "description": "Pattern weight contributing to score"
+          },
+          "block_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Block Id",
+            "description": "Source block identifier"
+          },
+          "bbox_norm": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bbox Norm",
+            "description": "Normalized bounding box [x0, y0, x1, y1]"
+          }
+        },
+        "type": "object",
+        "required": [
+          "phrase",
+          "pattern",
+          "weight"
+        ],
+        "title": "TypingEvidenceModel"
       },
       "ValidationError": {
         "properties": {
@@ -1771,6 +4712,20 @@
           "findings"
         ],
         "title": "ValidationResponseModel"
+      },
+      "VerificationStatus": {
+        "type": "string",
+        "enum": [
+          "VERIFIED",
+          "MISMATCH_DETECTED",
+          "EXPIRED",
+          "VERIFICATION_PENDING",
+          "SOURCE_UNAVAILABLE",
+          "MANUAL_REVIEW_REQUIRED",
+          "NOT_SUPPORTED",
+          "NOT_CHECKED"
+        ],
+        "title": "VerificationStatus"
       }
     }
   }

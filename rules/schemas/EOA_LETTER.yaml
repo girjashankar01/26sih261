@@ -1,0 +1,6 @@
+doc_type: EOA_LETTER
+fields:
+  - {key: institution_name, type: name, required: true}
+  - {key: application_id, type: id, required: true}
+  - {key: academic_year, type: text, required: true}
+  - {key: approved_intake, type: number, required: true}

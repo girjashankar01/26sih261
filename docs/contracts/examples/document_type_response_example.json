@@ -1,0 +1,47 @@
+{
+  "application_id": "APP-2026-KA-001",
+  "document_id": "doc_fire_noc_001",
+  "doc_slot": "fire_noc",
+  "doc_type": "FIRE_NOC",
+  "confidence": 0.93,
+  "is_classified": true,
+  "decision_reason": "Classified as 'FIRE_NOC' with score 1.25 (margin 1.16 over second candidate).",
+  "pipeline_stage": "S5_TYPING",
+  "evidence": [
+    {
+      "phrase": "no objection certificate",
+      "pattern": "no objection certificate",
+      "weight": 0.4,
+      "block_id": "B1_1",
+      "bbox_norm": [0.15, 0.08, 0.85, 0.14]
+    },
+    {
+      "phrase": "fire and rescue",
+      "pattern": "fire and rescue",
+      "weight": 0.35,
+      "block_id": "B1_2",
+      "bbox_norm": [0.2, 0.15, 0.8, 0.2]
+    },
+    {
+      "phrase": "fire safety",
+      "pattern": "(?i)fire\\s*safety",
+      "weight": 0.35,
+      "block_id": "B1_3",
+      "bbox_norm": [0.1, 0.25, 0.9, 0.32]
+    }
+  ],
+  "candidate_scores": {
+    "FIRE_NOC": 1.25,
+    "ACCREDITATION": 0.0,
+    "EOA_LETTER": 0.09,
+    "AFFIDAVIT": 0.0,
+    "BUILDING_PLAN": 0.0,
+    "BUILDING_COMPLETION": 0.0,
+    "LAND_DOCUMENTS": 0.0,
+    "FACULTY_LIST": 0.0
+  },
+  "flags": [],
+  "idempotent_cached": false,
+  "simulated": true,
+  "advisory": true
+}

@@ -1,0 +1,5 @@
+doc_type: AFFIDAVIT
+fields:
+  - {key: deponent_name, type: name, required: true}
+  - {key: institution_name, type: name, required: true}
+  - {key: sworn_date, type: date, required: false}

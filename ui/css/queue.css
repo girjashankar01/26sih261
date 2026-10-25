@@ -1,0 +1,534 @@
+/* =========================================================================
+   AICTE Application Validation Platform — Queue & Triage Dashboard Styles
+   Spec Reference: ROADMAP.md (Phase 3: Steps 13–18), Guide §11.7, §17.1
+   ========================================================================= */
+
+.queue-dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* KPI Counter Bar Grid (Step 13) */
+.queue-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.kpi-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  transition: all var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.kpi-card:hover {
+  border-color: var(--border-default);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 4px;
+}
+
+.kpi-card.kpi-total::before { background-color: var(--color-primary); }
+.kpi-card.kpi-critical::before { background-color: var(--lane-scrutiny); }
+.kpi-card.kpi-verification::before { background-color: var(--lane-verification); }
+.kpi-card.kpi-fast::before { background-color: var(--lane-fast); }
+
+.kpi-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.kpi-label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.kpi-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+}
+
+.kpi-value {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.1;
+  margin: var(--space-1) 0;
+}
+
+.kpi-total .kpi-value { color: var(--color-primary); }
+.kpi-critical .kpi-value { color: var(--lane-scrutiny); }
+.kpi-verification .kpi-value { color: var(--lane-verification); }
+.kpi-fast .kpi-value { color: var(--lane-fast); }
+
+.kpi-subtext {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* 4-Lane Triage Board Grid Layout (Preparation for Step 14) */
+.triage-lanes-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+@media (max-width: 1200px) {
+  .triage-lanes-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .triage-lanes-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.triage-lane-column {
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 480px;
+}
+
+.triage-lane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-3);
+  border-bottom: 2px solid transparent;
+}
+
+.lane-scrutiny-col .triage-lane-header { border-bottom-color: var(--lane-scrutiny); }
+.lane-verification-col .triage-lane-header { border-bottom-color: var(--lane-verification); }
+.lane-evidence-col .triage-lane-header { border-bottom-color: var(--lane-evidence); }
+.lane-fast-col .triage-lane-header { border-bottom-color: var(--lane-fast); }
+
+.triage-lane-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.lane-scrutiny-col .triage-lane-title { color: var(--lane-scrutiny); }
+.lane-verification-col .triage-lane-title { color: var(--lane-verification); }
+.lane-evidence-col .triage-lane-title { color: var(--lane-evidence); }
+.lane-fast-col .triage-lane-title { color: var(--lane-fast); }
+
+.triage-lane-count {
+  font-size: 11px;
+  font-weight: var(--font-weight-bold);
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+}
+
+.lane-scrutiny-col .triage-lane-count { background: var(--lane-scrutiny-bg); color: var(--lane-scrutiny); border: 1px solid rgba(220, 38, 38, 0.25); }
+.lane-verification-col .triage-lane-count { background: var(--lane-verification-bg); color: var(--lane-verification); border: 1px solid rgba(217, 119, 6, 0.25); }
+.lane-evidence-col .triage-lane-count { background: var(--lane-evidence-bg); color: var(--lane-evidence); border: 1px solid rgba(0, 102, 204, 0.25); }
+.lane-fast-col .triage-lane-count { background: var(--lane-fast-bg); color: var(--lane-fast); border: 1px solid rgba(5, 150, 105, 0.25); }
+
+.triage-lane-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+.triage-lane-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex: 1;
+  min-height: 200px;
+}
+
+.triage-lane-empty {
+  padding: var(--space-6) var(--space-3);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  margin-top: var(--space-2);
+}
+
+/* =========================================================================
+   Application Queue Card Component (Step 15)
+   ========================================================================= */
+.queue-app-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-xs);
+  position: relative;
+  user-select: none;
+}
+
+.queue-app-card:hover {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.queue-app-card:active {
+  transform: translateY(0);
+}
+
+.queue-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.queue-card-id {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+}
+
+.queue-card-badges {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.queue-card-inst-name {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-main);
+  line-height: var(--line-height-tight);
+}
+
+.queue-card-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+.queue-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-subtle);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+.queue-card-age {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* =========================================================================
+   Dynamic Priority Score Gauge & Breakdown Tooltip (Step 16)
+   Spec Reference: ROADMAP.md (Phase 3: Step 16), Guide §11.7
+   ========================================================================= */
+
+.priority-score-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.priority-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  cursor: help;
+  position: relative;
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.priority-gauge-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* Priority Gauge Thresholds: Crimson (>=100), Amber (30-99), Blue (<30) */
+.badge-priority-crimson {
+  background: var(--status-fail-bg);
+  color: var(--status-fail);
+  border: 1px solid var(--status-fail-border);
+}
+.badge-priority-crimson .priority-gauge-indicator {
+  background-color: var(--status-fail);
+  box-shadow: 0 0 5px rgba(220, 38, 38, 0.45);
+}
+
+.badge-priority-amber {
+  background: var(--status-warn-bg);
+  color: var(--status-warn);
+  border: 1px solid var(--status-warn-border);
+}
+.badge-priority-amber .priority-gauge-indicator {
+  background-color: var(--status-warn);
+  box-shadow: 0 0 5px rgba(217, 119, 6, 0.45);
+}
+
+.badge-priority-blue {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+  border: 1px solid rgba(0, 102, 204, 0.3);
+}
+.badge-priority-blue .priority-gauge-indicator {
+  background-color: var(--color-accent);
+  box-shadow: 0 0 5px rgba(0, 102, 204, 0.45);
+}
+
+/* Priority Breakdown Floating Tooltip */
+.priority-tooltip {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  background: #0f172a;
+  color: #ffffff;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: 11px;
+  font-family: var(--font-sans);
+  white-space: nowrap;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.35), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  z-index: 100;
+  pointer-events: none;
+  transition: opacity 0.18s ease, visibility 0.18s ease, transform 0.18s ease;
+  transform: translateY(4px);
+}
+
+.priority-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  right: 12px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #0f172a transparent transparent transparent;
+}
+
+.priority-score-container:hover .priority-tooltip,
+.priority-badge:focus + .priority-tooltip,
+.priority-badge:hover + .priority-tooltip {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.priority-tooltip-header {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  margin-bottom: 2px;
+}
+
+.priority-tooltip-formula {
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-semibold);
+  color: #38bdf8;
+  display: block;
+}
+
+/* =========================================================================
+   Statutory SLA Deadline Countdown Timer (Step 17)
+   Spec Reference: ROADMAP.md (Phase 3: Step 17), Guide §11.7, §17.1
+   Cutoff: 14 calendar days from submission.
+   States: > 7 days gray, 3-7 days yellow, < 3 days pulsating red.
+   ========================================================================= */
+
+@keyframes pulse-sla {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(220, 38, 38, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+  }
+}
+
+.sla-countdown-badge {
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+/* State 1: Normal (> 7 days remaining: gray / neutral) */
+.badge-sla-normal {
+  background: var(--bg-surface-muted);
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+}
+
+/* State 2: Warning (3-7 days remaining: yellow / amber) */
+.badge-sla-warning {
+  background: var(--status-warn-bg);
+  color: var(--status-warn);
+  border: 1px solid var(--status-warn-border);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* State 3: Critical (< 3 days remaining: pulsating red) */
+.badge-sla-critical {
+  background: var(--status-fail-bg);
+  color: var(--status-fail);
+  border: 1px solid var(--status-fail-border);
+  font-weight: var(--font-weight-bold);
+  animation: pulse-sla 1.8s infinite;
+}
+
+.sla-urgency-tag {
+  display: inline-block;
+  font-size: 10px;
+}
+
+/* =========================================================================
+   Filter, Search & Sorting Engine Toolbar (Step 18)
+   Spec Reference: ROADMAP.md (Phase 3: Step 18), Guide §11.7
+   ========================================================================= */
+
+.queue-toolbar {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  box-shadow: var(--shadow-xs);
+  margin-bottom: var(--space-4);
+}
+
+.queue-search-box {
+  position: relative;
+  flex: 1;
+  min-width: 260px;
+}
+
+.queue-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.queue-search-input {
+  width: 100%;
+  padding-left: 36px;
+  padding-right: 12px;
+  height: 38px;
+  font-size: var(--font-size-sm);
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.queue-search-input:focus {
+  background: var(--bg-surface);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
+  outline: none;
+}
+
+.queue-filter-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.queue-filter-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.queue-filter-group select {
+  height: 38px;
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-xs);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.queue-filter-group select:focus {
+  border-color: var(--color-accent);
+  outline: none;
+}
+
+.queue-filter-count {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+
+

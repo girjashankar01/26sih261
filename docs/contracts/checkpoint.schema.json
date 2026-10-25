@@ -1,0 +1,46 @@
+{
+  "additionalProperties": true,
+  "properties": {
+    "id": {
+      "description": "Unique checkpoint ID",
+      "title": "Id",
+      "type": "string"
+    },
+    "upto_id": {
+      "description": "Event ID up to which chain is anchored",
+      "title": "Upto Id",
+      "type": "integer"
+    },
+    "head_hash": {
+      "description": "Head SHA-256 hash at upto_id",
+      "title": "Head Hash",
+      "type": "string"
+    },
+    "signature": {
+      "description": "Ed25519 signature of 'upto_id:head_hash'",
+      "title": "Signature",
+      "type": "string"
+    },
+    "key_id": {
+      "description": "Identifier of trusted signing key",
+      "title": "Key Id",
+      "type": "string"
+    },
+    "created_at": {
+      "description": "ISO 8601 UTC timestamp",
+      "title": "Created At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "upto_id",
+    "head_hash",
+    "signature",
+    "key_id",
+    "created_at"
+  ],
+  "title": "CheckpointModel",
+  "type": "object",
+  "": "https://aicte.gov.in/schemas/v4/checkpoint.schema.json"
+}

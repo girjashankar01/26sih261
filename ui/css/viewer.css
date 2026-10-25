@@ -1,0 +1,1116 @@
+/* =========================================================================
+   AICTE Application Validation Platform — Viewer & Upload Stylesheet
+   Spec Reference: ROADMAP.md (Phase 2 & Phase 5)
+   ========================================================================= */
+
+/* Dropzone Styling (Step 07) */
+.dropzone {
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8) var(--space-6);
+  text-align: center;
+  background-color: var(--bg-surface-subtle);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  position: relative;
+  user-select: none;
+}
+
+.dropzone:hover {
+  border-color: var(--color-accent);
+  background-color: rgba(0, 102, 204, 0.04);
+}
+
+.dropzone.dragover,
+.dropzone.active {
+  border-color: var(--color-accent);
+  background-color: rgba(0, 102, 204, 0.08);
+  box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.15);
+  transform: scale(1.005);
+}
+
+.dropzone-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background-color: rgba(0, 102, 204, 0.1);
+  color: var(--color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-1);
+}
+
+.dropzone-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-main);
+  margin: 0;
+}
+
+.dropzone-subtitle {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.format-hint-pills {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: var(--space-2);
+}
+
+.format-pill {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* Staged Files List */
+.staged-files-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.staged-file-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  gap: var(--space-3);
+  transition: border-color var(--transition-fast);
+}
+
+.staged-file-card:hover {
+  border-color: var(--border-strong);
+}
+
+.staged-file-card.has-error {
+  border-color: var(--status-fail);
+  background-color: rgba(220, 38, 38, 0.04);
+}
+
+.staged-file-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  flex: 1;
+}
+
+.staged-file-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-surface-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+}
+
+.staged-file-details {
+  min-width: 0;
+  flex: 1;
+}
+
+.staged-file-name {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.staged-file-meta {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* Slot Selection Dropdown (Step 09) */
+.slot-select {
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.slot-select:focus {
+  border-color: var(--color-accent);
+}
+
+/* Idempotency Key Tag & Regenerator (Step 09) */
+.idempotency-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--bg-surface-muted);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  user-select: all;
+}
+
+.btn-regen-key {
+  background: none;
+  border: none;
+  padding: 0 2px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-regen-key:hover {
+  color: var(--color-accent);
+}
+
+/* S3 Document Routing Badges (Step 11) */
+.badge-routing-digital {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.03em;
+}
+
+.badge-routing-scanned {
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.03em;
+}
+
+.badge-routing-mixed {
+  background: rgba(0, 102, 204, 0.12);
+  color: #0066cc;
+  border: 1px solid rgba(0, 102, 204, 0.35);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.03em;
+}
+
+.badge-routing-vector {
+  background: rgba(124, 58, 237, 0.12);
+  color: #7c3aed;
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.03em;
+}
+
+/* =========================================================================
+   Content-Addressed Document Card Component (Step 12)
+   ========================================================================= */
+.document-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+.document-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  box-shadow: var(--shadow-xs);
+  transition: all var(--transition-fast);
+}
+
+.document-card:hover {
+  border-color: var(--border-default);
+  box-shadow: var(--shadow-sm);
+}
+
+.document-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.document-card-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.document-meta-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  flex-wrap: wrap;
+}
+
+.hash-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 3px 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-body);
+}
+
+.hash-label {
+  color: var(--text-muted);
+  margin-right: var(--space-1);
+}
+
+.hash-value {
+  color: var(--color-primary-dark);
+  font-weight: var(--font-weight-semibold);
+}
+
+.btn-copy-hash {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 1px 4px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1;
+  margin-left: var(--space-1);
+}
+
+.btn-copy-hash:hover {
+  color: var(--color-accent);
+  background-color: rgba(0, 102, 204, 0.08);
+}
+
+.document-card-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.staged-file-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.btn-remove-staged {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-size: var(--font-size-base);
+}
+
+.btn-remove-staged:hover {
+  color: var(--status-fail);
+  background-color: rgba(220, 38, 38, 0.1);
+}
+
+/* Upload Progress Bar */
+.upload-progress-container {
+  width: 100%;
+  height: 6px;
+  background-color: var(--bg-surface-muted);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-top: var(--space-2);
+}
+
+.upload-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-accent) 0%, var(--color-primary) 100%);
+  width: 0%;
+  transition: width var(--transition-normal);
+}
+
+/* =========================================================================
+   Phase 5: Interactive Evidence Viewer & Findings Console (Step 25)
+   ========================================================================= */
+
+.evidence-split-workspace {
+  display: flex;
+  flex-direction: row;
+  gap: var(--space-4);
+  width: 100%;
+  min-height: 680px;
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Left Pane: Document Canvas Renderer (60% width on desktop >= 1024px) */
+.evidence-left-pane {
+  flex: 0 0 60%;
+  width: 60%;
+  max-width: 60%;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-default);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Right Pane: Discrepancy Findings Inspector (40% width on desktop >= 1024px) */
+.evidence-right-pane {
+  flex: 0 0 40%;
+  width: 40%;
+  max-width: 40%;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  overflow: hidden;
+}
+
+/* Responsive Stacking: Stacks vertically on smaller viewports (< 1024px) */
+@media (max-width: 1023px) {
+  .evidence-split-workspace {
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  .evidence-left-pane,
+  .evidence-right-pane {
+    flex: 1 1 100%;
+    width: 100%;
+    max-width: 100%;
+    border-right: none;
+  }
+
+  .evidence-left-pane {
+    border-bottom: 1px solid var(--border-default);
+    min-height: 480px;
+  }
+
+  .evidence-right-pane {
+    min-height: 380px;
+  }
+}
+
+/* Canvas Toolbar & Controls */
+.evidence-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-surface-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.evidence-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.evidence-canvas-viewport {
+  flex: 1;
+  position: relative;
+  overflow: auto;
+  background: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 520px;
+  padding: var(--space-4);
+  user-select: none;
+  cursor: grab;
+}
+
+.evidence-canvas-viewport.is-panning {
+  cursor: grabbing;
+}
+
+.evidence-canvas-wrapper {
+  position: relative;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+  overflow: hidden;
+  display: inline-block;
+  transition: transform 0.15s ease-out;
+  transform-origin: top center;
+}
+
+.evidence-canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.evidence-overlay-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: all;
+  z-index: 10;
+}
+
+/* =========================================================================
+   Step 27: Normalized Bounding Box SVG Overlay Styles (Guide §17.2)
+   ========================================================================= */
+
+.bbox-group {
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.bbox-rect {
+  fill: rgba(0, 102, 204, 0.12);
+  stroke: var(--color-primary);
+  stroke-width: 2px;
+  rx: 2px;
+  ry: 2px;
+  transition: all var(--transition-fast);
+}
+
+/* Word Precision: Solid border */
+.bbox-precision-word {
+  stroke: #0284c7;
+  stroke-dasharray: none;
+  fill: rgba(2, 132, 199, 0.14);
+}
+
+/* Block Precision: Dashed border */
+.bbox-precision-block {
+  stroke: #8b5cf6;
+  stroke-dasharray: 6, 4;
+  fill: rgba(139, 92, 246, 0.10);
+}
+
+/* High Severity / Expired Discrepancy Highlight */
+.bbox-severity-high,
+.bbox-discrepancy {
+  stroke: #dc2626 !important;
+  fill: rgba(220, 38, 38, 0.18) !important;
+}
+
+/* Interactive States: Hover & Active/Selected */
+.bbox-group:hover .bbox-rect,
+.bbox-rect.is-hovered {
+  fill: rgba(245, 158, 11, 0.25) !important;
+  stroke: #f59e0b !important;
+  stroke-width: 2.5px;
+  filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.6));
+}
+
+.bbox-group.is-selected .bbox-rect,
+.bbox-rect.is-selected {
+  fill: rgba(220, 38, 38, 0.3) !important;
+  stroke: #dc2626 !important;
+  stroke-width: 3px;
+  filter: drop-shadow(0 0 6px rgba(220, 38, 38, 0.8));
+}
+
+/* Step 29: Bidirectional Finding-to-Canvas Amber Pulse Highlight */
+@keyframes bboxAmberPulse {
+  0% {
+    stroke: #f59e0b;
+    stroke-width: 2.5px;
+    fill: rgba(245, 158, 11, 0.2);
+  }
+  50% {
+    stroke: #d97706;
+    stroke-width: 4px;
+    fill: rgba(245, 158, 11, 0.45);
+    filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.85));
+  }
+  100% {
+    stroke: #f59e0b;
+    stroke-width: 2.5px;
+    fill: rgba(245, 158, 11, 0.2);
+  }
+}
+
+.bbox-pulse-highlight .bbox-rect,
+.bbox-group.bbox-pulse-highlight .bbox-rect,
+.bbox-rect.bbox-pulse-highlight {
+  animation: bboxAmberPulse 1.2s infinite ease-in-out !important;
+  stroke: #f59e0b !important;
+}
+
+.bbox-label-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  fill: #ffffff;
+  pointer-events: none;
+}
+
+.bbox-label-bg {
+  fill: #0f172a;
+  rx: 2px;
+  ry: 2px;
+  opacity: 0.85;
+}
+
+/* Findings Pane Header & List */
+.findings-inspector-header {
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-surface-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.findings-inspector-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.finding-empty-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) var(--space-4);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* =========================================================================
+   Step 28: Two-Sided Comparison Finding Card Component (ROADMAP Phase 5)
+   ========================================================================= */
+
+.finding-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.finding-card:hover {
+  border-color: var(--color-primary-light);
+  box-shadow: var(--shadow-md);
+}
+
+.finding-card.is-active,
+.finding-card.highlight-pulse {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.25), var(--shadow-md);
+}
+
+.finding-advisory-banner {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 11px;
+  color: #b45309;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  line-height: 1.3;
+}
+
+/* Two-Sided Comparison Grid */
+.two-sided-comparison {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-2);
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  margin: var(--space-3) 0;
+  position: relative;
+}
+
+.comparison-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.comparison-column-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.comparison-value {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.comparison-vs-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-muted);
+  padding: 0 4px;
+  user-select: none;
+}
+
+.comparison-observed {
+  border-right: 1px dashed var(--border-default);
+  padding-right: var(--space-2);
+}
+
+.comparison-expected {
+  padding-left: var(--space-2);
+}
+
+.badge-precision-word {
+  background: rgba(2, 132, 199, 0.1);
+  color: #0284c7;
+  border: 1px solid rgba(2, 132, 199, 0.3);
+}
+
+.badge-precision-block {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.finding-action-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-subtle);
+  flex-wrap: wrap;
+}
+
+/* Lifecycle Badges (Step 30) */
+.badge-ack {
+  background: rgba(14, 165, 233, 0.12);
+  color: #0284c7;
+  border: 1px solid rgba(14, 165, 233, 0.35);
+}
+
+.badge-dismissed {
+  background: rgba(100, 116, 139, 0.12);
+  color: #64748b;
+  border: 1px solid rgba(100, 116, 139, 0.35);
+  text-decoration: line-through;
+}
+
+.badge-escalated {
+  background: rgba(139, 92, 246, 0.12);
+  color: #8b5cf6;
+  border: 1px solid rgba(139, 92, 246, 0.35);
+}
+
+/* Action Control Bar Buttons (Step 30) */
+.btn-action {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all var(--transition-fast);
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  line-height: 1.4;
+}
+
+.btn-action:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--bg-surface-subtle);
+}
+
+.btn-action:disabled,
+.btn-action.is-active {
+  cursor: default;
+  opacity: 0.9;
+}
+
+.btn-action-ack:hover:not(:disabled) {
+  border-color: #0284c7;
+  color: #0284c7;
+}
+
+.btn-action-ack.is-active {
+  background: rgba(2, 132, 199, 0.12);
+  border-color: #0284c7;
+  color: #0284c7;
+  font-weight: 700;
+}
+
+.btn-action-rectify {
+  color: #ea580c;
+  border-color: rgba(234, 88, 12, 0.3);
+}
+
+.btn-action-rectify:hover:not(:disabled) {
+  border-color: #ea580c;
+  background: rgba(234, 88, 12, 0.06);
+}
+
+.btn-action-rectify.is-active {
+  background: rgba(234, 88, 12, 0.12);
+  border-color: #ea580c;
+  color: #ea580c;
+  font-weight: 700;
+}
+
+.btn-action-dismiss {
+  color: var(--text-muted);
+}
+
+.btn-action-dismiss:hover:not(:disabled) {
+  border-color: #64748b;
+  color: var(--text-main);
+}
+
+.btn-action-dismiss.is-active {
+  background: rgba(100, 116, 139, 0.12);
+  border-color: #64748b;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.btn-action-escalate {
+  color: #8b5cf6;
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+.btn-action-escalate:hover:not(:disabled) {
+  border-color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.06);
+}
+
+.btn-action-escalate.is-active {
+  background: rgba(139, 92, 246, 0.12);
+  border-color: #8b5cf6;
+  color: #8b5cf6;
+  font-weight: 700;
+}
+
+.btn-action-resolve {
+  color: #16a34a;
+  border-color: rgba(22, 163, 74, 0.3);
+}
+
+.btn-action-resolve:hover:not(:disabled) {
+  border-color: #16a34a;
+  background: rgba(22, 163, 74, 0.06);
+}
+
+/* Lifecycle State Notices (Step 30) */
+.finding-override-notice,
+.finding-rectification-notice,
+.finding-escalation-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  line-height: 1.4;
+  margin-top: var(--space-2);
+}
+
+.finding-override-notice {
+  background: rgba(100, 116, 139, 0.08);
+  border: 1px solid #94a3b8;
+  color: var(--text-muted);
+}
+
+.finding-rectification-notice {
+  background: rgba(234, 88, 12, 0.08);
+  border: 1px solid #ea580c;
+  color: #9a3412;
+}
+
+.finding-escalation-notice {
+  background: rgba(139, 92, 246, 0.08);
+  border: 1px solid #8b5cf6;
+  color: #6d28d9;
+}
+
+.finding-card.is-dismissed {
+  opacity: 0.82;
+  border-left-color: #64748b !important;
+}
+
+/* Action Audit Timeline (Step 30) */
+.finding-timeline {
+  margin-top: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px dashed var(--border-default);
+}
+
+.finding-timeline-header {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.finding-timeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.timeline-entry {
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 11px;
+}
+
+.timeline-entry-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: 2px;
+}
+
+.timeline-action-badge {
+  font-size: 9px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.timeline-action-badge.action-acknowledge {
+  background: rgba(2, 132, 199, 0.15);
+  color: #0284c7;
+}
+
+.timeline-action-badge.action-request_rectification {
+  background: rgba(234, 88, 12, 0.15);
+  color: #ea580c;
+}
+
+.timeline-action-badge.action-dismiss {
+  background: rgba(100, 116, 139, 0.15);
+  color: #64748b;
+}
+
+.timeline-action-badge.action-escalate {
+  background: rgba(139, 92, 246, 0.15);
+  color: #8b5cf6;
+}
+
+.timeline-action-badge.action-resolve {
+  background: rgba(22, 163, 74, 0.15);
+  color: #16a34a;
+}
+
+.timeline-actor {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.timeline-time {
+  font-size: 10px;
+  color: var(--text-faint);
+}
+
+.timeline-reason {
+  margin-top: 3px;
+  color: var(--text-main);
+  line-height: 1.35;
+}
+
+.timeline-meta {
+  margin-top: 3px;
+  font-size: 9px;
+  color: var(--text-faint);
+}
+
+/* Modal Overlay Styles (Step 30/31) */
+.action-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(2px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+.action-modal-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 480px;
+  overflow: hidden;
+  animation: modalScaleIn 0.15s ease-out;
+}
+
+@keyframes modalScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.action-modal-header {
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface-subtle);
+}
+
+.action-modal-body {
+  padding: var(--space-4);
+}
+
+.action-modal-footer {
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-surface-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.action-modal-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 85px;
+  padding: var(--space-2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-family: inherit;
+  resize: vertical;
+  line-height: 1.4;
+}
+
+.action-modal-textarea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.15);
+}
+
+.action-modal-error {
+  color: var(--status-fail);
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: var(--space-1);
+}
+
+.action-modal-char-count {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  text-align: right;
+  margin-top: 4px;
+}
+
+.action-modal-char-count.is-valid {
+  color: var(--status-pass);
+}
+
+.action-modal-char-count.is-invalid {
+  color: var(--status-fail);
+}

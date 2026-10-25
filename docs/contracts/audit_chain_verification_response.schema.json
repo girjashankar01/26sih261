@@ -1,0 +1,60 @@
+{
+  "additionalProperties": true,
+  "properties": {
+    "ok": {
+      "description": "True if hash chain integrity is 100% verified",
+      "title": "Ok",
+      "type": "boolean"
+    },
+    "head": {
+      "description": "Current head SHA-256 hash of audit chain",
+      "title": "Head",
+      "type": "string"
+    },
+    "count": {
+      "description": "Count of verified events in chain",
+      "title": "Count",
+      "type": "integer"
+    },
+    "first_bad_id": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "First tampered or invalid event ID if ok=False",
+      "title": "First Bad Id"
+    },
+    "reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Integrity failure reason if ok=False",
+      "title": "Reason"
+    },
+    "verified_at": {
+      "description": "ISO 8601 UTC timestamp of verification",
+      "title": "Verified At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "ok",
+    "head",
+    "count",
+    "verified_at"
+  ],
+  "title": "AuditChainVerificationResponseModel",
+  "type": "object",
+  "": "https://aicte.gov.in/schemas/v4/audit_chain_verification_response.schema.json"
+}

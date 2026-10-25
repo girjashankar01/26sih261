@@ -1,0 +1,87 @@
+{
+  "application_id": "APP-2026-EOA-9876",
+  "pipeline_stage": "S11_AGGREGATION",
+  "category": "EOA_RENEWAL",
+  "workflow_status": "NEEDS_RECTIFICATION",
+  "review_lane": "NEEDS_EVIDENCE",
+  "priority": {
+    "score": 235,
+    "formula": "100·high + 30·medium + 5·low + age_days + deadline_pressure",
+    "breakdown": {
+      "high": 2,
+      "medium": 1,
+      "low": 1,
+      "age_days": 0,
+      "deadline_pressure": 0
+    }
+  },
+  "summary": {
+    "total_documents": 3,
+    "total_checks": 7,
+    "passed_checks": 5,
+    "failed_checks": 2,
+    "needs_review_checks": 0,
+    "open_findings": 2,
+    "verifications_count": 2,
+    "infra_items_count": 3
+  },
+  "checks": [
+    {
+      "rule_id": "R-DOC-001",
+      "rule_version": "1.0.0",
+      "status": "PASS",
+      "category": "MISSING_DOCUMENT",
+      "reason": "All mandatory documents provided",
+      "evidence": {}
+    }
+  ],
+  "findings": [
+    {
+      "rule_id": "R-EXP-001",
+      "rule_version": "1.0.0",
+      "status": "FAILED_CHECK",
+      "category": "EXPIRED_CERTIFICATE",
+      "severity": "high",
+      "lifecycle": "open",
+      "advisory": true,
+      "reason": "Certificate expired on 2024-03-31",
+      "evidence": {}
+    }
+  ],
+  "verifications": [
+    {
+      "document_id": "doc_fire_01",
+      "adapter": "qr_state_fire_service",
+      "source": "state_fire_service_portal",
+      "status": "EXPIRED",
+      "simulated": true,
+      "checked_at": "2026-10-24T12:00:00Z",
+      "reason": "Fire NOC certificate FIRE/KA/2024/00123 has expired"
+    }
+  ],
+  "infra_checklist": [
+    {
+      "item_key": "computer_center",
+      "label": "Computer Centre",
+      "status": "EVIDENCE_COMPLETE_FOR_REVIEW",
+      "reason": "Computer Centre evidence complete for review",
+      "severity": "info",
+      "evidence_count": 1,
+      "flags": []
+    }
+  ],
+  "alerts": [
+    {
+      "id": "alt-exp-001",
+      "application_id": "APP-2026-EOA-9876",
+      "category": "DOCUMENT_EXPIRED",
+      "severity": "high",
+      "title": "Expired Mandatory Document",
+      "message": "Certificate expired on 2024-03-31",
+      "created_at": "2026-10-24T12:00:00Z"
+    }
+  ],
+  "simulated": true,
+  "decision_support_only": true,
+  "created_at": "2026-10-24T12:00:00Z"
+}

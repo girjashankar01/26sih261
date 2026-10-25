@@ -1,0 +1,36 @@
+checklist_name: EOA_RENEWAL
+version: 1
+demo: true
+items:
+  - key: computer_lab_photos
+    label: "Computer Laboratory"
+    status: synthetic_demo
+    min_files: 2
+    geo_required: false
+    radius_km: 2.0
+    claimed_value:
+      form: lab_area_sqm
+    min_value: 60
+    if_missing_severity: medium
+
+  - key: classroom_photos
+    label: "Instructional Classrooms"
+    status: synthetic_demo
+    min_files: 2
+    geo_required: true
+    radius_km: 2.0
+    claimed_value:
+      form: classroom_area_sqm
+    min_value: 66
+    if_missing_severity: medium
+
+  - key: central_library_photos
+    label: "Central Library"
+    status: synthetic_demo
+    min_files: 1
+    geo_required: false
+    radius_km: 2.0
+    claimed_value:
+      form: library_area_sqm
+    min_value: 150
+    if_missing_severity: medium

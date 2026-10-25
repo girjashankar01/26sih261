@@ -1,36 +1,390 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AICTE Validation Prototype</title><link rel="stylesheet" href="/static/style.css"></head>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AICTE Application Validation Platform — SIH 2026 · PS 26261</title>
+  <link rel="stylesheet" href="/static/css/main.css">
+  <link rel="stylesheet" href="/static/css/viewer.css">
+  <link rel="stylesheet" href="/static/css/queue.css">
+  <link rel="stylesheet" href="/static/css/verification.css">
+  <link rel="stylesheet" href="/static/css/infra.css">
+  <link rel="stylesheet" href="/static/css/exports.css">
+  <link rel="stylesheet" href="/static/css/audit.css">
+  <link rel="stylesheet" href="/static/css/rules.css">
+  <link rel="stylesheet" href="/static/css/realness.css">
+  <link rel="stylesheet" href="/static/css/shortcuts.css">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
 <body>
-  <header><div class="eyebrow">SIH 2026 · PS 26261</div><h1>Application validation</h1><p>Decision-support prototype</p></header>
-  <main><div class="notice"><b>Demo environment</b> — application and record data are synthetic. No AICTE or issuing-authority systems are connected. Findings require officer review.</div>
-    <section class="layout"><aside><h2>Demo applications</h2><div id="applications">Loading…</div></aside><section id="report" aria-live="polite"><p>Select an application to view its report.</p></section></section>
-  </main>
-  <script>
-    const esc = x => String(x ?? '—').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    const applications = document.querySelector('#applications'), report = document.querySelector('#report');
-    async function show(id) {
-      report.innerHTML = '<p>Loading demo report…</p>';
-      const response = await fetch(`/api/demo/applications/${encodeURIComponent(id)}/validate`);
-      if (!response.ok) { report.textContent = 'Could not load report.'; return; }
-      const data = await response.json();
-      report.innerHTML = `
-        <div class="report-head">
-          <div><div class="eyebrow">${esc(data.category)} · ${esc(data.application_id)}</div><h2>Validation report</h2></div>
-          <span class="badge">SIMULATED</span>
+
+  <!-- Top App Header & Role Switcher (Step 02) -->
+  <header class="app-header">
+    <div class="app-header-inner">
+      <a href="#queue" class="brand">
+        <div class="brand-emblem">AI</div>
+        <div class="brand-text">
+          <h1>AICTE Regulation Bureau</h1>
+          <p>Application Validation Platform · PS 26261</p>
         </div>
-        <p class="workflow">${esc(data.workflow.replaceAll('_',' '))}</p>
-        <p class="muted">Decision support only · ${esc(data.rule_set)} v${esc(data.rule_set_version)} · ${esc(data.coverage ? data.coverage.summary : 'Partial demo coverage')}</p>
-        <h3>Findings (${data.findings.length})</h3>
-        ${data.findings.length ? data.findings.map(f => `<article class="finding"><b>${esc(f.rule_id)} · ${esc(f.category)} (${esc(f.severity)})</b><p>${esc(f.reason)}</p><pre>${esc(JSON.stringify(f.evidence,null,2))}</pre></article>`).join('') : '<p class="pass">No issues found within enabled demo checks (' + data.checks.length + ' passed). OCR, document forensics, and live issuer checks are not evaluated in this demo slice.</p>'}
-        <h3>Passed checks (${data.checks.length})</h3>
-        <ul>${data.checks.map(c => `<li><b>${esc(c.rule_id)}</b> — ${esc(c.reason)}</li>`).join('')}</ul>
-      `;
+      </a>
+
+      <!-- Primary Navigation Tabs -->
+      <nav class="nav-tabs-bar" aria-label="Main Navigation">
+        <button id="nav-btn-queue" class="nav-tab-btn active" data-target="view-queue" data-route="#queue">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+          Queue Dashboard
+        </button>
+        <button id="nav-btn-workspace" class="nav-tab-btn" data-target="view-workspace" data-route="#workspace">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Application Workspace
+        </button>
+        <button id="nav-btn-rules" class="nav-tab-btn" data-target="view-rules" data-route="#rules">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          Rules Explorer
+        </button>
+        <button id="nav-btn-audit" class="nav-tab-btn" data-target="view-audit" data-route="#audit">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Audit & Tamper
+        </button>
+        <button id="nav-btn-realness" class="nav-tab-btn" data-target="view-realness" data-route="#about/realness">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          Realness Matrix
+        </button>
+      </nav>
+
+      <!-- System Status Indicators & Role Switcher -->
+      <div class="nav-controls">
+        <span class="badge badge-offline" title="Air-gapped topology proof: No external data transmission">
+          OFFLINE · SOVEREIGN
+        </span>
+        <select id="role-switcher" class="role-select" aria-label="Select User Role">
+          <option value="officer">Role: Scrutiny Officer</option>
+          <option value="senior_officer">Role: Senior Officer</option>
+          <option value="institution">Role: Institution (Applicant)</option>
+          <option value="auditor">Role: Independent Auditor</option>
+        </select>
+        <span id="role-badge" class="badge badge-pass text-xs" style="font-size: 11px;">Scrutiny Officer</span>
+        <button id="btn-shortcuts-help" class="btn btn-outline btn-sm" title="Keyboard Shortcuts (?)" style="color:#fff; border-color:rgba(255,255,255,0.2); background:transparent;">
+          ?
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sticky System Advisory Banner (Non-Negotiable) -->
+  <div class="container" style="margin-top: var(--space-4);">
+    <aside class="advisory-banner">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0; margin-top:2px;">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <div class="flex items-center justify-between" style="width:100%; gap: var(--space-3); flex-wrap: wrap;">
+        <div>
+          <strong>Decision-Support Prototype (SIH PS 26261):</strong>
+          AI proposes, deterministic rules decide, officers approve. Demonstrates traceable extraction, verifiable checklists, and tamper-evident audit trails.
+        </div>
+        <span class="badge badge-simulated">SIMULATED DATA · NOT AICTE-INTEGRATED</span>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Main Viewports Container -->
+  <main class="app-main container">
+
+    <!-- Viewport 1: Queue Dashboard (Step 03 & Phase 3) -->
+    <section id="view-queue" class="app-viewport">
+      <div class="card" style="margin-bottom: var(--space-6);">
+        <div class="card-header">
+          <div>
+            <h2>Triage & Priority Queue</h2>
+            <p class="text-muted text-xs">Applications scored by severity, document age, and deadline pressure</p>
+          </div>
+          <button id="btn-open-upload-modal" class="btn btn-primary btn-sm">
+            + Upload Application Bundle
+          </button>
+        </div>
+        <div class="card-body">
+          <div id="queue-kpi-bar" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-6);">
+            <div class="card" style="padding: var(--space-4); background: var(--bg-surface-subtle);">
+              <div class="text-muted text-xs">Total Active Queue</div>
+              <div id="kpi-total-apps" style="font-size: var(--font-size-2xl); font-weight: bold; color: var(--color-primary);">2</div>
+            </div>
+            <div class="card" style="padding: var(--space-4); background: var(--lane-scrutiny-bg);">
+              <div class="text-muted text-xs">Needs Scrutiny</div>
+              <div id="kpi-needs-scrutiny" style="font-size: var(--font-size-2xl); font-weight: bold; color: var(--lane-scrutiny);">1</div>
+            </div>
+            <div class="card" style="padding: var(--space-4); background: var(--lane-verification-bg);">
+              <div class="text-muted text-xs">Needs Verification</div>
+              <div id="kpi-needs-verification" style="font-size: var(--font-size-2xl); font-weight: bold; color: var(--lane-verification);">0</div>
+            </div>
+            <div class="card" style="padding: var(--space-4); background: var(--lane-fast-bg);">
+              <div class="text-muted text-xs">Fast Review Eligible</div>
+              <div id="kpi-fast-review" style="font-size: var(--font-size-2xl); font-weight: bold; color: var(--lane-fast);">1</div>
+            </div>
+          </div>
+
+          <!-- Filter, Search & Sorting Toolbar (Step 18) -->
+          <div id="queue-filter-toolbar" class="queue-toolbar-container" style="margin-bottom: var(--space-4);"></div>
+
+          <!-- 4-Lane Triage Board (Step 14 & Phase 3) -->
+          <div id="queue-triage-board" style="margin-bottom: var(--space-6);"></div>
+
+          <!-- Demo Application Switcher (Legacy Bridge) -->
+          <div class="layout">
+            <aside>
+              <h3 style="margin-bottom: var(--space-3);">Demo Applications</h3>
+              <div id="applications">Loading applications…</div>
+            </aside>
+            <section id="report" aria-live="polite">
+              <p>Select an application to view its evaluation report.</p>
+            </section>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Viewport 2: Application Workspace (Phase 4 & 5) -->
+    <section id="view-workspace" class="app-viewport hidden">
+      <div id="workspace-root" class="workspace-container">
+        <!-- Rendered dynamically by WorkspaceComponent (Step 19) -->
+      </div>
+    </section>
+
+    <!-- Viewport 3: Rules & Checklists Explorer (Phase 10) -->
+    <section id="view-rules" class="app-viewport hidden">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>Rules & Checklists Explorer</h2>
+            <p class="text-muted text-xs">Versioned regulatory logic conforming to Approval Process Handbook norms</p>
+          </div>
+          <span class="badge badge-simulated">SYNTHETIC_DEMO NORMS</span>
+        </div>
+        <div class="card-body">
+          <p class="text-muted">Loading active rule definitions for <code>EOA_RENEWAL.yaml</code>…</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Viewport 4: Audit & Tamper Console (Phase 9) -->
+    <section id="view-audit" class="app-viewport hidden">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>Cryptographic Audit Trail & Checkpoints</h2>
+            <p class="text-muted text-xs">Strictly sequential SHA-256 hash chain with signed Ed25519 external checkpoints</p>
+          </div>
+          <button id="btn-verify-chain" class="btn btn-primary btn-sm">Verify Hash Chain</button>
+        </div>
+        <div class="card-body">
+          <p class="text-muted">Loading tamper-evident event log from Genesis to Head…</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Viewport 5: System Realness Matrix (Phase 10) -->
+    <section id="view-realness" class="app-viewport hidden">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>System Realness & Transparency Matrix</h2>
+            <p class="text-muted text-xs">Honest disclosure of real vs. simulated prototype capabilities per Prototype Guide §1.4</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <table style="width:100%; border-collapse:collapse; font-size:var(--font-size-xs);">
+            <thead>
+              <tr style="border-bottom:2px solid var(--border-default); text-align:left;">
+                <th style="padding:var(--space-2);">Component</th>
+                <th style="padding:var(--space-2);">Status</th>
+                <th style="padding:var(--space-2);">Technical Implementation</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid var(--border-subtle);">
+                <td style="padding:var(--space-2);"><strong>Ingest & Storage (S1)</strong></td>
+                <td><span class="badge badge-pass">REAL</span></td>
+                <td>Streaming upload, BLAKE3 + SHA-256 in one pass, content-addressed vault storage.</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border-subtle);">
+                <td style="padding:var(--space-2);"><strong>Forensics & Signatures (S2)</strong></td>
+                <td><span class="badge badge-pass">REAL</span></td>
+                <td>PDF metadata, pyHanko digital signature validation, QR code locator decoding.</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border-subtle);">
+                <td style="padding:var(--space-2);"><strong>Routing & OCR Extraction (S3, S4)</strong></td>
+                <td><span class="badge badge-pass">REAL</span></td>
+                <td>Branch A/B routing, Docling digital text extraction, table normalisation.</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border-subtle);">
+                <td style="padding:var(--space-2);"><strong>Rules Engine v4 (S8)</strong></td>
+                <td><span class="badge badge-pass">REAL</span></td>
+                <td>Deterministic 3-valued gate; evaluates expiry, intake, and document presence.</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border-subtle);">
+                <td style="padding:var(--space-2);"><strong>Audit Trail (S13)</strong></td>
+                <td><span class="badge badge-pass">REAL</span></td>
+                <td>Tamper-evident sequential SHA-256 hash chain and asymmetric Ed25519 signed checkpoints.</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border-subtle);">
+                <td style="padding:var(--space-2);"><strong>AICTE Institutional Records</strong></td>
+                <td><span class="badge badge-simulated">SIMULATED</span></td>
+                <td>Authorised records simulated via <code>MockRecordsAdapter</code> with explicit simulation metadata.</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border-subtle);">
+                <td style="padding:var(--space-2);"><strong>State Fire Service Online Registry</strong></td>
+                <td><span class="badge badge-simulated">SIMULATED</span></td>
+                <td>Simulated verification adapter responding to decoded QR parameters.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Global Modal Container (Hidden by default) -->
+  <div id="modal-container" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-dialog">
+      <div class="card-header">
+        <h3 id="modal-title">Modal Window</h3>
+        <button id="modal-close-btn" class="btn btn-outline btn-sm" aria-label="Close Modal">&times;</button>
+      </div>
+      <div id="modal-body" class="card-body"></div>
+      <div id="modal-footer" class="card-footer flex justify-between"></div>
+    </div>
+  </div>
+
+  <!-- Global Toast Notifications Container -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- Global State Store (Step 05) -->
+  <script src="/static/js/state.js"></script>
+
+  <!-- API Client Layer (Step 04) -->
+  <script src="/static/js/api.js"></script>
+
+  <!-- Router Script (Step 03) -->
+  <script src="/static/js/app.js"></script>
+
+  <!-- Top Navigation & Role Switcher Component (Step 06) -->
+  <script src="/static/js/components/nav.js"></script>
+
+  <!-- Document Intake & Upload Modal Component (Step 07) -->
+  <script src="/static/js/components/upload_modal.js"></script>
+
+  <!-- Document List & S3 Routing Badge Component (Step 11 & Step 12) -->
+  <script src="/static/js/components/document_list.js"></script>
+
+  <!-- Application Queue Card Component (Step 15) -->
+  <script src="/static/js/components/queue_card.js"></script>
+
+  <!-- Officer Queue & Triage Dashboard Component (Step 13 & Phase 3) -->
+  <script src="/static/js/components/queue_view.js"></script>
+
+  <!-- Institutional Identity & Metadata Header Card (Step 20 & Step 21) -->
+  <script src="/static/js/components/application_header.js"></script>
+
+  <!-- High-Severity Active Alerts Banner Component (Step 22) -->
+  <script src="/static/js/components/alerts_bar.js"></script>
+
+  <!-- 3-Valued Interactive Checklist Table (Step 23 & Step 24) -->
+  <script src="/static/js/components/checklist_table.js"></script>
+
+  <!-- Two-Sided Comparison Finding Card Component (Step 28 & Phase 5) -->
+  <script src="/static/js/components/finding_card.js"></script>
+
+  <!-- Mandatory Human Rationale Action Modal (Step 31 & Phase 5) -->
+  <script src="/static/js/components/action_modal.js"></script>
+
+  <!-- Interactive Evidence Viewer & Findings Console (Step 25 & Phase 5) -->
+  <script src="/static/js/components/evidence_viewer.js"></script>
+
+  <!-- Issuing Authority Verification Gateway (Step 32 & Phase 6) -->
+  <script src="/static/js/components/verification_panel.js"></script>
+
+  <!-- Infrastructure Evidence Checklist & Geotag Review Panel (Step 37 & Phase 7) -->
+  <script src="/static/js/components/infra_panel.js"></script>
+
+  <!-- Officer Exports Tab & Generator Hub Component (Step 42 & Phase 8) -->
+  <script src="/static/js/components/exports_modal.js"></script>
+
+  <!-- Cryptographic Audit Trail & Tamper Console (Step 47 & Phase 9) -->
+  <script src="/static/js/components/audit_view.js"></script>
+
+  <!-- Versioned YAML Rules Explorer (Step 53 & Phase 10) -->
+  <script src="/static/js/components/rules_view.js"></script>
+
+  <!-- System Realness & Transparency Matrix (Step 55 & Phase 10) -->
+  <script src="/static/js/components/realness_view.js"></script>
+
+  <!-- Keyboard Triage Shortcuts Engine (Step 56 & Phase 10) -->
+  <script src="/static/js/components/keyboard_shortcuts.js"></script>
+
+  <!-- Application Detail Workspace & Tab Manager (Step 19 & Phase 4) -->
+  <script src="/static/js/components/workspace.js"></script>
+
+  <!-- Legacy Demo Viewer Bridge (To be replaced in Phase 3/4) -->
+  <script>
+    // Bridge for legacy demo viewer
+    const esc = x => String(x ?? '—').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const applications = document.querySelector('#applications');
+    const report = document.querySelector('#report');
+
+    async function show(id) {
+      if (!report) return;
+      report.innerHTML = '<p class="text-muted">Loading evaluation report…</p>';
+      try {
+        const response = await fetch(`/api/demo/applications/${encodeURIComponent(id)}/validate`);
+        if (!response.ok) throw new Error('Failed to load report');
+        const data = await response.json();
+        report.innerHTML = `
+          <div class="report-head" style="margin-bottom: var(--space-4);">
+            <div>
+              <div class="text-muted text-xs">${esc(data.category)} · ${esc(data.application_id)}</div>
+              <h2>Validation Report</h2>
+            </div>
+            <span class="badge badge-simulated">SIMULATED DATA</span>
+          </div>
+          <p class="badge badge-pass" style="margin-bottom: var(--space-3);">${esc(data.workflow.replaceAll('_',' '))}</p>
+          <p class="text-muted text-xs" style="margin-bottom: var(--space-4);">Decision support only · ${esc(data.rule_set)} v${esc(data.rule_set_version)} · ${esc(data.coverage ? data.coverage.summary : 'Partial demo coverage')}</p>
+          <h3 style="margin-bottom: var(--space-2);">Findings (${data.findings.length})</h3>
+          ${data.findings.length ? data.findings.map(f => `
+            <article class="card" style="margin-bottom: var(--space-3); border-left: 4px solid var(--status-fail);">
+              <div class="card-body">
+                <b>${esc(f.rule_id)} · ${esc(f.category)} (${esc(f.severity)})</b>
+                <p style="margin: var(--space-2) 0;">${esc(f.reason)}</p>
+                <pre class="font-mono text-xs" style="background: var(--bg-surface-muted); padding: var(--space-3); border-radius: var(--radius-sm); overflow-x: auto;">${esc(JSON.stringify(f.evidence, null, 2))}</pre>
+              </div>
+            </article>`).join('') : '<p class="badge badge-pass" style="padding: var(--space-3); width: 100%;">No issues found within enabled demo checks (' + data.checks.length + ' passed). Forensics and live issuer checks require persisted bundle.</p>'}
+          <h3 style="margin: var(--space-4) 0 var(--space-2);">Passed Checks (${data.checks.length})</h3>
+          <ul style="padding-left: var(--space-4);">
+            ${data.checks.map(c => `<li style="margin-bottom: var(--space-1);"><b>${esc(c.rule_id)}</b> — ${esc(c.reason)}</li>`).join('')}
+          </ul>
+        `;
+      } catch (err) {
+        report.textContent = 'Could not load report.';
+      }
     }
-    fetch('/api/demo/applications').then(r => r.json()).then(data => {
-      applications.innerHTML = data.items.map(a => `<button data-id="${esc(a.id)}"><b>${esc(a.id)}</b><span>${esc(a.category.replaceAll('_',' '))}</span><small>${esc(a.submitted_on)} · synthetic</small></button>`).join('');
-      applications.querySelectorAll('button').forEach(b => b.addEventListener('click', () => show(b.dataset.id)));
-      show(data.items[1]?.id ?? data.items[0]?.id);
-    }).catch(() => applications.textContent = 'Demo applications could not be loaded.');
+
+    if (applications) {
+      fetch('/api/demo/applications')
+        .then(r => r.json())
+        .then(data => {
+          applications.innerHTML = data.items.map(a => `
+            <button class="btn btn-outline" style="width: 100%; margin-bottom: var(--space-2); text-align: left; display: block;" data-id="${esc(a.id)}">
+              <b>${esc(a.id)}</b>
+              <div class="text-muted text-xs">${esc(a.category.replaceAll('_', ' '))}</div>
+              <small class="text-faint text-xs">${esc(a.submitted_on)} · synthetic</small>
+            </button>
+          `).join('');
+          applications.querySelectorAll('button').forEach(b => b.addEventListener('click', () => show(b.dataset.id)));
+          show(data.items[1]?.id ?? data.items[0]?.id);
+        })
+        .catch(() => { applications.textContent = 'Demo applications could not be loaded.'; });
+    }
   </script>
-</body></html>
+</body>
+</html>

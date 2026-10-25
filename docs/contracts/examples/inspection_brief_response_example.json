@@ -1,0 +1,35 @@
+{
+  "brief_id": "insp-brief-APP-2026-EOA-9876-001",
+  "application_id": "APP-2026-EOA-9876",
+  "document_type": "PHYSICAL_INSPECTION_BRIEF",
+  "status": "READY_FOR_INSPECTION_TEAM",
+  "actor": "officer_verma",
+  "campus_coordinates": {
+    "latitude": 12.9716,
+    "longitude": 77.5946
+  },
+  "facilities_to_inspect_count": 1,
+  "facilities_to_inspect": [
+    {
+      "item_key": "computer_center",
+      "facility": "Computer Centre",
+      "reason": "Perceptual photo hash indicates possible duplicate evidence across institutes",
+      "evidence_status": "POSSIBLE_DUPLICATE_EVIDENCE",
+      "inspection_focus": "Physically verify dimensions, equipment, and actual location of Computer Centre."
+    }
+  ],
+  "pending_verifications_count": 1,
+  "pending_verifications": [
+    {
+      "document_id": "doc_fire_01",
+      "adapter": "qr_state_fire_service",
+      "status": "MANUAL_REVIEW_REQUIRED",
+      "reason": "Fire NOC requires ground verification against issuing station logbook",
+      "inspection_focus": "Inspect original physical certificate on campus for doc_fire_01."
+    }
+  ],
+  "advisory_banner": "Preliminary indicators requiring physical human verification. Not conclusive evidence.",
+  "simulated": true,
+  "decision_support_only": true,
+  "created_at": "2026-10-24T12:00:00Z"
+}

@@ -1,0 +1,188 @@
+{
+  "$defs": {
+    "InspectionBriefFacilityModel": {
+      "additionalProperties": true,
+      "properties": {
+        "item_key": {
+          "description": "Facility item key",
+          "title": "Item Key",
+          "type": "string"
+        },
+        "facility": {
+          "description": "Facility name",
+          "title": "Facility",
+          "type": "string"
+        },
+        "reason": {
+          "description": "Reason for ground verification",
+          "title": "Reason",
+          "type": "string"
+        },
+        "evidence_status": {
+          "description": "Automated evidence checklist state",
+          "title": "Evidence Status",
+          "type": "string"
+        },
+        "inspection_focus": {
+          "description": "Instructions for physical inspection team",
+          "title": "Inspection Focus",
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_key",
+        "facility",
+        "reason",
+        "evidence_status",
+        "inspection_focus"
+      ],
+      "title": "InspectionBriefFacilityModel",
+      "type": "object"
+    },
+    "InspectionBriefVerificationModel": {
+      "additionalProperties": true,
+      "properties": {
+        "document_id": {
+          "description": "Document identifier",
+          "title": "Document Id",
+          "type": "string"
+        },
+        "adapter": {
+          "description": "Verification adapter used",
+          "title": "Adapter",
+          "type": "string"
+        },
+        "status": {
+          "description": "Verification status",
+          "title": "Status",
+          "type": "string"
+        },
+        "reason": {
+          "description": "Verification outcome explanation",
+          "title": "Reason",
+          "type": "string"
+        },
+        "inspection_focus": {
+          "description": "Instructions for physical verification",
+          "title": "Inspection Focus",
+          "type": "string"
+        }
+      },
+      "required": [
+        "document_id",
+        "adapter",
+        "status",
+        "reason",
+        "inspection_focus"
+      ],
+      "title": "InspectionBriefVerificationModel",
+      "type": "object"
+    }
+  },
+  "additionalProperties": true,
+  "properties": {
+    "brief_id": {
+      "description": "Unique inspection brief ID",
+      "title": "Brief Id",
+      "type": "string"
+    },
+    "application_id": {
+      "description": "Application identifier",
+      "title": "Application Id",
+      "type": "string"
+    },
+    "document_type": {
+      "default": "PHYSICAL_INSPECTION_BRIEF",
+      "description": "Document type",
+      "title": "Document Type",
+      "type": "string"
+    },
+    "status": {
+      "default": "READY_FOR_INSPECTION_TEAM",
+      "description": "Status",
+      "title": "Status",
+      "type": "string"
+    },
+    "actor": {
+      "description": "Officer or system generator",
+      "title": "Actor",
+      "type": "string"
+    },
+    "campus_coordinates": {
+      "anyOf": [
+        {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Registered campus coordinates",
+      "title": "Campus Coordinates"
+    },
+    "facilities_to_inspect_count": {
+      "description": "Count of facilities requiring ground check",
+      "title": "Facilities To Inspect Count",
+      "type": "integer"
+    },
+    "facilities_to_inspect": {
+      "description": "Facilities list",
+      "items": {
+        "$ref": "#/$defs/InspectionBriefFacilityModel"
+      },
+      "title": "Facilities To Inspect",
+      "type": "array"
+    },
+    "pending_verifications_count": {
+      "description": "Count of document verifications requiring ground check",
+      "title": "Pending Verifications Count",
+      "type": "integer"
+    },
+    "pending_verifications": {
+      "description": "Verifications list",
+      "items": {
+        "$ref": "#/$defs/InspectionBriefVerificationModel"
+      },
+      "title": "Pending Verifications",
+      "type": "array"
+    },
+    "advisory_banner": {
+      "description": "Advisory disclaimer",
+      "title": "Advisory Banner",
+      "type": "string"
+    },
+    "simulated": {
+      "default": true,
+      "description": "Always true in demo slice",
+      "title": "Simulated",
+      "type": "boolean"
+    },
+    "decision_support_only": {
+      "default": true,
+      "description": "Decision support advisory flag",
+      "title": "Decision Support Only",
+      "type": "boolean"
+    },
+    "created_at": {
+      "description": "ISO 8601 UTC timestamp",
+      "title": "Created At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "brief_id",
+    "application_id",
+    "actor",
+    "facilities_to_inspect_count",
+    "pending_verifications_count",
+    "advisory_banner",
+    "created_at"
+  ],
+  "title": "InspectionBriefResponseModel",
+  "type": "object",
+  "": "https://aicte.gov.in/schemas/v4/inspection_brief_response.schema.json"
+}

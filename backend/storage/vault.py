@@ -86,7 +86,8 @@ class LocalVaultStorage:
 
         try:
             shutil.copyfile(src_path, tmp_path)
-            with open(tmp_path, "rb") as f:
+            with open(tmp_path, "r+b") as f:
+                f.flush()
                 os.fsync(f.fileno())
 
             if if_absent:

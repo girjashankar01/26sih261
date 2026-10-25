@@ -1,0 +1,63 @@
+{
+  "report_id": "rep-APP-2026-EOA-9876-001",
+  "application_id": "APP-2026-EOA-9876",
+  "pipeline_stage": "S12_REPORT_VIEW",
+  "category": "EOA_RENEWAL",
+  "rule_set_version": "4",
+  "data_snapshot_id": "snap-9876",
+  "audit_chain_head": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+  "documents_count": 2,
+  "checklist": [
+    {
+      "rule_id": "R-DOC-001",
+      "category": "MISSING_DOCUMENT",
+      "status": "PASS",
+      "reason": "All required documents present",
+      "evaluated": true
+    },
+    {
+      "rule_id": "R-EXP-001",
+      "category": "EXPIRED_CERTIFICATE",
+      "status": "FAILED_CHECK",
+      "reason": "Fire NOC expired",
+      "evaluated": true
+    }
+  ],
+  "findings": [
+    {
+      "rule_id": "R-EXP-001",
+      "category": "EXPIRED_CERTIFICATE",
+      "status": "FAILED_CHECK",
+      "severity": "high",
+      "lifecycle": "rectification_requested",
+      "reason": "Fire NOC expired",
+      "officer_actions": [
+        {
+          "id": "act-01",
+          "action": "request_rectification",
+          "actor": "officer_sharma",
+          "reason": "Certificate expired; requested renewal"
+        }
+      ]
+    }
+  ],
+  "verifications": [
+    {
+      "document_id": "doc_fire_01",
+      "adapter": "qr_state_fire_service",
+      "status": "EXPIRED",
+      "reason": "Simulated registry confirms expiration"
+    }
+  ],
+  "infra_checklist": [
+    {
+      "item_key": "computer_center",
+      "status": "EVIDENCE_COMPLETE_FOR_REVIEW",
+      "reason": "Evidence complete"
+    }
+  ],
+  "advisory_banner": "Preliminary automated findings for officer review. Not a regulatory decision.",
+  "simulated": true,
+  "decision_support_only": true,
+  "created_at": "2026-10-24T12:00:00Z"
+}

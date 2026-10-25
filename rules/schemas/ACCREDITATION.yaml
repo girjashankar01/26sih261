@@ -1,0 +1,7 @@
+doc_type: ACCREDITATION
+fields:
+  - {key: institution_name, type: name, required: true}
+  - {key: accreditation_status, type: text, required: true}
+  - {key: valid_till, type: date, required: true}
+  - {key: file_no, type: id, required: false}
+  - {key: programme_name, type: text, required: false}

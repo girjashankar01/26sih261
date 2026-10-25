@@ -1,0 +1,24 @@
+{
+  "notice_id": "def-not-APP-2026-EOA-9876-001",
+  "application_id": "APP-2026-EOA-9876",
+  "document_type": "DEFICIENCY_NOTICE_DRAFT",
+  "status": "DRAFT",
+  "actor": "officer_sharma",
+  "deficiencies_count": 1,
+  "deficiencies": [
+    {
+      "finding_id": "find-exp-01",
+      "rule_id": "R-EXP-001",
+      "category": "EXPIRED_CERTIFICATE",
+      "observed": "2024-03-31",
+      "expected": "2026-10-12",
+      "action_required": "Please upload valid or rectified documentation addressing: Fire NOC validity expired.",
+      "handbook_reference": "AICTE Approval Process Handbook Clause 2.14",
+      "status": "OPEN"
+    }
+  ],
+  "advisory_banner": "Draft deficiency notice for officer verification. Not a regulatory rejection or sanction.",
+  "simulated": true,
+  "decision_support_only": true,
+  "created_at": "2026-10-24T12:00:00Z"
+}

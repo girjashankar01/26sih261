@@ -1,0 +1,1032 @@
+/* =========================================================================
+   AICTE Application Validation Platform — Cryptographic Audit Trail Stylesheet
+   Spec Reference: ROADMAP.md (Phase 9: Steps 47–52), Guide §15.1, MASTER §2.2
+   ========================================================================= */
+
+/* Main Audit Console Container */
+.audit-console-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+/* Advisory Simulation & Sovereign Air-Gap Banner */
+.audit-advisory-banner {
+  background: rgba(14, 165, 233, 0.06);
+  border: 1px solid rgba(14, 165, 233, 0.25);
+  border-left: 4px solid var(--color-accent, #0ea5e9);
+  border-radius: var(--radius-sm, 4px);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-main);
+}
+
+.audit-advisory-banner svg {
+  color: var(--color-accent, #0ea5e9);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Header Section */
+.audit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.audit-header-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.audit-header-desc {
+  margin: 4px 0 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* 4-Card Top Statistics Grid (Step 47 Core Requirement) */
+.audit-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-2);
+}
+
+/* Stat Card */
+.audit-stat-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.audit-stat-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.audit-stat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.audit-stat-title-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.audit-stat-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(14, 165, 233, 0.1);
+  color: var(--color-accent, #0ea5e9);
+  flex-shrink: 0;
+}
+
+.audit-stat-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.audit-stat-body {
+  margin: 4px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.audit-stat-value {
+  font-size: 26px;
+  font-weight: 800;
+  font-family: var(--font-mono, monospace);
+  color: var(--text-main);
+  line-height: 1.1;
+}
+
+.audit-stat-hash {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--bg-surface-muted, #1e293b);
+  color: #38bdf8;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm, 4px);
+  border: 1px solid var(--border-subtle);
+  word-break: break-all;
+  display: block;
+}
+
+.audit-stat-subtitle {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Badge Styles */
+.badge-status-anchored {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.badge-status-anchored::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  display: inline-block;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.badge-hash-tag {
+  background: rgba(99, 102, 241, 0.12);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+}
+
+/* Sections & Placeholders (Steps 48–52) */
+.audit-section-container {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  box-shadow: var(--shadow-sm);
+}
+
+.audit-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.audit-section-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.audit-placeholder-box {
+  background: var(--bg-surface-muted, #0f172a);
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* =========================================================================
+   Step 48: Paginated Chronological Audit Event Table Styles
+   Spec Reference: ROADMAP.md (Phase 9: Step 48), Guide §15.1
+   ========================================================================= */
+
+.audit-table-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.audit-search-box {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--bg-surface-muted, #1e293b);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  max-width: 340px;
+  width: 100%;
+}
+
+.audit-search-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 12px;
+  color: var(--text-main);
+  width: 100%;
+}
+
+.audit-table-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.audit-select-sm {
+  background: var(--bg-surface-muted, #1e293b);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-size: 11px;
+  color: var(--text-main);
+  outline: none;
+}
+
+/* Event Table */
+.audit-table-container {
+  overflow-x: auto;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+}
+
+.audit-events-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  text-align: left;
+}
+
+.audit-events-table th {
+  background: var(--bg-surface-elevated, #1e293b);
+  color: var(--text-main);
+  font-weight: 700;
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--border-default);
+  border-right: 1px solid var(--border-subtle);
+  white-space: nowrap;
+}
+
+.audit-events-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  border-right: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+
+.audit-events-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.audit-events-table th:last-child,
+.audit-events-table td:last-child {
+  border-right: none;
+}
+
+/* Row & Hash Linkage */
+.audit-row-id {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.audit-hash-cell {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hash-pill {
+  background: var(--bg-surface-muted, #0f172a);
+  color: #38bdf8;
+  padding: 3px 6px;
+  border-radius: 3px;
+  border: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  display: inline-block;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.hash-pill:hover {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+}
+
+.hash-pill-prev {
+  color: #94a3b8;
+  border-style: dashed;
+}
+
+.hash-link-icon {
+  color: #10b981;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* Actor & Action Badges */
+.badge-actor-system {
+  background: rgba(100, 116, 139, 0.15);
+  color: #94a3b8;
+  border: 1px solid rgba(100, 116, 139, 0.3);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+}
+
+.badge-actor-officer {
+  background: rgba(14, 165, 233, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(14, 165, 233, 0.3);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+}
+
+.badge-action-pill {
+  background: rgba(139, 92, 246, 0.12);
+  color: #c4b5fd;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+/* Pagination Bar */
+.audit-pagination-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) var(--space-2);
+  margin-top: var(--space-2);
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.audit-pagination-btns {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.btn-pagination {
+  background: var(--bg-surface-muted, #1e293b);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  font-size: 11px;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-pagination:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.btn-pagination:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Expandable Details Drawer */
+.audit-details-row {
+  background: rgba(15, 23, 42, 0.4);
+}
+
+.audit-details-box {
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-muted, #0f172a);
+  border: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: #e2e8f0;
+  max-height: 200px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* =========================================================================
+   Step 49: Live Hash Chain Verification Styles
+   Spec Reference: ROADMAP.md (Phase 9: Step 49), Guide §15.1
+   ========================================================================= */
+
+.audit-section-desc {
+  margin: 0 0 var(--space-3) 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.audit-verification-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.btn-verify-chain {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  background: var(--color-accent, #0ea5e9);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 2px 4px rgba(14, 165, 233, 0.2);
+  transition: all 0.2s ease;
+}
+
+.btn-verify-chain:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(14, 165, 233, 0.3);
+  filter: brightness(1.08);
+}
+
+.btn-verify-chain:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.audit-verification-card {
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transition: all 0.2s ease;
+}
+
+.audit-verification-verified {
+  background: rgba(16, 185, 129, 0.05);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-left: 4px solid #10b981;
+}
+
+.audit-verification-tampered {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-left: 4px solid #ef4444;
+}
+
+.audit-verification-badge-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.badge-integrity-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.1);
+}
+
+.badge-integrity-failed {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(239, 68, 68, 0.18);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.audit-verified-head-box {
+  background: var(--bg-surface-muted, #0f172a);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.audit-head-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.audit-head-match-status {
+  font-size: 12px;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  word-break: break-all;
+}
+
+.audit-match-icon {
+  color: #10b981;
+  font-weight: 800;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.audit-verification-checklist {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.check-item {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.check-icon {
+  color: #10b981;
+  font-weight: bold;
+}
+
+.audit-broken-chain-details {
+  font-size: 12px;
+  color: #f87171;
+  font-family: var(--font-mono);
+  background: rgba(239, 68, 68, 0.1);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+}
+
+.audit-verification-loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: var(--space-4);
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  background: var(--bg-surface-muted, #0f172a);
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-sm);
+}
+
+.spinner-sm {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(14, 165, 233, 0.2);
+  border-top-color: var(--color-accent, #0ea5e9);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* =========================================================================
+   Step 50: Ed25519 Checkpoint Card & Signature Validator Styles
+   Spec Reference: ROADMAP.md (Phase 9: Step 50), Guide §15.1
+   ========================================================================= */
+
+.audit-checkpoint-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.audit-checkpoint-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.audit-checkpoint-card {
+  background: var(--bg-surface-elevated, #1e293b);
+  border: 1px solid var(--border-default);
+  border-left: 4px solid #6366f1;
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transition: all 0.2s ease;
+}
+
+.audit-checkpoint-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+}
+
+.audit-checkpoint-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.audit-checkpoint-id {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: #818cf8;
+}
+
+.audit-sig-status-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.badge-signature-valid {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.badge-signature-invalid {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(239, 68, 68, 0.18);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.audit-checkpoint-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-3);
+}
+
+.audit-checkpoint-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.audit-checkpoint-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.audit-checkpoint-val {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-main);
+  word-break: break-all;
+}
+
+.audit-pubkey-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(99, 102, 241, 0.12);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+.audit-sig-hex-box {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--bg-surface-muted, #0f172a);
+  border: 1px solid var(--border-subtle);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  word-break: break-all;
+  color: #c7d2fe;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.audit-sig-hex-box:hover {
+  border-color: #818cf8;
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.audit-checkpoint-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-subtle);
+  font-size: 11px;
+}
+
+/* =========================================================================
+   Step 51: External Anchor Checkpoint Creation Form Styles
+   Spec Reference: ROADMAP.md (Phase 9: Step 51), Guide §15.1
+   ========================================================================= */
+
+.audit-checkpoint-creation-bar {
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.audit-checkpoint-creation-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.badge-officer {
+  background: rgba(14, 165, 233, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(14, 165, 233, 0.35);
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-weight: 700;
+}
+
+.btn-create-checkpoint {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #6366f1;
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.25);
+}
+
+.btn-create-checkpoint:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.35);
+}
+
+.btn-create-checkpoint:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.audit-checkpoint-feedback {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  margin-bottom: var(--space-3);
+  animation: fadeIn 0.2s ease;
+}
+
+/* =========================================================================
+   Step 52: Interactive Fail-Visible Tamper Demonstration Studio Styles
+   Spec Reference: ROADMAP.md (Phase 9: Step 52), Guide §15.1
+   ========================================================================= */
+
+.audit-tamper-studio-card {
+  background: var(--bg-surface-elevated, #1e293b);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transition: all 0.2s ease;
+}
+
+.audit-tamper-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.audit-tamper-buttons {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.btn-tamper-simulate {
+  background: #dc2626;
+  color: #ffffff;
+  border: none;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
+}
+
+.btn-tamper-simulate:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.4);
+}
+
+.btn-tamper-restore {
+  background: #10b981;
+  color: #ffffff;
+  border: none;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+.btn-tamper-restore:hover {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4);
+}
+
+.audit-tamper-alert-banner {
+  background: rgba(220, 38, 38, 0.15);
+  border: 2px solid #ef4444;
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  color: #fecaca;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: pulseRed 2s infinite ease-in-out;
+}
+
+.audit-tamper-alert-title {
+  font-size: 13px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: #f87171;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.4;
+}
+
+.audit-tamper-alert-desc {
+  font-size: 12px;
+  color: #e2e8f0;
+  line-height: 1.5;
+  font-family: var(--font-mono);
+}
+
+.audit-tamper-intact-banner {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px dashed rgba(16, 185, 129, 0.3);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.audit-row-tampered {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-left: 4px solid #ef4444 !important;
+}
+
+.badge-tamper-intact {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.badge-tamper-active {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  animation: pulseRed 2s infinite ease-in-out;
+}
+
+@keyframes pulseRed {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+

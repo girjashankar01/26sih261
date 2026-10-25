@@ -1,0 +1,26 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Data storage & vault
+data/vault/b3/
+data/vault/derived/
+*.db-journal
+
+# Secrets & Private Keys
+.env
+.env.*
+keys/private/
+*.pem
+*.key
+
+# Test scratch & temporary files
+test_*.db
+temp_*.patch
+hunk*.py

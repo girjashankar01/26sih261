@@ -299,3 +299,413 @@ class ExtractionFailureModel(BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
+
+
+class TypingEvidenceModel(BaseModel):
+    phrase: str = Field(..., description="Matched keyword or pattern string")
+    pattern: str = Field(..., description="Pattern identifier or regex")
+    weight: float = Field(..., description="Pattern weight contributing to score")
+    block_id: str | None = Field(default=None, description="Source block identifier")
+    bbox_norm: list[float] | None = Field(default=None, description="Normalized bounding box [x0, y0, x1, y1]")
+
+
+class DocumentTypeResponseModel(BaseModel):
+    application_id: str = Field(..., description="Application identifier")
+    document_id: str = Field(..., description="Document identifier")
+    doc_slot: str | None = Field(default=None, description="Slot name declared during upload")
+    doc_type: str = Field(..., description="Classified document type (e.g. FIRE_NOC, ACCREDITATION, EOA_LETTER, AFFIDAVIT) or UNCLASSIFIED")
+    confidence: float = Field(..., description="Classification confidence score between 0.0 and 1.0")
+    is_classified: bool = Field(..., description="True if accepted with high confidence; False if UNCLASSIFIED requiring manual typing")
+    decision_reason: str = Field(..., description="Plain-language reason for classification or unclassified status")
+    pipeline_stage: str = Field(default="S5_TYPING", description="Architectural pipeline stage identifier")
+    evidence: list[TypingEvidenceModel] = Field(default_factory=list, description="Evidence items with matched phrases and bounding boxes")
+    candidate_scores: dict[str, float] = Field(default_factory=dict, description="Normalized score per candidate type")
+    flags: list[dict[str, Any]] = Field(default_factory=list, description="Advisory flags such as DOC_TYPE_SLOT_MISMATCH")
+    idempotent_cached: bool | None = Field(default=None, description="True if served from database cache")
+    simulated: bool = Field(default=True, description="Always true in demo prototype")
+    advisory: bool = Field(default=True, description="Advisory decision-support indicator")
+
+    model_config = ConfigDict(extra="allow")
+
+
+class C3FactModel(BaseModel):
+    id: str = Field(...)
+    application_id: str = Field(...)
+    document_id: str | None = Field(default=None)
+    source: str = Field(default="doc")
+    entity: str = Field(..., description="Document type or entity name (e.g. FIRE_NOC)")
+    key: str = Field(..., description="Field key name")
+    raw: str | None = Field(default=None)
+    value_type: str = Field(...)
+    value: Any | None = Field(default=None)
+    parse_state: str = Field(..., description="ok, ambiguous, invalid, unavailable")
+    conf: float | None = Field(default=None)
+    conf_kind: str = Field(default="regex_exact")
+    grounded: bool = Field(...)
+    source_ref: str | None = Field(default=None)
+    page: int | None = Field(default=None)
+    bbox_norm: list[float] | None = Field(default=None)
+    bbox_precision: str | None = Field(default=None)
+    extractor: str = Field(...)
+    extractor_version: str = Field(...)
+    needs_confirmation: bool = Field(default=False)
+    simulated: bool = Field(default=True)
+
+    model_config = ConfigDict(extra="allow")
+
+
+class DocumentFieldsResponseModel(BaseModel):
+    application_id: str = Field(...)
+    document_id: str = Field(...)
+    doc_type: str = Field(...)
+    completeness_status: str = Field(..., description="COMPLETE, INCOMPLETE, or NOT_CHECKED")
+    missing_fields: list[str] = Field(default_factory=list)
+    facts: list[C3FactModel] = Field(default_factory=list)
+    pipeline_stage: str = Field(default="S6_EXTRACTION")
+    idempotent_cached: bool | None = Field(default=None)
+    reason: str | None = Field(default=None)
+    simulated: bool = Field(default=True)
+    advisory: bool = Field(default=True)
+
+    model_config = ConfigDict(extra="allow")
+
+
+class CanonicalInstituteModel(BaseModel):
+    aicte_id: str = Field(..., description="AICTE permanent institute ID")
+    name: str = Field(..., description="Canonical institution name from authorised record")
+    source: str = Field(default="synthetic_record", description="Source of canonical record")
+    address: str | None = Field(default=None, description="Institute registered address")
+    state: str | None = Field(default=None, description="Registered state")
+    simulated: bool = Field(default=True, description="Always true in demo prototype")
+
+    model_config = ConfigDict(extra="allow")
+
+
+class NameAliasModel(BaseModel):
+    document_id: str | None = Field(default=None, description="Source document ID")
+    doc_type: str = Field(..., description="Document type (e.g. FIRE_NOC, ACCREDITATION)")
+    extracted_name: str = Field(..., description="Institution name extracted from document")
+    canonical_name: str = Field(..., description="Canonical institution name from record")
+    match_status: str = Field(..., description="MATCH, LEGAL_FORM_DIFFERS, PARTIAL, DIFFERENT")
+    core_extracted: str = Field(..., description="Normalized core tokens of extracted name")
+    core_canonical: str = Field(..., description="Normalized core tokens of canonical name")
+    legal_forms_extracted: list[str] = Field(default_factory=list, description="Extracted legal form tokens")
+    legal_forms_canonical: list[str] = Field(default_factory=list, description="Canonical legal form tokens")
+
+    model_config = ConfigDict(extra="allow")
+
+
+class ApplicationFactsResponseModel(BaseModel):
+    application_id: str = Field(..., description="Application identifier")
+    pipeline_stage: str = Field(default="S7_TYPED_FACTS", description="Architectural pipeline stage")
+    simulated: bool = Field(default=True, description="Always true in demo prototype")
+    decision_support_only: bool = Field(default=True, description="Decision-support advisory flag")
+    canonical_institute: CanonicalInstituteModel | None = Field(default=None, description="Resolved canonical institute")
+    aliases: list[NameAliasModel] = Field(default_factory=list, description="Document institution name aliases and comparison statuses")
+    facts: list[C3FactModel] = Field(default_factory=list, description="All aggregated C3 typed facts across form, records, and docs")
+    facts_count: int = Field(..., description="Total count of aggregated facts")
+
+    model_config = ConfigDict(extra="allow")
+
+
+class C6VerificationResultModel(BaseModel):
+    document_id: str = Field(..., description="Identifier of verified document")
+    document_type: str | None = Field(default=None, description="Document type")
+    adapter: str = Field(..., description="Verification adapter used")
+    source: str = Field(..., description="Registry source queried")
+    simulated: bool = Field(default=True, description="Always true in demo slice")
+    status: VerificationStatus | str = Field(..., description="Verification status dimension")
+    request_digest: str | None = Field(default=None, description="Hash of query request payload")
+    response_digest: str | None = Field(default=None, description="Hash of response received")
+    checked_at: str = Field(..., description="ISO 8601 UTC timestamp of verification")
+    integrity: dict[str, Any] | None = Field(default=None, description="Cryptographic integrity")
+    trust: dict[str, Any] | None = Field(default=None, description="Trust class")
+    compared: dict[str, Any] | None = Field(default=None, description="Field comparison results")
+    reason: str = Field(..., description="Plain-language explanation of verification outcome")
+    idempotent_cached: bool | None = Field(default=None, description="True if served from database cache")
+
+    model_config = ConfigDict(extra="allow")
+
+
+class InfraItemResultModel(BaseModel):
+    item_key: str = Field(..., description="Checklist item key")
+    label: str = Field(..., description="Human-readable label for facility")
+    status: str = Field(..., description="EVIDENCE_COMPLETE_FOR_REVIEW, ADDITIONAL_EVIDENCE_REQUIRED, POSSIBLE_DUPLICATE_EVIDENCE, LOCATION_METADATA_INCONSISTENT, INSPECTION_SUGGESTED, NOT_CHECKED")
+    reason: str = Field(..., description="Plain-language evaluation reason")
+    severity: str = Field(default="info", description="Advisory severity")
+    evidence_count: int = Field(..., description="Count of uploaded evidence files")
+    flags: list[str] = Field(default_factory=list, description="Advisory flags")
+
+    model_config = ConfigDict(extra="allow")
+
+
+class InfraChecklistResponseModel(BaseModel):
+    application_id: str = Field(..., description="Application identifier")
+    pipeline_stage: str = Field(default="S10_INFRA_CHECKLIST", description="Architectural pipeline stage")
+    category: str = Field(default="EOA_RENEWAL", description="Application category")
+    simulated: bool = Field(default=True, description="Always true in demo slice")
+    decision_support_only: bool = Field(default=True, description="Decision support advisory flag")
+    overall_status: str = Field(..., description="Overall infra checklist state")
+    campus_coordinates: dict[str, float] | None = Field(default=None, description="Campus reference coordinates")
+    items: list[InfraItemResultModel] = Field(default_factory=list, description="Item evaluation results")
+    total_items: int = Field(..., description="Total checklist items evaluated")
+
+    model_config = ConfigDict(extra="allow")
+
+
+class ReviewLane(str, Enum):
+    NEEDS_SCRUTINY = "NEEDS_SCRUTINY"
+    NEEDS_VERIFICATION = "NEEDS_VERIFICATION"
+    NEEDS_EVIDENCE = "NEEDS_EVIDENCE"
+    FAST_REVIEW = "FAST_REVIEW"
+
+
+class PriorityBreakdownModel(BaseModel):
+    high: int = Field(default=0, description="Count of high-severity findings and flags")
+    medium: int = Field(default=0, description="Count of medium-severity findings and flags")
+    low: int = Field(default=0, description="Count of low-severity findings and flags")
+    age_days: int = Field(default=0, description="Elapsed days since application submission")
+    deadline_pressure: int = Field(default=0, description="Bonus score points based on deadline proximity")
+
+    model_config = ConfigDict(extra="allow")
+
+
+class PriorityScoreModel(BaseModel):
+    score: int = Field(..., description="Queue order priority score")
+    formula: str = Field(
+        default="100·high + 30·medium + 5·low + age_days + deadline_pressure",
+        description="Priority formula tooltip"
+    )
+    breakdown: PriorityBreakdownModel = Field(..., description="Component breakdown of priority score")
+
+    model_config = ConfigDict(extra="allow")
+
+
+class AlertModel(BaseModel):
+    id: str = Field(..., description="Unique alert identifier")
+    application_id: str = Field(..., description="Application identifier")
+    category: str = Field(..., description="Alert category classification")
+    severity: str = Field(..., description="Alert severity level")
+    title: str = Field(..., description="Human-readable alert title")
+    message: str = Field(..., description="Detailed alert message")
+    created_at: str = Field(..., description="ISO 8601 UTC timestamp")
+
+    model_config = ConfigDict(extra="allow")
+
+
+class AggregationSummaryModel(BaseModel):
+    total_documents: int = Field(..., description="Total documents uploaded for application")
+    total_checks: int = Field(..., description="Total rule checks evaluated")
+    passed_checks: int = Field(..., description="Count of PASS checks")
+    failed_checks: int = Field(..., description="Count of FAILED_CHECK checks")
+    needs_review_checks: int = Field(..., description="Count of NEEDS_REVIEW or NOT_CHECKED checks")
+    open_findings: int = Field(..., description="Count of unresolved open actionable findings")
+    verifications_count: int = Field(..., description="Count of issuing authority verification checks")
+    infra_items_count: int = Field(..., description="Count of physical infrastructure items evaluated")
+
+    model_config = ConfigDict(extra="allow")
+
+
+class AggregationResponseModel(BaseModel):
+    application_id: str = Field(..., description="Application identifier")
+    pipeline_stage: str = Field(default="S11_AGGREGATION", description="Architectural pipeline stage")
+    category: str = Field(default="EOA_RENEWAL", description="Application category")
+    workflow_status: str = Field(..., description="Application workflow state (NEEDS_RECTIFICATION, NEEDS_MANUAL_REVIEW, VALIDATED_NO_ISSUES)")
+    review_lane: ReviewLane | str = Field(..., description="Assigned review lane for officer routing")
+    priority: PriorityScoreModel = Field(..., description="Queue priority score and calculation breakdown")
+    summary: AggregationSummaryModel = Field(..., description="High-level counts summary")
+    checks: list[dict[str, Any]] = Field(default_factory=list, description="C4 check results")
+    findings: list[dict[str, Any]] = Field(default_factory=list, description="C5 actionable findings")
+    verifications: list[dict[str, Any]] = Field(default_factory=list, description="C6 verification outcomes")
+    infra_checklist: list[dict[str, Any]] = Field(default_factory=list, description="S10 infrastructure item results")
+    alerts: list[AlertModel] = Field(default_factory=list, description="Structured alerts for officer attention")
+    simulated: bool = Field(default=True, description="Always true in demo prototype")
+    decision_support_only: bool = Field(default=True, description="Always true. Prototype does not make approvals.")
+    created_at: str = Field(..., description="ISO 8601 UTC timestamp of aggregation")
+
+    model_config = ConfigDict(extra="allow")
+
+
+# --- S12 Review & Officer Console Schemas ---
+
+class FindingActionRequestModel(BaseModel):
+    action: str = Field(..., description="Action to perform: acknowledge, request_rectification, dismiss, escalate, resolve")
+    actor: str = Field(..., description="Officer identifier performing action")
+    reason: str | None = Field(default=None, description="Mandatory justification reason for dismiss/escalate/rectify")
+    notes: str | None = Field(default=None, description="Optional officer notes")
+    user_role: str = Field(default="officer", description="Role of officer: officer, senior_officer")
+
+    model_config = ConfigDict(extra="allow")
+
+
+class FindingActionResponseModel(BaseModel):
+    id: str = Field(..., description="Unique action event ID")
+    application_id: str = Field(..., description="Application identifier")
+    finding_id: str = Field(..., description="Target finding identifier")
+    action: str = Field(..., description="Action performed")
+    previous_state: str = Field(..., description="Previous finding lifecycle state")
+    new_state: str = Field(..., description="New finding lifecycle state")
+    actor: str = Field(..., description="Officer identifier")
+    reason: str = Field(default="", description="Officer justification reason")
+    notes: str | None = Field(default=None, description="Officer notes")
+    created_at: str = Field(..., description="ISO 8601 UTC timestamp")
+    audit_event_id: int | None = Field(default=None, description="Linked S13 audit event ID")
+    audit_entry_hash: str | None = Field(default=None, description="Linked S13 audit entry hash")
+
+    model_config = ConfigDict(extra="allow")
+
+
+class DeficiencyItemModel(BaseModel):
+    finding_id: str = Field(..., description="Finding identifier")
+    rule_id: str | None = Field(default=None, description="Triggering rule ID")
+    category: str | None = Field(default=None, description="Discrepancy category")
+    observed: Any = Field(..., description="Observed value from submission")
+    expected: Any = Field(..., description="Expected value from record or norm")
+    action_required: str = Field(..., description="Clear instruction for rectification")
+    handbook_reference: str = Field(..., description="AICTE Handbook clause reference")
+    status: str = Field(default="OPEN", description="Deficiency status")
+
+    model_config = ConfigDict(extra="allow")
+
+
+class DeficiencyNoticeResponseModel(BaseModel):
+    notice_id: str = Field(..., description="Unique deficiency notice draft ID")
+    application_id: str = Field(..., description="Application identifier")
+    document_type: str = Field(default="DEFICIENCY_NOTICE_DRAFT", description="Document type")
+    status: str = Field(default="DRAFT", description="Notice lifecycle state")
+    actor: str = Field(..., description="Officer or system generator")
+    deficiencies_count: int = Field(..., description="Count of rectifiable deficiencies")
+    deficiencies: list[DeficiencyItemModel] = Field(default_factory=list, description="Deficiency items with two-sided evidence")
+    advisory_banner: str = Field(..., description="Advisory disclaimer")
+    simulated: bool = Field(default=True, description="Always true in demo slice")
+    decision_support_only: bool = Field(default=True, description="Decision support advisory flag")
+    created_at: str = Field(..., description="ISO 8601 UTC timestamp")
+
+    model_config = ConfigDict(extra="allow")
+
+
+class InspectionBriefFacilityModel(BaseModel):
+    item_key: str = Field(..., description="Facility item key")
+    facility: str = Field(..., description="Facility name")
+    reason: str = Field(..., description="Reason for ground verification")
+    evidence_status: str = Field(..., description="Automated evidence checklist state")
+    inspection_focus: str = Field(..., description="Instructions for physical inspection team")
+
+    model_config = ConfigDict(extra="allow")
+
+
+class InspectionBriefVerificationModel(BaseModel):
+    document_id: str = Field(..., description="Document identifier")
+    adapter: str = Field(..., description="Verification adapter used")
+    status: str = Field(..., description="Verification status")
+    reason: str = Field(..., description="Verification outcome explanation")
+    inspection_focus: str = Field(..., description="Instructions for physical verification")
+
+    model_config = ConfigDict(extra="allow")
+
+
+class InspectionBriefResponseModel(BaseModel):
+    brief_id: str = Field(..., description="Unique inspection brief ID")
+    application_id: str = Field(..., description="Application identifier")
+    document_type: str = Field(default="PHYSICAL_INSPECTION_BRIEF", description="Document type")
+    status: str = Field(default="READY_FOR_INSPECTION_TEAM", description="Status")
+    actor: str = Field(..., description="Officer or system generator")
+    campus_coordinates: dict[str, float] | None = Field(default=None, description="Registered campus coordinates")
+    facilities_to_inspect_count: int = Field(..., description="Count of facilities requiring ground check")
+    facilities_to_inspect: list[InspectionBriefFacilityModel] = Field(default_factory=list, description="Facilities list")
+    pending_verifications_count: int = Field(..., description="Count of document verifications requiring ground check")
+    pending_verifications: list[InspectionBriefVerificationModel] = Field(default_factory=list, description="Verifications list")
+    advisory_banner: str = Field(..., description="Advisory disclaimer")
+    simulated: bool = Field(default=True, description="Always true in demo slice")
+    decision_support_only: bool = Field(default=True, description="Decision support advisory flag")
+    created_at: str = Field(..., description="ISO 8601 UTC timestamp")
+
+    model_config = ConfigDict(extra="allow")
+
+
+class ChecklistReportItemModel(BaseModel):
+    rule_id: str = Field(..., description="Rule identifier or PLANNED")
+    category: str | None = Field(default=None, description="Checklist item category")
+    status: str = Field(..., description="Evaluation outcome: PASS, FAILED_CHECK, NEEDS_REVIEW, NOT_CHECKED, NOT_RUN")
+    reason: str = Field(..., description="Explanation of evaluation")
+    evaluated: bool = Field(..., description="True if evaluated in active demo rule set")
+
+    model_config = ConfigDict(extra="allow")
+
+
+class ApplicationReportResponseModel(BaseModel):
+    report_id: str = Field(..., description="Unique evaluation report ID")
+    application_id: str = Field(..., description="Application identifier")
+    pipeline_stage: str = Field(default="S12_REPORT_VIEW", description="Architectural pipeline stage")
+    category: str = Field(default="EOA_RENEWAL", description="Application category")
+    rule_set_version: str = Field(..., description="Rule set version evaluated")
+    data_snapshot_id: str = Field(..., description="Cryptographic snapshot digest of input facts")
+    audit_chain_head: str = Field(..., description="SHA-256 head hash of audit trail chain")
+    documents_count: int = Field(..., description="Count of uploaded documents")
+    checklist: list[ChecklistReportItemModel] = Field(default_factory=list, description="Complete evaluation checklist table")
+    findings: list[dict[str, Any]] = Field(default_factory=list, description="Findings with officer action history")
+    verifications: list[dict[str, Any]] = Field(default_factory=list, description="Verification outcomes")
+    infra_checklist: list[dict[str, Any]] = Field(default_factory=list, description="Physical infra evidence evaluations")
+    advisory_banner: str = Field(..., description="Advisory disclaimer")
+    simulated: bool = Field(default=True, description="Always true in demo slice")
+    decision_support_only: bool = Field(default=True, description="Decision support advisory flag")
+    created_at: str = Field(..., description="ISO 8601 UTC timestamp")
+
+    model_config = ConfigDict(extra="allow")
+
+
+# --- S13 Audit Trail & RBAC Schemas ---
+
+class AuditEventModel(BaseModel):
+    id: int = Field(..., description="Sequential audit event ID")
+    ts: str = Field(..., description="ISO 8601 UTC timestamp")
+    actor: str = Field(..., description="User or service actor")
+    action: str = Field(..., description="Action name")
+    subject: str = Field(..., description="Subject resource URI / ID")
+    details: Any = Field(..., description="Event details payload")
+    canonical: str = Field(..., description="Deterministic canonical JSON string")
+    prev_hash: str = Field(..., description="SHA-256 hash of previous audit event")
+    entry_hash: str = Field(..., description="SHA-256 hash of this canonical event")
+
+    model_config = ConfigDict(extra="allow")
+
+
+class AuditEventsListResponseModel(BaseModel):
+    total_events: int = Field(..., description="Total audit events returned")
+    events: list[AuditEventModel] = Field(default_factory=list, description="Audit events")
+
+    model_config = ConfigDict(extra="allow")
+
+
+class AuditChainVerificationResponseModel(BaseModel):
+    ok: bool = Field(..., description="True if hash chain integrity is 100% verified")
+    head: str = Field(..., description="Current head SHA-256 hash of audit chain")
+    count: int = Field(..., description="Count of verified events in chain")
+    first_bad_id: int | None = Field(default=None, description="First tampered or invalid event ID if ok=False")
+    reason: str | None = Field(default=None, description="Integrity failure reason if ok=False")
+    verified_at: str = Field(..., description="ISO 8601 UTC timestamp of verification")
+
+    model_config = ConfigDict(extra="allow")
+
+
+class CheckpointModel(BaseModel):
+    id: str = Field(..., description="Unique checkpoint ID")
+    upto_id: int = Field(..., description="Event ID up to which chain is anchored")
+    head_hash: str = Field(..., description="Head SHA-256 hash at upto_id")
+    signature: str = Field(..., description="Ed25519 signature of 'upto_id:head_hash'")
+    key_id: str = Field(..., description="Identifier of trusted signing key")
+    created_at: str = Field(..., description="ISO 8601 UTC timestamp")
+
+    model_config = ConfigDict(extra="allow")
+
+
+class CheckpointsListResponseModel(BaseModel):
+    total_checkpoints: int = Field(..., description="Total checkpoints returned")
+    checkpoints: list[CheckpointModel] = Field(default_factory=list, description="Checkpoints list")
+
+    model_config = ConfigDict(extra="allow")
+
+
+
+
+

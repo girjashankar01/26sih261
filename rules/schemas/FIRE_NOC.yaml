@@ -1,0 +1,7 @@
+doc_type: FIRE_NOC
+fields:
+  - {key: institution_name, type: name, required: true}
+  - {key: certificate_no, type: id, required: true, pattern: "^[A-Z0-9/\\-]{6,30}$"}
+  - {key: issued_on, type: date, required: true}
+  - {key: valid_till, type: date, required: true}
+  - {key: issuing_authority, type: text, required: false}

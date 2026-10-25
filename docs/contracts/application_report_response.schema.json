@@ -1,0 +1,165 @@
+{
+  "$defs": {
+    "ChecklistReportItemModel": {
+      "additionalProperties": true,
+      "properties": {
+        "rule_id": {
+          "description": "Rule identifier or PLANNED",
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "category": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Checklist item category",
+          "title": "Category"
+        },
+        "status": {
+          "description": "Evaluation outcome: PASS, FAILED_CHECK, NEEDS_REVIEW, NOT_CHECKED, NOT_RUN",
+          "title": "Status",
+          "type": "string"
+        },
+        "reason": {
+          "description": "Explanation of evaluation",
+          "title": "Reason",
+          "type": "string"
+        },
+        "evaluated": {
+          "description": "True if evaluated in active demo rule set",
+          "title": "Evaluated",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "rule_id",
+        "status",
+        "reason",
+        "evaluated"
+      ],
+      "title": "ChecklistReportItemModel",
+      "type": "object"
+    }
+  },
+  "additionalProperties": true,
+  "properties": {
+    "report_id": {
+      "description": "Unique evaluation report ID",
+      "title": "Report Id",
+      "type": "string"
+    },
+    "application_id": {
+      "description": "Application identifier",
+      "title": "Application Id",
+      "type": "string"
+    },
+    "pipeline_stage": {
+      "default": "S12_REPORT_VIEW",
+      "description": "Architectural pipeline stage",
+      "title": "Pipeline Stage",
+      "type": "string"
+    },
+    "category": {
+      "default": "EOA_RENEWAL",
+      "description": "Application category",
+      "title": "Category",
+      "type": "string"
+    },
+    "rule_set_version": {
+      "description": "Rule set version evaluated",
+      "title": "Rule Set Version",
+      "type": "string"
+    },
+    "data_snapshot_id": {
+      "description": "Cryptographic snapshot digest of input facts",
+      "title": "Data Snapshot Id",
+      "type": "string"
+    },
+    "audit_chain_head": {
+      "description": "SHA-256 head hash of audit trail chain",
+      "title": "Audit Chain Head",
+      "type": "string"
+    },
+    "documents_count": {
+      "description": "Count of uploaded documents",
+      "title": "Documents Count",
+      "type": "integer"
+    },
+    "checklist": {
+      "description": "Complete evaluation checklist table",
+      "items": {
+        "$ref": "#/$defs/ChecklistReportItemModel"
+      },
+      "title": "Checklist",
+      "type": "array"
+    },
+    "findings": {
+      "description": "Findings with officer action history",
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Findings",
+      "type": "array"
+    },
+    "verifications": {
+      "description": "Verification outcomes",
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Verifications",
+      "type": "array"
+    },
+    "infra_checklist": {
+      "description": "Physical infra evidence evaluations",
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Infra Checklist",
+      "type": "array"
+    },
+    "advisory_banner": {
+      "description": "Advisory disclaimer",
+      "title": "Advisory Banner",
+      "type": "string"
+    },
+    "simulated": {
+      "default": true,
+      "description": "Always true in demo slice",
+      "title": "Simulated",
+      "type": "boolean"
+    },
+    "decision_support_only": {
+      "default": true,
+      "description": "Decision support advisory flag",
+      "title": "Decision Support Only",
+      "type": "boolean"
+    },
+    "created_at": {
+      "description": "ISO 8601 UTC timestamp",
+      "title": "Created At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "report_id",
+    "application_id",
+    "rule_set_version",
+    "data_snapshot_id",
+    "audit_chain_head",
+    "documents_count",
+    "advisory_banner",
+    "created_at"
+  ],
+  "title": "ApplicationReportResponseModel",
+  "type": "object",
+  "": "https://aicte.gov.in/schemas/v4/application_report_response.schema.json"
+}

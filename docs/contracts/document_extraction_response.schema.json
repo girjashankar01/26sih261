@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aicte.gov.in/schemas/v4/document_extraction_response.schema.json",
+  "title": "Document Extraction Response",
+  "description": "Response emitted by POST /applications/{id}/documents/{doc_id}/fields upon executing schema-driven extraction, date policy normalization, bounding-box grounding, and completeness evaluation (Guide §11.2 S6, §11.3 S6b).",
+  "type": "object",
+  "required": [
+    "application_id",
+    "document_id",
+    "doc_type",
+    "completeness_status",
+    "missing_fields",
+    "facts",
+    "pipeline_stage",
+    "simulated",
+    "advisory"
+  ],
+  "properties": {
+    "application_id": {
+      "type": "string",
+      "description": "Application identifier"
+    },
+    "document_id": {
+      "type": "string",
+      "description": "Document identifier"
+    },
+    "doc_type": {
+      "type": "string",
+      "description": "Classified document type (e.g. FIRE_NOC, ACCREDITATION, EOA_LETTER)"
+    },
+    "completeness_status": {
+      "type": "string",
+      "enum": ["COMPLETE", "INCOMPLETE", "NOT_CHECKED"],
+      "description": "Completeness status based on required fields extraction and validation"
+    },
+    "missing_fields": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of required fields missing or invalid"
+    },
+    "facts": {
+      "type": "array",
+      "description": "Extracted and grounded C3 typed facts",
+      "items": {
+        "$ref": "c3_fact.schema.json"
+      }
+    },
+    "pipeline_stage": {
+      "type": "string",
+      "enum": ["S6_EXTRACTION"],
+      "description": "Architectural pipeline stage identifier"
+    },
+    "idempotent_cached": {
+      "type": "boolean",
+      "description": "True if served from database cache"
+    },
+    "reason": {
+      "type": ["string", "null"],
+      "description": "Reason in case of incomplete or unclassified status"
+    },
+    "simulated": {
+      "type": "boolean",
+      "description": "True in demo prototype"
+    },
+    "advisory": {
+      "type": "boolean",
+      "description": "True for decision-support outputs"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,149 @@
+{
+  "$defs": {
+    "DeficiencyItemModel": {
+      "additionalProperties": true,
+      "properties": {
+        "finding_id": {
+          "description": "Finding identifier",
+          "title": "Finding Id",
+          "type": "string"
+        },
+        "rule_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Triggering rule ID",
+          "title": "Rule Id"
+        },
+        "category": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Discrepancy category",
+          "title": "Category"
+        },
+        "observed": {
+          "description": "Observed value from submission",
+          "title": "Observed"
+        },
+        "expected": {
+          "description": "Expected value from record or norm",
+          "title": "Expected"
+        },
+        "action_required": {
+          "description": "Clear instruction for rectification",
+          "title": "Action Required",
+          "type": "string"
+        },
+        "handbook_reference": {
+          "description": "AICTE Handbook clause reference",
+          "title": "Handbook Reference",
+          "type": "string"
+        },
+        "status": {
+          "default": "OPEN",
+          "description": "Deficiency status",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "finding_id",
+        "observed",
+        "expected",
+        "action_required",
+        "handbook_reference"
+      ],
+      "title": "DeficiencyItemModel",
+      "type": "object"
+    }
+  },
+  "additionalProperties": true,
+  "properties": {
+    "notice_id": {
+      "description": "Unique deficiency notice draft ID",
+      "title": "Notice Id",
+      "type": "string"
+    },
+    "application_id": {
+      "description": "Application identifier",
+      "title": "Application Id",
+      "type": "string"
+    },
+    "document_type": {
+      "default": "DEFICIENCY_NOTICE_DRAFT",
+      "description": "Document type",
+      "title": "Document Type",
+      "type": "string"
+    },
+    "status": {
+      "default": "DRAFT",
+      "description": "Notice lifecycle state",
+      "title": "Status",
+      "type": "string"
+    },
+    "actor": {
+      "description": "Officer or system generator",
+      "title": "Actor",
+      "type": "string"
+    },
+    "deficiencies_count": {
+      "description": "Count of rectifiable deficiencies",
+      "title": "Deficiencies Count",
+      "type": "integer"
+    },
+    "deficiencies": {
+      "description": "Deficiency items with two-sided evidence",
+      "items": {
+        "$ref": "#/$defs/DeficiencyItemModel"
+      },
+      "title": "Deficiencies",
+      "type": "array"
+    },
+    "advisory_banner": {
+      "description": "Advisory disclaimer",
+      "title": "Advisory Banner",
+      "type": "string"
+    },
+    "simulated": {
+      "default": true,
+      "description": "Always true in demo slice",
+      "title": "Simulated",
+      "type": "boolean"
+    },
+    "decision_support_only": {
+      "default": true,
+      "description": "Decision support advisory flag",
+      "title": "Decision Support Only",
+      "type": "boolean"
+    },
+    "created_at": {
+      "description": "ISO 8601 UTC timestamp",
+      "title": "Created At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "notice_id",
+    "application_id",
+    "actor",
+    "deficiencies_count",
+    "advisory_banner",
+    "created_at"
+  ],
+  "title": "DeficiencyNoticeResponseModel",
+  "type": "object",
+  "": "https://aicte.gov.in/schemas/v4/deficiency_notice_response.schema.json"
+}

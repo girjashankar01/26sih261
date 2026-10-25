@@ -1,0 +1,960 @@
+/* =========================================================================
+   AICTE Application Validation Platform — Officer Exports & Generator Hub Stylesheet
+   Spec Reference: ROADMAP.md (Phase 8: Steps 42–46), Guide §11.8
+   ========================================================================= */
+
+/* Main Hub Container */
+.exports-hub-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+/* Simulation Advisory Banner (AGENTS.md Compliance) */
+.exports-advisory-banner {
+  background: rgba(14, 165, 233, 0.06);
+  border: 1px solid rgba(14, 165, 233, 0.25);
+  border-left: 4px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-main);
+}
+
+.exports-advisory-banner svg {
+  color: var(--color-accent);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Header Section */
+.exports-hub-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.exports-hub-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.exports-hub-desc {
+  margin: 4px 0 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+/* 3-Column Generator Cards Grid (Step 42) */
+.exports-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--space-4);
+}
+
+/* Document Generator Card Component */
+.export-generator-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.export-generator-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+/* Card Header */
+.export-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.export-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.export-card-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(14, 165, 233, 0.1);
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.export-card-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+/* Recipient Badges */
+.export-recipient-badge {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+}
+
+.badge-recipient-institution {
+  background: rgba(234, 88, 12, 0.12);
+  color: #ea580c;
+  border: 1px solid rgba(234, 88, 12, 0.3);
+}
+
+.badge-recipient-committee {
+  background: rgba(139, 92, 246, 0.12);
+  color: #8b5cf6;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.badge-recipient-admin {
+  background: rgba(14, 165, 233, 0.12);
+  color: #0284c7;
+  border: 1px solid rgba(14, 165, 233, 0.3);
+}
+
+/* Document Description */
+.export-card-desc {
+  font-size: 12px;
+  color: var(--text-body);
+  line-height: 1.5;
+  margin: 0;
+  flex: 1;
+}
+
+/* Features / Metadata List */
+.export-features-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.export-format-badge {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--bg-surface-muted, #1e293b);
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+}
+
+/* Card Action Footer */
+.export-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: var(--space-3);
+  margin-top: auto;
+  gap: var(--space-2);
+}
+
+/* Generate & Preview Action Button */
+.btn-generate-preview {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-primary, #2563eb);
+  color: #ffffff;
+  border: 1px solid var(--color-primary, #2563eb);
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  text-decoration: none;
+}
+
+.btn-generate-preview:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
+}
+
+/* Preview Modal Host & Styles */
+.export-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  animation: fadeIn 0.15s ease-out;
+}
+
+.export-modal-content {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: scaleIn 0.15s ease-out;
+}
+
+.export-modal-header {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-surface-elevated, var(--bg-surface));
+}
+
+.export-modal-body {
+  padding: var(--space-4);
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.export-modal-footer {
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-surface-elevated, var(--bg-surface));
+  gap: var(--space-2);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* =========================================================================
+   Step 43: Formal Draft Deficiency Notice Letterhead & Two-Sided Table
+   ========================================================================= */
+
+.notice-letter {
+  background: var(--bg-surface, #0f172a);
+  color: var(--text-main, #f8fafc);
+  border: 1px solid var(--border-default, #334155);
+  border-radius: var(--radius-sm, 4px);
+  padding: 32px 36px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.6;
+  position: relative;
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.2);
+}
+
+/* Top Letterhead */
+.notice-letterhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid var(--border-strong, #475569);
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
+
+.notice-letterhead-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.notice-emblem {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #1e3a8a;
+  border: 2px solid #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #60a5fa;
+  font-weight: 800;
+  font-size: 15px;
+  font-family: var(--font-mono, monospace);
+  flex-shrink: 0;
+}
+
+.notice-authority-titles h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--text-main, #f8fafc);
+  text-transform: uppercase;
+}
+
+.notice-authority-titles p {
+  margin: 2px 0 0 0;
+  font-size: 11px;
+  color: var(--text-muted, #94a3b8);
+}
+
+.notice-meta-grid {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  font-size: 11px;
+  font-family: var(--font-mono, monospace);
+  color: var(--text-muted, #94a3b8);
+  margin-bottom: 16px;
+}
+
+/* Draft Notice Watermark Badge */
+.badge-draft-notice {
+  background: rgba(234, 88, 12, 0.15);
+  color: #ea580c;
+  border: 1px dashed rgba(234, 88, 12, 0.6);
+  padding: 4px 10px;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  border-radius: 4px;
+}
+
+/* Recipient Block */
+.notice-recipient-block {
+  margin-bottom: 18px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.notice-recipient-block strong {
+  color: var(--text-main, #f8fafc);
+}
+
+/* Subject Line */
+.notice-subject {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main, #f8fafc);
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 3px solid #3b82f6;
+  padding: 8px 12px;
+  margin: 16px 0;
+  border-radius: 0 var(--radius-sm, 4px) var(--radius-sm, 4px) 0;
+}
+
+.notice-intro {
+  font-size: 12px;
+  color: var(--text-body, #cbd5e1);
+  margin-bottom: 16px;
+}
+
+/* Two-Sided Deficiency Table (Step 43 Core Requirement) */
+.notice-table-container {
+  overflow-x: auto;
+  margin: 16px 0;
+  border: 1px solid var(--border-default, #334155);
+  border-radius: var(--radius-sm, 4px);
+}
+
+.notice-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  text-align: left;
+}
+
+.notice-table th {
+  background: var(--bg-surface-elevated, #1e293b);
+  color: var(--text-main, #f8fafc);
+  font-weight: 700;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-default, #334155);
+  border-right: 1px solid var(--border-subtle, #334155);
+}
+
+.notice-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-subtle, #1e293b);
+  border-right: 1px solid var(--border-subtle, #1e293b);
+  vertical-align: top;
+  line-height: 1.45;
+}
+
+.notice-table tr:last-child td {
+  border-bottom: none;
+}
+
+.notice-table td:last-child,
+.notice-table th:last-child {
+  border-right: none;
+}
+
+.notice-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.notice-observed-val {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.notice-expected-val {
+  color: #10b981;
+  font-weight: 600;
+}
+
+/* Statutory Deadline Callout */
+.notice-deadline-box {
+  background: rgba(234, 88, 12, 0.08);
+  border: 1px solid rgba(234, 88, 12, 0.3);
+  border-left: 4px solid #ea580c;
+  border-radius: var(--radius-sm, 4px);
+  padding: 12px 16px;
+  margin: 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.notice-deadline-box svg {
+  color: #ea580c;
+  flex-shrink: 0;
+}
+
+/* Official Sign-off */
+.notice-signoff {
+  margin-top: 32px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.notice-signoff-box {
+  text-align: right;
+  font-size: 11px;
+  color: var(--text-muted, #94a3b8);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.notice-signoff-box strong {
+  color: var(--text-main, #f8fafc);
+  font-size: 12px;
+}
+
+.notice-stamp {
+  margin-top: 8px;
+  display: inline-block;
+  padding: 4px 8px;
+  border: 1px dashed #3b82f6;
+  border-radius: 4px;
+  font-size: 9px;
+  font-family: var(--font-mono, monospace);
+  color: #60a5fa;
+  text-transform: uppercase;
+}
+
+/* =========================================================================
+   Step 45: Visiting Committee Physical Inspection Brief Dossier Styles
+   ========================================================================= */
+
+.brief-dossier {
+  background: var(--bg-surface, #0f172a);
+  color: var(--text-main, #f8fafc);
+  border: 1px solid var(--border-default, #334155);
+  border-radius: var(--radius-sm, 4px);
+  padding: 32px 36px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.6;
+  position: relative;
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.2);
+}
+
+.brief-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid var(--border-strong, #475569);
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
+
+.brief-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brief-emblem {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #2e1065;
+  border: 2px solid #8b5cf6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #c4b5fd;
+  font-weight: 800;
+  font-size: 14px;
+  font-family: var(--font-mono, monospace);
+  flex-shrink: 0;
+}
+
+.brief-authority-titles h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--text-main, #f8fafc);
+  text-transform: uppercase;
+}
+
+.brief-authority-titles p {
+  margin: 2px 0 0 0;
+  font-size: 11px;
+  color: var(--text-muted, #94a3b8);
+}
+
+.badge-brief-status {
+  background: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  padding: 4px 10px;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  border-radius: 4px;
+}
+
+.brief-meta-grid {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  font-size: 11px;
+  font-family: var(--font-mono, monospace);
+  color: var(--text-muted, #94a3b8);
+  margin-bottom: 16px;
+}
+
+.brief-inst-block {
+  margin-bottom: 18px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.brief-inst-block strong {
+  color: var(--text-main, #f8fafc);
+}
+
+/* Campus GPS Coordinate Callout Box (Step 45 Core Deliverable) */
+.brief-gps-box {
+  background: rgba(14, 165, 233, 0.08);
+  border: 1px solid rgba(14, 165, 233, 0.3);
+  border-left: 4px solid var(--color-accent, #0ea5e9);
+  border-radius: var(--radius-sm, 4px);
+  padding: 14px 18px;
+  margin: 18px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.brief-gps-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brief-campus-coords {
+  font-family: var(--font-mono, monospace);
+  font-size: 14px;
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: 0.05em;
+}
+
+.badge-gps-anchor {
+  font-family: var(--font-mono, monospace);
+  font-size: 9px;
+  background: rgba(14, 165, 233, 0.2);
+  color: #38bdf8;
+  border: 1px solid rgba(14, 165, 233, 0.4);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+/* Sections & Tables */
+.brief-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main, #f8fafc);
+  margin: 22px 0 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brief-table-container {
+  overflow-x: auto;
+  margin: 10px 0 20px 0;
+  border: 1px solid var(--border-default, #334155);
+  border-radius: var(--radius-sm, 4px);
+}
+
+.brief-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  text-align: left;
+}
+
+.brief-table th {
+  background: var(--bg-surface-elevated, #1e293b);
+  color: var(--text-main, #f8fafc);
+  font-weight: 700;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-default, #334155);
+  border-right: 1px solid var(--border-subtle, #334155);
+}
+
+.brief-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-subtle, #1e293b);
+  border-right: 1px solid var(--border-subtle, #1e293b);
+  vertical-align: top;
+  line-height: 1.45;
+}
+
+.brief-table tr:last-child td {
+  border-bottom: none;
+}
+
+.brief-table td:last-child,
+.brief-table th:last-child {
+  border-right: none;
+}
+
+.brief-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #8b5cf6;
+}
+
+.brief-obs-input {
+  width: 100%;
+  background: var(--bg-surface, #0f172a);
+  border: 1px solid var(--border-default, #334155);
+  border-radius: var(--radius-sm, 4px);
+  padding: 4px 8px;
+  font-size: 11px;
+  color: var(--text-main, #f8fafc);
+}
+
+.brief-obs-input:focus {
+  outline: none;
+  border-color: #8b5cf6;
+}
+
+/* Status Badges */
+.badge-status-additional {
+  background: rgba(234, 88, 12, 0.15);
+  color: #fb923c;
+  border: 1px solid rgba(234, 88, 12, 0.35);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+}
+
+.badge-status-inconsistent {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+}
+
+.badge-status-suggested {
+  background: rgba(139, 92, 246, 0.15);
+  color: #c4b5fd;
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+}
+
+/* Visiting Committee Signatures */
+.brief-committee-signatures {
+  margin-top: 32px;
+  border-top: 2px solid var(--border-strong, #475569);
+  padding-top: 20px;
+}
+
+.brief-signatures-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.brief-signature-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.brief-sign-line {
+  border-bottom: 1px dashed var(--border-strong, #475569);
+  height: 48px;
+  margin-bottom: 6px;
+}
+
+/* =========================================================================
+   Step 46: Print Layout Stylesheet for A4 Paper & Export Formatting
+   Spec Reference: ROADMAP.md (Phase 8: Step 46), Guide §11.8
+   ========================================================================= */
+
+@media print {
+  /* 1. Standard A4 Paper Page Sizing & Margins */
+  @page {
+    size: A4 portrait;
+    margin: 15mm 15mm 15mm 15mm;
+  }
+
+  /* 2. Global Document Cleanups for Monochrome / Ink-Friendly Printing */
+  *, *::before, *::after {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  html, body {
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 10pt !important;
+    line-height: 1.45 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 3. Hide Navigation Chrome, Tabs, Toolbars & Interactive Buttons */
+  .app-header,
+  .nav-tabs-bar,
+  .nav-controls,
+  .workspace-header,
+  .workspace-nav,
+  .alerts-bar,
+  .sidebar,
+  .checklist-filter-bar,
+  .export-modal-header button,
+  .export-modal-footer,
+  .exports-hub-header,
+  .exports-cards-grid,
+  .btn-generate-preview,
+  button,
+  .btn,
+  #role-switcher {
+    display: none !important;
+  }
+
+  /* 4. Format Modal Container as Static Flow Document (No Fixed Overlay / Scrollbars) */
+  .export-modal-backdrop {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    z-index: auto !important;
+  }
+
+  .export-modal-content {
+    position: static !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: none !important;
+    height: auto !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  .export-modal-body {
+    padding: 0 !important;
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+  }
+
+  /* 5. Printable Letterhead Stationery & High-Contrast Ink Formatting */
+  .notice-letter,
+  .brief-dossier {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    color: #0f172a !important;
+    page-break-after: avoid;
+  }
+
+  .notice-letterhead,
+  .brief-header {
+    border-bottom: 2pt solid #0f172a !important;
+    padding-bottom: 12pt !important;
+    margin-bottom: 16pt !important;
+  }
+
+  .notice-emblem,
+  .brief-emblem {
+    background: #f1f5f9 !important;
+    border: 2pt solid #0f172a !important;
+    color: #0f172a !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .notice-authority-titles h2,
+  .brief-authority-titles h2 {
+    color: #0f172a !important;
+    font-size: 13pt !important;
+  }
+
+  .badge-draft-notice,
+  .badge-brief-status {
+    border: 1pt solid #0f172a !important;
+    background: #f8fafc !important;
+    color: #0f172a !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 6. Clean Printable Tables with Row Page-Break Protection */
+  .notice-table,
+  .brief-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    border: 1pt solid #cbd5e1 !important;
+    font-size: 9pt !important;
+  }
+
+  .notice-table th,
+  .brief-table th {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+    border: 1pt solid #cbd5e1 !important;
+    padding: 6pt 8pt !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .notice-table td,
+  .brief-table td {
+    border: 1pt solid #e2e8f0 !important;
+    padding: 6pt 8pt !important;
+    color: #1e293b !important;
+  }
+
+  .notice-table tr,
+  .brief-table tr,
+  .brief-section,
+  .notice-deadline-box,
+  .brief-gps-box,
+  .notice-signoff,
+  .brief-committee-signatures {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .notice-deadline-box,
+  .brief-gps-box {
+    border: 1pt solid #cbd5e1 !important;
+    background: #f8fafc !important;
+    padding: 8pt 12pt !important;
+    margin: 12pt 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .brief-checkbox {
+    border: 1pt solid #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .notice-stamp,
+  .brief-stamp {
+    border: 1pt solid #0f172a !important;
+    color: #0f172a !important;
+  }
+}
+
+
+

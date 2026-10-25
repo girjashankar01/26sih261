@@ -1,0 +1,286 @@
+rule_set: EOA_RENEWAL
+version: 4
+demo: true
+effective_from: "2024-04-01"
+effective_to: "2026-03-31"
+approved_by: "Domain Reviewer (Illustrative Synthetic Demo)"
+params:
+  expiry_warn_days: 30
+  name_min_ratio: 90
+
+rules:
+  - id: R-DOC-001
+    type: required_doc
+    status: synthetic_demo
+    mandatory: true
+    doc_type: AFFIDAVIT
+    severity: high
+    rectifiable: true
+    inputs: []
+    message: "Required affidavit/undertaking document not submitted"
+    ref:
+      handbook: "APH 2024-25 to 2026-27"
+      clause: "Chapter II, Clause 2.1 (Illustrative synthetic demo)"
+      amendment: null
+    tests:
+      - name: missing
+        docs: [FIRE_NOC]
+        expect: FAILED_CHECK
+      - name: present
+        docs: [AFFIDAVIT]
+        expect: PASS
+      - name: unclassified_present
+        docs: [FIRE_NOC, UNCLASSIFIED]
+        expect: NEEDS_REVIEW
+
+  - id: R-EXP-001
+    type: not_expired
+    status: synthetic_demo
+    mandatory: true
+    doc_type: FIRE_NOC
+    field: valid_till
+    params:
+      as_of: submission_date
+      warn_days: 30
+    inputs: [FIRE_NOC.valid_till]
+    severity: high
+    rectifiable: true
+    message: "Fire NOC validity date precedes application submission or expires within warning window"
+    ref:
+      handbook: "APH 2024-25 to 2026-27"
+      clause: "Chapter II, Clause 2.3 (Illustrative synthetic demo)"
+      amendment: null
+    tests:
+      - name: expired
+        submitted: "2026-10-12"
+        facts: {FIRE_NOC.valid_till: "2026-03-31"}
+        expect: FAILED_CHECK
+      - name: boundary_last_valid_day
+        submitted: "2026-10-12"
+        facts: {FIRE_NOC.valid_till: "2026-10-12"}
+        expect: WARNING
+      - name: soon
+        submitted: "2026-10-12"
+        facts: {FIRE_NOC.valid_till: "2026-10-30"}
+        expect: WARNING
+      - name: ok
+        submitted: "2026-10-12"
+        facts: {FIRE_NOC.valid_till: "2027-06-01"}
+        expect: PASS
+      - name: missing
+        submitted: "2026-10-12"
+        facts: {}
+        expect: NOT_CHECKED
+      - name: ambiguous_2digit_year
+        submitted: "2026-10-12"
+        raw: {FIRE_NOC.valid_till: "31/03/26"}
+        expect: NEEDS_REVIEW
+
+  - id: R-CROSS-001
+    type: fuzzy_match
+    status: synthetic_demo
+    left:
+      doc_type: ACCREDITATION
+      field: institution_name
+    right:
+      record: institute.name
+    params:
+      min_ratio: 90
+    severity: medium
+    inputs: [ACCREDITATION.institution_name]
+    message: "Institution name in document differs from official institute registry record"
+    ref:
+      handbook: "APH 2024-25 to 2026-27"
+      clause: "Chapter II, Clause 2.4 (Illustrative synthetic demo)"
+      amendment: null
+    tests:
+      - name: matching_names
+        doc_name: "Apex Inst of Tech Pvt. Ltd."
+        record_name: "Apex Institute of Technology Private Limited"
+        expect: PASS
+      - name: legal_form_differs
+        doc_name: "Apex Engineering College Trust"
+        record_name: "Apex Engineering College Society"
+        expect: NEEDS_REVIEW
+      - name: partial_match
+        doc_name: "Apex Institute"
+        record_name: "Apex Institute of Technology"
+        expect: NEEDS_REVIEW
+      - name: different_institution
+        doc_name: "Delhi Engineering College"
+        record_name: "Apex Institute of Technology"
+        expect: FAILED_CHECK
+
+  - id: R-NUM-001
+    type: field_lte_record
+    status: synthetic_demo
+    left:
+      form: requested_intake
+    right:
+      record: approved_programmes.intake
+    severity: high
+    inputs: [form.requested_intake]
+    message: "Requested intake exceeds approved record intake"
+    ref:
+      handbook: "APH 2024-25 to 2026-27"
+      clause: "Chapter II, Clause 2.5 (Illustrative synthetic demo)"
+      amendment: null
+    tests:
+      - name: intake_ok
+        form_intake: 480
+        record_intake: 480
+        expect: PASS
+      - name: intake_exceeded
+        form_intake: 540
+        record_intake: 480
+        expect: FAILED_CHECK
+      - name: intake_missing_record
+        form_intake: 480
+        record_intake: null
+        expect: NOT_CHECKED
+
+  - id: R-TBL-001
+    type: table_sums_consistent
+    status: synthetic_demo
+    doc_type: EOA_LETTER
+    severity: medium
+    inputs: [EOA_LETTER.programmes_table]
+    message: "Table arithmetic consistency check for programmes/intake tables"
+    ref:
+      handbook: "APH 2024-25 to 2026-27"
+      clause: "Chapter II, Clause 2.6 (Illustrative synthetic demo)"
+      amendment: null
+    tests:
+      - name: table_arithmetic_ok
+        expect: PASS
+      - name: table_arithmetic_mismatch
+        expect: FAILED_CHECK
+
+  - id: R-ID-001
+    type: id_format
+    status: synthetic_demo
+    doc_type: FIRE_NOC
+    field: certificate_no
+    pattern: "^(?:FIRE/[A-Z]{2}/\\d{4}/\\d+|NOC-\\d{4}-\\d+|[A-Z0-9/-]{6,25})$"
+    severity: medium
+    inputs: [FIRE_NOC.certificate_no]
+    message: "Certificate number format conforms to issuer registry specifications"
+    ref:
+      handbook: "APH 2024-25 to 2026-27"
+      clause: "Chapter II, Clause 2.7 (Illustrative synthetic demo)"
+      amendment: null
+    tests:
+      - name: valid_id
+        value: "FIRE/KA/2024/00123"
+        expect: PASS
+      - name: invalid_id
+        value: "INVALID?#@"
+        expect: FAILED_CHECK
+
+  - id: R-COMP-001
+    type: required_field
+    status: synthetic_demo
+    doc_type: FIRE_NOC
+    severity: high
+    rectifiable: true
+    inputs: [FIRE_NOC.certificate_no, FIRE_NOC.valid_till]
+    message: "Mandatory fields extracted and parsed without ambiguity"
+    ref:
+      handbook: "APH 2024-25 to 2026-27"
+      clause: "Chapter II, Clause 2.8 (Illustrative synthetic demo)"
+      amendment: null
+    tests:
+      - name: complete
+        missing: []
+        expect: PASS
+      - name: incomplete
+        missing: [valid_till]
+        expect: FAILED_CHECK
+
+  # Planned candidate rules per Guide §12.1
+  - id: R-INTAKE-001
+    type: field_lte_record
+    status: synthetic_demo
+    left:
+      form: requested_intake
+    right:
+      record: approved_programmes.intake
+    severity: high
+    inputs: [form.requested_intake]
+    message: "Requested intake exceeds approved record intake"
+    ref:
+      handbook: "APH 2024-25 to 2026-27"
+      clause: "Chapter II, Clause 2.5 (Illustrative synthetic demo)"
+      amendment: null
+    tests:
+      - name: intake_ok
+        form_intake: 480
+        record_intake: 480
+        expect: PASS
+      - name: intake_exceeded
+        form_intake: 540
+        record_intake: 480
+        expect: FAILED_CHECK
+      - name: intake_missing_record
+        form_intake: 480
+        record_intake: null
+        expect: NOT_CHECKED
+  - id: R-LAND-001
+    type: land_area_norm
+    status: planned
+    params: {min_acres_metro: 1.5, min_acres_urban: 2.5, min_acres_rural: 5.0}
+    severity: high
+    rectifiable: false
+    inputs: [campus.land_acres, institute.location_category]
+    message: "Institution land area satisfies minimum acreage norms per category"
+    ref:
+      handbook: "APH 2024-25 to 2026-27"
+      clause: "Chapter IV, Clause 4.1 (Land Norms - Illustrative synthetic demo)"
+      amendment: null
+    tests:
+      - name: metro_land_ok
+        expect: PASS
+      - name: rural_land_insufficient
+        expect: FAILED_CHECK
+  - id: R-MARK-001
+    type: visual_mark_present
+    status: planned
+    doc_type: AFFIDAVIT
+    mark: signature
+    severity: low
+    advisory: true
+  - id: R-ID-002
+    type: id_match
+    status: planned
+    left: {doc_type: FIRE_NOC, field: plot_no}
+    right: {doc_type: BUILDING_PLAN, field: plot_no}
+    severity: high
+    inputs: [FIRE_NOC.plot_no, BUILDING_PLAN.plot_no]
+  - id: R-DATE-001
+    type: date_order
+    status: planned
+    left: {doc_type: BUILDING_COMPLETION, field: issued_on}
+    right: {doc_type: FIRE_NOC, field: issued_on}
+    severity: medium
+    inputs: [BUILDING_COMPLETION.issued_on, FIRE_NOC.issued_on]
+  - id: R-FAC-001
+    type: faculty_ratio
+    status: planned
+    params: {students_per_faculty: 20, basis: sum_of_approved_intake_all_years}
+    severity: high
+    rectifiable: true
+    inputs: [FACULTY_LIST.regular_count, records.approved_programmes.intake]
+  - id: R-REC-001
+    type: record_flag
+    status: planned
+    record: ter_payment
+    expect: paid
+    severity: high
+    inputs: [records.ter_payment.status]
+  - id: R-REC-002
+    type: record_flag
+    status: planned
+    record: deficiencies
+    expect: none_open
+    severity: high
+    inputs: [records.deficiencies.open_count]
