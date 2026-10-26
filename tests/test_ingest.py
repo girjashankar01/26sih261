@@ -88,12 +88,12 @@ class TestIngestionGateway(unittest.TestCase):
         res = asyncio.run(
             process_upload_stream(
                 f,
-                application_id="DEMO-CLEAN-001",
+                application_id="TEST-INGEST-001",
                 doc_slot="fire_noc",
                 scratch_dir=self.scratch_dir,
             )
         )
-        self.assertEqual(res.application_id, "DEMO-CLEAN-001")
+        self.assertEqual(res.application_id, "TEST-INGEST-001")
         self.assertEqual(res.detected_kind, "pdf")
         self.assertEqual(res.detected_media_type, "application/pdf")
         self.assertEqual(res.byte_size, len(SAMPLE_PDF))
@@ -110,7 +110,7 @@ class TestIngestionGateway(unittest.TestCase):
         res = asyncio.run(
             process_upload_stream(
                 f,
-                application_id="DEMO-CLEAN-001",
+                application_id="TEST-INGEST-001",
                 doc_slot="site_plan",
                 scratch_dir=self.scratch_dir,
             )
@@ -127,7 +127,7 @@ class TestIngestionGateway(unittest.TestCase):
         res = asyncio.run(
             process_upload_stream(
                 f,
-                application_id="DEMO-CLEAN-001",
+                application_id="TEST-INGEST-001",
                 doc_slot="building_photo",
                 scratch_dir=self.scratch_dir,
             )
@@ -147,7 +147,7 @@ class TestIngestionGateway(unittest.TestCase):
             asyncio.run(
                 process_upload_stream(
                     f,
-                    application_id="DEMO-CLEAN-001",
+                    application_id="TEST-INGEST-001",
                     scratch_dir=self.scratch_dir,
                 )
             )
@@ -164,7 +164,7 @@ class TestIngestionGateway(unittest.TestCase):
             asyncio.run(
                 process_upload_stream(
                     f,
-                    application_id="DEMO-CLEAN-001",
+                    application_id="TEST-INGEST-001",
                     scratch_dir=self.scratch_dir,
                 )
             )
@@ -180,7 +180,7 @@ class TestIngestionGateway(unittest.TestCase):
             asyncio.run(
                 process_upload_stream(
                     f,
-                    application_id="DEMO-CLEAN-001",
+                    application_id="TEST-INGEST-001",
                     max_size=100,
                     scratch_dir=self.scratch_dir,
                 )
@@ -196,7 +196,7 @@ class TestIngestionGateway(unittest.TestCase):
             asyncio.run(
                 process_upload_stream(
                     f,
-                    application_id="DEMO-CLEAN-001",
+                    application_id="TEST-INGEST-001",
                     scratch_dir=self.scratch_dir,
                 )
             )
@@ -208,13 +208,13 @@ class TestIngestionGateway(unittest.TestCase):
         f = make_upload_file(SAMPLE_PDF, "affidavit.pdf")
         res = asyncio.run(
             upload_document(
-                application_id="DEMO-CLEAN-001",
+                application_id="TEST-INGEST-001",
                 file=f,
                 doc_slot="affidavit",
             )
         )
         validated = DocumentIngestResponseModel.model_validate(res.__dict__)
-        self.assertEqual(validated.application_id, "DEMO-CLEAN-001")
+        self.assertEqual(validated.application_id, "TEST-INGEST-001")
         self.assertEqual(validated.doc_slot, "affidavit")
         self.assertEqual(validated.detected_kind, "pdf")
         self.assertEqual(validated.pipeline_stage, "S1_INGESTION_GATEWAY")

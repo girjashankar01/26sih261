@@ -116,6 +116,50 @@ def run_scanned_ocr_ladder(
             }
 
     if not docling_ready:
+        try:
+            from rapidocr_onnxruntime import RapidOCR
+            engine = RapidOCR()
+            res, _ = engine(gray_prep)
+            blocks = []
+            for i, (box, text, score) in enumerate(res or []):
+                xs = [p[0] for p in box]
+                ys = [p[1] for p in box]
+                norm = [
+                    round(max(0.0, min(xs)) / sw, 4),
+                    round(max(0.0, min(ys)) / sh, 4),
+                    round(min(float(sw), max(xs)) / sw, 4),
+                    round(min(float(sh), max(ys)) / sh, 4),
+                ]
+                mapped = map_bbox_to_source(norm, prep_meta)
+                blocks.append({
+                    "id": f"B{i+1}",
+                    "page": page_index,
+                    "label": "text",
+                    "text": text,
+                    "confidence": round(float(score), 3),
+                    "bbox_norm": mapped,
+                    "bbox_precision": "word",
+                    "engine": "rapidocr"
+                })
+
+            if blocks:
+                full_text = " ".join(b["text"] for b in blocks)
+                q_score, q_method, q_cal = compute_quality_score(full_text, page_area_px)
+                md = "\n\n".join(b["text"] for b in blocks)
+                return {
+                    "status": "SUCCESS",
+                    "error_class": None,
+                    "reason": "RapidOCR offline ladder completed",
+                    "level": start_level,
+                    "quality": {"score": q_score, "method": "rapidocr_density", "calibrated": False},
+                    "preprocess": prep_meta,
+                    "tables": [],
+                    "blocks": blocks,
+                    "markdown": md
+                }
+        except Exception:
+            pass
+
         # Honest reporting per Guide §8.6 and §20.1
         return {
             "status": "NOT_CHECKED",

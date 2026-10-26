@@ -148,9 +148,15 @@ class WorkspaceComponent {
 
     // Fetch S7 facts for header card if available
     try {
-      const client = (typeof window !== 'undefined' && window.apiClient) ? window.apiClient : null;
+      const client = (typeof window !== 'undefined' && (window.apiClient || window.api)) ? (window.apiClient || window.api) : null;
       if (client && typeof client.getApplicationFacts === 'function') {
         this.currentFacts = await client.getApplicationFacts(appId);
+      }
+      if (client && typeof client.getDocuments === 'function') {
+        const docsRes = await client.getDocuments(appId);
+        if (docsRes && Array.isArray(docsRes.documents)) {
+          this.currentDocuments = docsRes.documents;
+        }
       }
     } catch (_) {}
 
@@ -428,7 +434,7 @@ class WorkspaceComponent {
           </div>
           <div class="card-body" id="workspace-evidence-content" style="padding: 0;">
             ${(typeof window !== 'undefined' && window.evidenceViewerComponent)
-              ? window.evidenceViewerComponent.render(appId, this.currentAggregate)
+              ? window.evidenceViewerComponent.render(appId, this.currentAggregate, this.currentDocuments || [])
               : '<p class="text-muted text-sm" style="padding: var(--space-4);">Findings viewer container initialized. Ready for Phase 5 coordinate inspection.</p>'}
           </div>
         </div>

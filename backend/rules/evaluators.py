@@ -95,26 +95,38 @@ def eval_not_expired(rule: dict[str, Any], facts: list[dict[str, Any]], context:
     doc_type = rule.get("doc_type", "FIRE_NOC")
     field = rule.get("field", "valid_till")
 
+    doc_samples = context.get("doc_samples", {})
+    ocr_sample = doc_samples.get(doc_type) or doc_samples.get(doc_type.lower())
+
     fact = _find_fact(facts, doc_type, field)
     pre = precheck(fact, need_grounded=True)
     if pre.block:
         status, block_reason = pre.block
+        if ocr_sample:
+            reason = f"Document '{doc_type}' validity date cannot be verified: {block_reason}. Extracted text snippet ('{ocr_sample[:50]}...') contains no certificate validity dates."
+        else:
+            reason = f"Document '{doc_type}' validity date cannot be verified: {block_reason}."
+
+        evidence: dict[str, Any] = {
+            "document_type": doc_type,
+            "field": field,
+            "fact": fact,
+        }
+        if ocr_sample:
+            evidence["extracted_ocr_sample"] = ocr_sample
+
         return {
             "rule_id": rule_id,
             "rule_version": rule_version,
             "status": status,
             "category": "EXPIRED",
             "severity": rule.get("severity", "high"),
-            "observed": fact.get("raw") if fact else None,
+            "observed": fact.get("raw") if fact else (f"Not Found (OCR: \"{ocr_sample[:40]}…\")" if ocr_sample else None),
             "expected": "Valid date exceeding submission date",
             "advisory": True,
             "simulated": True,
-            "reason": f"Document '{doc_type}' validity date cannot be verified: {block_reason}.",
-            "evidence": {
-                "document_type": doc_type,
-                "field": field,
-                "fact": fact,
-            },
+            "reason": reason,
+            "evidence": evidence,
         }
 
     as_of_str = context.get("submission_date") or context.get("submitted_on")
@@ -466,12 +478,25 @@ def eval_required_field(rule: dict[str, Any], facts: list[dict[str, Any]], conte
                 if not f or f.get("parse_state") != "ok":
                     missing.append(parts[1])
 
+    doc_samples = context.get("doc_samples", {})
+    ocr_sample = doc_samples.get(doc_type) or doc_samples.get(doc_type.lower())
+
     if not missing:
         status = PASS
         reason = f"All required fields for document '{doc_type}' are extracted and verified."
     else:
         status = FAILED_CHECK
-        reason = f"Required field(s) {missing} missing or invalid in document '{doc_type}'."
+        if ocr_sample:
+            reason = f"Required field(s) {missing} missing or invalid in document '{doc_type}'. Extracted text snippet ('{ocr_sample[:60]}...') contains no recognized statutory certificate fields."
+        else:
+            reason = f"Required field(s) {missing} missing or invalid in document '{doc_type}'."
+
+    evidence: dict[str, Any] = {
+        "document_type": doc_type,
+        "missing_fields": missing,
+    }
+    if ocr_sample:
+        evidence["extracted_ocr_sample"] = ocr_sample
 
     return {
         "rule_id": rule_id,
@@ -484,10 +509,7 @@ def eval_required_field(rule: dict[str, Any], facts: list[dict[str, Any]], conte
         "advisory": True,
         "simulated": True,
         "reason": reason,
-        "evidence": {
-            "document_type": doc_type,
-            "missing_fields": missing,
-        },
+        "evidence": evidence,
     }
 
 

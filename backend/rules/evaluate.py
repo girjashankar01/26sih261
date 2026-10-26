@@ -37,9 +37,57 @@ def validate_persisted_application(
     )
     facts = aggregated.get("facts", [])
 
-    # 2. Derive evaluation context
-    submitted_docs = list({f.get("entity") for f in facts if f.get("source") == "doc"})
-    has_unclassified = "UNCLASSIFIED" in submitted_docs
+    # 2. Derive evaluation context and check persisted documents
+    import json
+    from backend.db.repository import get_uploads_by_application
+    from backend.storage.vault import default_vault
+
+    with d.connection() as conn:
+        uploads = get_uploads_by_application(conn, application_id, database=d)
+        doc_types = conn.execute(
+            d.adapt_sql("SELECT document_id, doc_slot, doc_type, is_classified, confidence FROM document_types WHERE application_id = ?"),
+            (application_id,)
+        ).fetchall()
+        ext_rows = conn.execute(
+            d.adapt_sql("SELECT document_id, payload_storage_key, status FROM extractions WHERE application_id = ?"),
+            (application_id,)
+        ).fetchall()
+
+    doc_samples: dict[str, str] = {}
+    v = default_vault
+    for row in ext_rows:
+        r_dict = dict(row)
+        if r_dict.get("status") == "SUCCESS" and r_dict.get("payload_storage_key"):
+            try:
+                raw_bytes = v.get_bytes(r_dict["payload_storage_key"])
+                ext_payload = json.loads(raw_bytes.decode("utf-8"))
+                blocks = ext_payload.get("blocks", [])
+                if blocks:
+                    doc_id = r_dict["document_id"]
+                    matching_slot = None
+                    for dt in doc_types:
+                        dt_dict = dict(dt)
+                        if dt_dict["document_id"] == doc_id:
+                            matching_slot = (dt_dict.get("doc_slot") or "").upper()
+                            break
+                    if not matching_slot:
+                        for u in uploads:
+                            if u["id"] == doc_id and u.get("doc_slot"):
+                                matching_slot = u["doc_slot"].upper()
+                                break
+                    sample_text = " ".join(b["text"] for b in blocks[:15])
+                    if matching_slot:
+                        doc_samples[matching_slot] = sample_text
+                        doc_samples[matching_slot.lower()] = sample_text
+                    doc_samples[doc_id] = sample_text
+            except Exception:
+                pass
+
+    submitted_slots = {u.get("doc_slot", "").upper() for u in uploads if u.get("doc_slot")}
+    doc_fact_entities = {f.get("entity") for f in facts if f.get("source") == "doc"}
+    doc_classified_types = {dict(dt)["doc_type"].upper() for dt in doc_types if dict(dt).get("is_classified") and dict(dt).get("doc_type")}
+    submitted_docs = list(doc_fact_entities | submitted_slots | doc_classified_types)
+    has_unclassified = any(dict(dt)["is_classified"] == 0 or dict(dt).get("doc_type") == "UNCLASSIFIED" for dt in doc_types)
 
     context = {
         "application_id": application_id,
@@ -47,6 +95,7 @@ def validate_persisted_application(
         "has_unclassified": has_unclassified,
         "classification_executed": True,
         "submission_date": None,
+        "doc_samples": doc_samples,
     }
 
     # Find submission date in facts
@@ -64,6 +113,48 @@ def validate_persisted_application(
         application_id=application_id,
         category=rs.get("rule_set", "EOA_RENEWAL"),
     )
+
+    # 4. Check for slot mismatch / unclassified upload in declared slot
+    for dt in doc_types:
+        dt_dict = dict(dt)
+        slot = (dt_dict.get("doc_slot") or "").upper()
+        dtype = (dt_dict.get("doc_type") or "").upper()
+        if slot and (dtype == "UNCLASSIFIED" or not dt_dict.get("is_classified")):
+            sample = doc_samples.get(slot, doc_samples.get(dt_dict["document_id"], "Non-statutory academic content"))
+            slot_check = {
+                "rule_id": "R-SLOT-001",
+                "rule_version": "1.0.0",
+                "status": "FAILED_CHECK",
+                "category": "INCONSISTENT",
+                "severity": "high",
+                "observed": f"UNCLASSIFIED: \"{sample[:60]}…\"",
+                "expected": f"Statutory {slot} Certificate",
+                "advisory": True,
+                "simulated": True,
+                "reason": f"Preliminary indicator requiring human verification: Document in declared slot '{slot}' does not match statutory format. Extracted OCR content appears to be college/academic material ('{sample[:60]}…').",
+                "evidence": {
+                    "declared_slot": slot,
+                    "detected_type": "UNCLASSIFIED",
+                    "document_id": dt_dict["document_id"],
+                    "confidence": dt_dict.get("confidence", 0.0),
+                    "extracted_ocr_sample": sample
+                }
+            }
+            if not any(c.get("rule_id") == "R-SLOT-001" and c.get("evidence", {}).get("document_id") == dt_dict["document_id"] for c in report["checks"]):
+                report["checks"].append(slot_check)
+                report["findings"].append({
+                    "id": f"finding-r-slot-001-{dt_dict['document_id'][:8]}",
+                    "rule_id": "R-SLOT-001",
+                    "rule_version": "1.0.0",
+                    "status": "FAILED_CHECK",
+                    "category": "INCONSISTENT",
+                    "severity": "high",
+                    "lifecycle": "open",
+                    "advisory": True,
+                    "reason": slot_check["reason"],
+                    "evidence": slot_check["evidence"],
+                    "dismissal_reason": None
+                })
 
     return report
 

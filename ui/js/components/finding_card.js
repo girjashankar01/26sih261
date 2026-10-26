@@ -68,6 +68,17 @@ const RULE_REGULATORY_METADATA = {
     defaultObserved: 'Fields Missing: [certificate_no, valid_till]',
     defaultExpected: 'Complete Valid Fields'
   },
+  'R-SLOT-001': {
+    clause: 'APH Ch. II, Cl. 2.1 & 2.12',
+    title: 'Document Slot & Content Verification',
+    formula: 'detected_document_type == declared_slot',
+    docSlot: 'FIRE_NOC',
+    field: 'doc_type',
+    precision: 'block',
+    page: 1,
+    defaultObserved: 'UNCLASSIFIED (Academic Course Content)',
+    defaultExpected: 'Official Statutory Certificate'
+  },
   'R-LAND-001': {
     clause: 'APH Ch. II, Cl. 2.14',
     title: 'Land Area Requirement',
@@ -241,9 +252,26 @@ class FindingCardComponent {
       if (evidence.submitted.page) pageRef = evidence.submitted.page;
       if (evidence.submitted.bbox_precision) precision = evidence.submitted.bbox_precision;
     }
+    if (evidence.declared_slot) docSlot = evidence.declared_slot;
     if (evidence.document_type) docSlot = evidence.document_type;
 
-    if (!observedValue && meta.defaultObserved) {
+    if (Array.isArray(observedValue)) {
+      if (evidence.extracted_ocr_sample) {
+        observedValue = `Missing [${observedValue.join(', ')}] · OCR: \"${evidence.extracted_ocr_sample.slice(0, 65)}…\"`;
+      } else {
+        observedValue = `Missing fields: [${observedValue.join(', ')}]`;
+      }
+    } else if (!observedValue && evidence.extracted_ocr_sample) {
+      observedValue = `Extracted OCR: \"${evidence.extracted_ocr_sample.slice(0, 70)}…\"`;
+    } else if (!observedValue && Array.isArray(evidence.missing_fields) && evidence.missing_fields.length > 0) {
+      observedValue = `Missing fields: [${evidence.missing_fields.join(', ')}]`;
+    } else if (observedValue === null && meta.defaultObserved) {
+      if (finding.status === 'NOT_CHECKED' && finding.reason && finding.reason.includes('unavailable')) {
+        observedValue = 'Unavailable / Not Found in Document';
+      } else {
+        observedValue = meta.defaultObserved;
+      }
+    } else if (!observedValue && meta.defaultObserved) {
       observedValue = meta.defaultObserved;
     }
 

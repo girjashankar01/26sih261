@@ -4,6 +4,7 @@ from pathlib import Path
 import yaml
 
 from fastapi import FastAPI, File, Form, Header, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 import pymupdf
@@ -76,6 +77,14 @@ app = FastAPI(
     title="AICTE Application Validation Prototype",
     description="Synthetic decision-support demo for SIH 2026 PS 26261. Not an AICTE-integrated service.",
     version="0.1.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 ROOT = Path(__file__).resolve().parents[2]
 UI_DIR = ROOT / "ui"
@@ -201,8 +210,13 @@ async def get_document_page_raster_endpoint(
     raw_bytes = default_vault.get_bytes(storage_key)
     media_type = record.get("media_type", "application/pdf")
 
+    headers = {
+        "Access-Control-Allow-Origin": "*",
+        "Cache-Control": "public, max-age=3600",
+    }
+
     if media_type in ("image/png", "image/jpeg", "image/jpg"):
-        return Response(content=raw_bytes, media_type=media_type)
+        return Response(content=raw_bytes, media_type=media_type, headers=headers)
 
     if media_type == "application/pdf":
         def _render_pdf_page():
@@ -216,11 +230,11 @@ async def get_document_page_raster_endpoint(
 
         try:
             png_bytes = await asyncio.to_thread(_render_pdf_page)
-            return Response(content=png_bytes, media_type="image/png")
+            return Response(content=png_bytes, media_type="image/png", headers=headers)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to rasterize PDF page: {str(e)}")
 
-    return Response(content=raw_bytes, media_type=media_type)
+    return Response(content=raw_bytes, media_type=media_type, headers=headers)
 
 
 @app.post(
@@ -360,6 +374,10 @@ async def extract_document_endpoint(
             detail={"error_code": "DOCUMENT_NOT_FOUND", "message": result.get("reason")},
         )
 
+    if isinstance(result, dict):
+        result["document_id"] = document_id.strip()
+        result["application_id"] = application_id.strip()
+
     return result
 
 
@@ -444,6 +462,10 @@ async def extract_fields_endpoint(
             status_code=422,
             detail={"error_code": result.get("error_code", "EXTRACTION_FAILED"), "message": result.get("reason")},
         )
+
+    if isinstance(result, dict):
+        result["document_id"] = document_id.strip()
+        result["application_id"] = application_id.strip()
 
     return result
 
@@ -532,6 +554,10 @@ async def verify_document_endpoint(
             status_code=404,
             detail={"error_code": "DOCUMENT_NOT_FOUND", "message": result.get("reason")},
         )
+
+    if isinstance(result, dict):
+        result["document_id"] = document_id.strip()
+        result["application_id"] = application_id.strip()
 
     return result
 

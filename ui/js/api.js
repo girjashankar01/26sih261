@@ -500,5 +500,6 @@ class ApiClient {
 // Export singleton instance globally and as module
 const api = new ApiClient();
 window.api = api;
+window.apiClient = api;
 window.ApiClient = ApiClient;
 window.ApiError = ApiError;

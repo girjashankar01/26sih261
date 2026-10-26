@@ -220,9 +220,9 @@ class EvidenceViewerComponent {
     );
 
     if (isRealUpload && this.currentAppId && this.currentDocId) {
-      const pageUrl = `/applications/${encodeURIComponent(this.currentAppId)}/documents/${encodeURIComponent(this.currentDocId)}/page/${pageNum}`;
+      const baseUrl = (typeof window !== 'undefined' && ((window.api && window.api.baseUrl) || (window.apiClient && window.apiClient.baseUrl))) || '';
+      const pageUrl = `${baseUrl}/applications/${encodeURIComponent(this.currentAppId)}/documents/${encodeURIComponent(this.currentDocId)}/page/${pageNum}`;
       const img = new Image();
-      img.crossOrigin = 'anonymous';
 
       // Loading indicator on canvas
       ctx.fillStyle = '#f8fafc';
@@ -236,29 +236,24 @@ class EvidenceViewerComponent {
       img.onload = () => {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, w, h);
-
-        const imgAspect = img.width / img.height;
-        const canvasAspect = w / h;
-        let drawW = w;
-        let drawH = h;
-        let drawX = 0;
-        let drawY = 0;
-
-        if (imgAspect > canvasAspect) {
-          drawW = w;
-          drawH = w / imgAspect;
-          drawY = (h - drawH) / 2;
-        } else {
-          drawH = h;
-          drawW = h * imgAspect;
-          drawX = (w - drawW) / 2;
-        }
-
-        ctx.drawImage(img, drawX, drawY, drawW, drawH);
+        ctx.drawImage(img, 0, 0, w, h);
       };
 
-      img.onerror = () => {
-        this.drawSyntheticFallback(ctx, w, h, pageNum);
+      img.onerror = (e) => {
+        console.error(`[EvidenceViewer] Could not load image for ${this.currentDocId} from ${pageUrl}:`, e);
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(0, 0, w, h);
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(24, 24, w - 48, h - 48);
+        ctx.fillStyle = '#64748b';
+        ctx.font = 'bold 15px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`Raster preview unavailable for ${this.currentDocId}`, w / 2, h / 2 - 15);
+        ctx.font = '12px sans-serif';
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText(`Inspecting extracted OCR fields and bounding boxes.`, w / 2, h / 2 + 15);
+        ctx.textAlign = 'left';
       };
       img.src = pageUrl;
       return;
@@ -358,7 +353,7 @@ class EvidenceViewerComponent {
       // 2. Scroll to and highlight corresponding finding card in findings inspector (Step 29)
       if (ruleId) {
         this.activeFindingId = ruleId;
-        const cardEl = document.getElementById(`finding-${ruleId}`);
+        const cardEl = document.getElementById(`finding-${ruleId}`) || document.querySelector(`[data-rule-id="${ruleId}"]`);
         if (cardEl) {
           if (typeof cardEl.scrollIntoView === 'function') {
             cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -404,24 +399,35 @@ class EvidenceViewerComponent {
     let targetPage = 1;
     let targetFieldKey = null;
 
-    if (ruleId === 'R-EXP-001') {
-      targetDocId = 'doc_qr_fire';
+    const activeDoc = this.documents.find(d => d.id === this.currentDocId);
+    const activeDocSlot = activeDoc ? (activeDoc.slot || '').toUpperCase() : '';
+
+    if (ruleId === 'R-EXP-001' || ruleId === 'R-COMP-001' || ruleId === 'R-ID-001' || ruleId === 'R-SLOT-001') {
+      if (activeDocSlot === 'FIRE_NOC') {
+        targetDocId = this.currentDocId;
+      } else {
+        const fireDoc = this.documents.find(d => (d.slot || '').toUpperCase() === 'FIRE_NOC');
+        targetDocId = fireDoc ? fireDoc.id : 'doc_qr_fire';
+      }
       targetPage = 1;
-      targetFieldKey = 'valid_till';
+      targetFieldKey = ruleId === 'R-EXP-001' ? 'valid_till' : (ruleId === 'R-ID-001' ? 'certificate_no' : null);
     } else if (ruleId === 'R-NUM-001') {
-      targetDocId = 'doc_digital_1';
+      const formDoc = this.documents.find(d => (d.slot || '').toUpperCase().includes('FORM'));
+      targetDocId = formDoc ? formDoc.id : 'doc_digital_1';
       targetPage = 1;
       targetFieldKey = 'intake';
     } else if (ruleId === 'R-DOC-001') {
-      targetDocId = 'doc_qr_fire';
+      targetDocId = this.currentDocId || 'doc_qr_fire';
       targetPage = 1;
       targetFieldKey = 'certificate_no';
     } else if (ruleId === 'R-LAND-001') {
-      targetDocId = 'doc_digital_1';
+      const landDoc = this.documents.find(d => (d.slot || '').toUpperCase().includes('LAND'));
+      targetDocId = landDoc ? landDoc.id : 'doc_digital_1';
       targetPage = 1;
       targetFieldKey = 'land_area_acres';
     } else if (ruleId === 'R-BUILD-001') {
-      targetDocId = 'doc_scanned_2';
+      const buildDoc = this.documents.find(d => (d.slot || '').toUpperCase().includes('BUILD'));
+      targetDocId = buildDoc ? buildDoc.id : 'doc_scanned_2';
       targetPage = 1;
       targetFieldKey = 'builtup_area_sqm';
     }
@@ -519,24 +525,69 @@ class EvidenceViewerComponent {
     if (documentId) this.currentDocId = documentId;
     this.currentFields = [];
 
+    const isSyntheticMock = (documentId === 'doc_qr_fire' || documentId === 'doc_digital_1' || documentId === 'doc_scanned_2');
+
     try {
       const client = (typeof window !== 'undefined' && window.apiClient)
         ? window.apiClient
         : (typeof ApiClient !== 'undefined' ? new ApiClient() : null);
 
-      if (client && typeof client.getDocumentFields === 'function' && applicationId) {
-        const res = await client.getDocumentFields(applicationId, documentId);
-        if (res && Array.isArray(res.fields)) {
-          this.currentFields = res.fields;
-        } else if (Array.isArray(res)) {
-          this.currentFields = res;
+      if (client && applicationId) {
+        // 1. Fetch schema-extracted fields if available
+        if (typeof client.getDocumentFields === 'function') {
+          try {
+            const res = await client.getDocumentFields(applicationId, documentId);
+            const rawFields = (res && Array.isArray(res.facts)) ? res.facts
+                            : ((res && Array.isArray(res.fields)) ? res.fields
+                            : (Array.isArray(res) ? res : []));
+            if (rawFields.length > 0) {
+              this.currentFields = rawFields.map(f => ({
+                id: f.id || `field-${f.key}`,
+                key: f.key,
+                label: f.label || (f.key ? f.key.replace(/_/g, ' ') : 'Field'),
+                value: f.value || f.raw || '',
+                page: f.page || 1,
+                bbox_norm: f.bbox_norm,
+                bbox_precision: f.bbox_precision || 'word',
+                rule_id: f.rule_id || (f.key === 'valid_till' ? 'R-EXP-001' : (f.key === 'certificate_no' ? 'R-COMP-001' : null)),
+                severity: f.severity || (f.key === 'valid_till' ? 'high' : null),
+                confidence: f.conf
+              }));
+            }
+          } catch (err) {
+            console.warn(`[EvidenceViewer] Could not fetch schema fields for ${documentId}:`, err);
+          }
+        }
+
+        // 2. If no schema fields, load real OCR text blocks from Branch B extraction
+        if ((!this.currentFields || this.currentFields.length === 0) && typeof client.getDocumentExtraction === 'function') {
+          let ext = this.currentExtraction;
+          if (!ext || ext.document_id !== documentId) {
+            try {
+              ext = await client.getDocumentExtraction(applicationId, documentId);
+            } catch (_) {}
+          }
+          if (ext && Array.isArray(ext.blocks) && ext.blocks.length > 0) {
+            this.currentExtraction = ext;
+            this.currentFields = ext.blocks.map(b => ({
+              id: b.id || `block-${Math.random().toString(36).slice(2, 6)}`,
+              key: b.id,
+              label: b.label === 'text' ? 'OCR Text' : (b.label || 'OCR Text'),
+              value: b.text || '',
+              page: b.page || 1,
+              bbox_norm: b.bbox_norm,
+              bbox_precision: b.bbox_precision || 'word',
+              confidence: b.confidence,
+              engine: b.engine || 'rapidocr'
+            }));
+          }
         }
       }
     } catch (err) {
-      console.warn(`[EvidenceViewer] Could not fetch fields for ${documentId}:`, err);
+      console.warn(`[EvidenceViewer] Could not fetch fields or extraction for ${documentId}:`, err);
     }
 
-    if (!this.currentFields || this.currentFields.length === 0) {
+    if ((!this.currentFields || this.currentFields.length === 0) && isSyntheticMock) {
       this.currentFields = this.getDefaultFields(documentId);
     }
 
@@ -868,7 +919,10 @@ class EvidenceViewerComponent {
     if (stateDocId && this.documents.some(d => d.id === stateDocId)) {
       this.currentDocId = stateDocId;
     } else if (!this.currentDocId || !this.documents.some(d => d.id === this.currentDocId)) {
-      this.currentDocId = this.documents[0] ? this.documents[0].id : null;
+      const findingWithDoc = this.findings.find(f => f.evidence && f.evidence.document_id);
+      const targetFromFinding = findingWithDoc ? this.documents.find(d => d.id === findingWithDoc.evidence.document_id) : null;
+      const fireDoc = this.documents.find(d => (d.slot || '').toLowerCase().includes('fire') || (d.slot || '').toLowerCase().includes('noc'));
+      this.currentDocId = (targetFromFinding || fireDoc || this.documents[0]) ? (targetFromFinding || fireDoc || this.documents[0]).id : null;
     }
 
     const activeDoc = this.documents.find(d => d.id === this.currentDocId);
@@ -878,7 +932,8 @@ class EvidenceViewerComponent {
     // Documents selector dropdown options
     const docOptionsHtml = this.documents.map(doc => {
       const isSelected = doc.id === this.currentDocId;
-      return `<option value="${doc.id}" ${isSelected ? 'selected' : ''}>${doc.slot || doc.name || doc.id} (${doc.name || doc.id})</option>`;
+      const label = doc.name || (doc.slot ? `${doc.slot} (${doc.id})` : doc.id);
+      return `<option value="${doc.id}" ${isSelected ? 'selected' : ''}>${label}</option>`;
     }).join('');
 
     // Findings cards placeholder / list
