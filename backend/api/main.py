@@ -4,8 +4,9 @@ from pathlib import Path
 import yaml
 
 from fastapi import FastAPI, File, Form, Header, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
+import pymupdf
 
 from backend.api.schemas import (
     DemoApplicationsListModel,
@@ -157,6 +158,8 @@ async def list_documents_endpoint(
     for r in records:
         item = dict(r)
         item["document_id"] = item.get("id")
+        if item.get("media_type") in ("image/png", "image/jpeg"):
+            item["routing_outcome"] = "BRANCH_B_SCANNED"
         normalized.append(item)
 
     return {
@@ -165,6 +168,59 @@ async def list_documents_endpoint(
         "count": len(normalized),
         "simulated": True,
     }
+
+
+@app.get(
+    "/applications/{application_id}/documents/{document_id}/page/{page_num}",
+    summary="Serve rendered document page raster (PNG or JPEG) for Evidence Viewer",
+)
+@app.get(
+    "/applications/{application_id}/documents/{document_id}/page",
+    include_in_schema=False,
+)
+async def get_document_page_raster_endpoint(
+    application_id: str,
+    document_id: str,
+    page_num: int = 1,
+):
+    if not application_id or not application_id.strip():
+        raise HTTPException(status_code=400, detail="Invalid application_id")
+    if not document_id or not document_id.strip():
+        raise HTTPException(status_code=400, detail="Invalid document_id")
+
+    with default_db.connection() as conn:
+        record = get_upload_by_id(conn, document_id.strip(), default_db)
+
+    if not record or record.get("application_id") != application_id.strip():
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    storage_key = record["storage_key"]
+    if not default_vault.exists(storage_key):
+        raise HTTPException(status_code=404, detail="Vault storage object not found")
+
+    raw_bytes = default_vault.get_bytes(storage_key)
+    media_type = record.get("media_type", "application/pdf")
+
+    if media_type in ("image/png", "image/jpeg", "image/jpg"):
+        return Response(content=raw_bytes, media_type=media_type)
+
+    if media_type == "application/pdf":
+        def _render_pdf_page():
+            doc = pymupdf.open(stream=raw_bytes, filetype="pdf")
+            if len(doc) == 0:
+                raise ValueError("Empty PDF")
+            idx = max(0, min(page_num - 1, len(doc) - 1))
+            page = doc.load_page(idx)
+            pix = page.get_pixmap(dpi=150)
+            return pix.tobytes("png")
+
+        try:
+            png_bytes = await asyncio.to_thread(_render_pdf_page)
+            return Response(content=png_bytes, media_type="image/png")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to rasterize PDF page: {str(e)}")
+
+    return Response(content=raw_bytes, media_type=media_type)
 
 
 @app.post(
@@ -205,7 +261,8 @@ async def route_document_endpoint(
 
     raw_bytes = default_vault.get_bytes(storage_key)
 
-    result = route_document(
+    result = await asyncio.to_thread(
+        route_document,
         raw_bytes=raw_bytes,
         media_type=record["media_type"],
         document_id=record["id"],

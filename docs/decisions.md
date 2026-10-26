@@ -2103,6 +2103,23 @@ Date · decision · reason · owner · interfaces/files affected · unresolved f
 ## Roadmap Sign-off & Milestone Completion
 - **All 58 micro-steps of the SIH PS 26261 implementation roadmap are 100% complete, fully implemented, verified, and documented.**
 
+## Evidence Viewer Real Document Raster and DB Test Cleanup — 2026-10-26
+- Issues addressed:
+  1. Evidence Viewer loaded a hardcoded generic certificate placeholder instead of actual uploaded document images/PDFs.
+  2. Inspection tab accumulated 136 test documents from automated test runs.
+- Changes made:
+  - Database cleanup: Pruned 131 duplicate test uploads from `data/prototype.db`, keeping the 5 latest documents for `DEMO-CLEAN-001`.
+  - Backend API: Added `GET /applications/{application_id}/documents/{document_id}/page/{page_num}` endpoint in `backend/api/main.py`. Serves raw bytes for PNG/JPEG images directly and rasterizes PDF pages to PNG using PyMuPDF in a worker thread.
+  - Evidence Viewer: Updated `evidence_viewer.js` to query actual uploaded documents from `apiClient.getDocuments(applicationId)` and render the real document page raster onto the HTML5 canvas, maintaining a graceful synthetic fallback for simulated demo IDs.
+  - Document Card: Added `View in Evidence` action button on document cards in `document_list.js` to transition directly to the Evidence Viewer with the selected document focused.
+- Verification:
+  - Tested raster endpoint directly with curl across JPEG, PNG, and PDF files: all returned HTTP 200 with appropriate media types.
+  - Executed all 48 frontend integration test suites (`test_step11.js` through `test_step58.js`): All 48 passed.
+  - Executed backend unit tests: 30/30 passed.
+
+
+
+
 
 
 

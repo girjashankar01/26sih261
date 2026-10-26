@@ -356,9 +356,33 @@ class DocumentListComponent {
           <button class="btn btn-primary btn-sm" onclick="window.documentListComponent.runExtraction('${appId}', '${docId}')" title="Run S4 extraction and S6 field bounding box grounding">
             Run Extraction
           </button>
+          <button class="btn btn-outline btn-sm" onclick="window.documentListComponent.viewInEvidence('${appId}', '${docId}')" title="Inspect page raster and bounding boxes in Evidence Viewer">
+            View in Evidence
+          </button>
         </div>
       </div>
     `;
+  }
+
+  /**
+   * Focus document in Evidence Viewer (Step 12 & Phase 5)
+   */
+  viewInEvidence(applicationId, documentId) {
+    if (typeof window === 'undefined') return;
+
+    if (window.appState && typeof window.appState.setSelectedDoc === 'function') {
+      window.appState.setSelectedDoc(documentId);
+    }
+
+    if (window.workspaceComponent && typeof window.workspaceComponent.switchTab === 'function') {
+      window.workspaceComponent.switchTab('evidence');
+    } else {
+      window.location.hash = `#application/${applicationId}/evidence`;
+    }
+
+    if (window.evidenceViewerComponent && typeof window.evidenceViewerComponent.switchDocument === 'function') {
+      window.evidenceViewerComponent.switchDocument(documentId);
+    }
   }
 
   /**
@@ -455,18 +479,34 @@ class DocumentListComponent {
       return emptyHtml;
     }
 
+    const headerHtml = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-3);">
+        <span class="text-xs text-muted">Showing <strong>${documents.length}</strong> persisted document(s) · <em>newest first</em></span>
+      </div>
+    `;
     const cardsHtml = documents.map(doc => this.renderDocumentCard(doc)).join('');
-    const gridHtml = `<div class="document-grid">${cardsHtml}</div>`;
+    const gridHtml = `${headerHtml}<div class="document-grid">${cardsHtml}</div>`;
     if (targetEl) targetEl.innerHTML = gridHtml;
 
-    // Asynchronously fetch missing routes
-    documents.forEach(doc => {
+    // Asynchronously fetch missing routes for documents that need them
+    const needsRouting = documents.filter(doc => {
       const docId = doc.document_id || doc.id;
       const appId = doc.application_id || (window.appState && window.appState.getState('selectedAppId'));
-      if (docId && appId && !this.routeCache.has(`${appId}:${docId}`)) {
-        this.fetchAndBindRoute(appId, docId).catch(() => {});
-      }
+      const hasOutcome = Boolean(doc.routing_outcome || (doc.route && doc.route.routing_outcome));
+      return docId && appId && !hasOutcome && !this.routeCache.has(`${appId}:${docId}`);
     });
+
+    // Process unrouted documents in small sequential batches of 2 to avoid event loop contention
+    (async () => {
+      for (let i = 0; i < Math.min(needsRouting.length, 10); i += 2) {
+        const batch = needsRouting.slice(i, i + 2);
+        await Promise.all(batch.map(doc => {
+          const docId = doc.document_id || doc.id;
+          const appId = doc.application_id || (window.appState && window.appState.getState('selectedAppId'));
+          return this.fetchAndBindRoute(appId, docId).catch(() => {});
+        }));
+      }
+    })();
 
     return gridHtml;
   }
@@ -490,8 +530,25 @@ class DocumentListComponent {
       return docs;
     } catch (err) {
       console.error(`Failed to load documents for ${applicationId}:`, err);
+      const targetEl = typeof container === 'string'
+        ? document.getElementById(container)
+        : (container || document.getElementById('workspace-documents-container'));
+      if (targetEl) {
+        targetEl.innerHTML = `
+          <div class="card" style="padding: var(--space-4); text-align: center; color: var(--status-fail);">
+            Failed to load documents: ${err.message || 'Network error'}
+          </div>
+        `;
+      }
       return [];
     }
+  }
+
+  /**
+   * Load documents for an application (alias matching workspace caller)
+   */
+  async loadDocuments(applicationId, container = null) {
+    return this.loadApplicationDocuments(applicationId, container);
   }
 
   /**

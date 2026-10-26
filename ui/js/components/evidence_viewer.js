@@ -144,19 +144,9 @@ class EvidenceViewerComponent {
   }
 
   /**
-   * Render simulated high-resolution document raster on HTML5 canvas (Step 26)
+   * Render simulated fallback document raster on HTML5 canvas
    */
-  drawPage(pageNum = 1) {
-    if (typeof document === 'undefined') return;
-    const canvas = document.getElementById('evidence-canvas');
-    if (!canvas || typeof canvas.getContext !== 'function') return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const w = canvas.width || this.canvasWidth;
-    const h = canvas.height || this.canvasHeight;
-
+  drawSyntheticFallback(ctx, w, h, pageNum) {
     // Clear background to clean white paper
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, w, h);
@@ -205,6 +195,76 @@ class EvidenceViewerComponent {
     ctx.font = '11px sans-serif';
     ctx.fillText(`Date of Expiry: 2024-03-31`, w - 245, h - 130);
     ctx.fillText(`Page Ref: Page ${pageNum}`, w - 245, h - 110);
+  }
+
+  /**
+   * Render high-resolution document raster on HTML5 canvas (Step 26)
+   */
+  drawPage(pageNum = 1) {
+    if (typeof document === 'undefined') return;
+    const canvas = document.getElementById('evidence-canvas');
+    if (!canvas || typeof canvas.getContext !== 'function') return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const w = canvas.width || this.canvasWidth;
+    const h = canvas.height || this.canvasHeight;
+
+    // Check if this document can be loaded from the backend
+    const activeDoc = (this.documents || []).find(d => d.id === this.currentDocId);
+    const isRealUpload = Boolean(
+      typeof Image !== 'undefined' &&
+      activeDoc &&
+      (activeDoc.isRealUpload || (this.currentDocId && (this.currentDocId.startsWith('doc_') && !this.currentDocId.includes('qr') && !this.currentDocId.includes('digital') && !this.currentDocId.includes('scanned'))))
+    );
+
+    if (isRealUpload && this.currentAppId && this.currentDocId) {
+      const pageUrl = `/applications/${encodeURIComponent(this.currentAppId)}/documents/${encodeURIComponent(this.currentDocId)}/page/${pageNum}`;
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+
+      // Loading indicator on canvas
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = '#64748b';
+      ctx.font = '14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`Loading document raster (${this.currentDocId})…`, w / 2, h / 2);
+      ctx.textAlign = 'left';
+
+      img.onload = () => {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, w, h);
+
+        const imgAspect = img.width / img.height;
+        const canvasAspect = w / h;
+        let drawW = w;
+        let drawH = h;
+        let drawX = 0;
+        let drawY = 0;
+
+        if (imgAspect > canvasAspect) {
+          drawW = w;
+          drawH = w / imgAspect;
+          drawY = (h - drawH) / 2;
+        } else {
+          drawH = h;
+          drawW = h * imgAspect;
+          drawX = (w - drawW) / 2;
+        }
+
+        ctx.drawImage(img, drawX, drawY, drawW, drawH);
+      };
+
+      img.onerror = () => {
+        this.drawSyntheticFallback(ctx, w, h, pageNum);
+      };
+      img.src = pageUrl;
+      return;
+    }
+
+    this.drawSyntheticFallback(ctx, w, h, pageNum);
   }
 
   /**
@@ -777,11 +837,21 @@ class EvidenceViewerComponent {
   /**
    * Render Split-Screen Workspace HTML (Step 25, Step 26 & Step 27)
    */
-  render(applicationId, aggregate = null) {
+  render(applicationId, aggregate = null, uploadedDocs = []) {
     this.currentAppId = applicationId;
     
-    // Resolve documents list from aggregate or defaults
-    if (aggregate && Array.isArray(aggregate.documents) && aggregate.documents.length > 0) {
+    // Resolve documents list: priority to real uploads, then aggregate, then synthetic defaults
+    if (Array.isArray(uploadedDocs) && uploadedDocs.length > 0) {
+      this.documents = uploadedDocs.map(d => ({
+        id: d.document_id || d.id,
+        name: `${d.doc_slot || 'Document'} (${d.document_id || d.id})`,
+        slot: d.doc_slot || 'unspecified',
+        media_type: d.media_type,
+        byte_size: d.byte_size,
+        pages: 1,
+        isRealUpload: true,
+      }));
+    } else if (aggregate && Array.isArray(aggregate.documents) && aggregate.documents.length > 0) {
       this.documents = aggregate.documents;
     } else {
       this.documents = this.getDefaultDocuments(applicationId);
@@ -790,8 +860,15 @@ class EvidenceViewerComponent {
     // Resolve findings list from aggregate
     this.findings = (aggregate && Array.isArray(aggregate.findings)) ? aggregate.findings : [];
 
-    if (!this.currentDocId && this.documents.length > 0) {
-      this.currentDocId = this.documents[0].id;
+    // Check if appState has a selectedDocId
+    const stateDocId = (typeof window !== 'undefined' && window.appState && typeof window.appState.getState === 'function')
+      ? window.appState.getState('selectedDocId')
+      : null;
+
+    if (stateDocId && this.documents.some(d => d.id === stateDocId)) {
+      this.currentDocId = stateDocId;
+    } else if (!this.currentDocId || !this.documents.some(d => d.id === this.currentDocId)) {
+      this.currentDocId = this.documents[0] ? this.documents[0].id : null;
     }
 
     const activeDoc = this.documents.find(d => d.id === this.currentDocId);
@@ -951,6 +1028,7 @@ class EvidenceViewerComponent {
     }
 
     let aggregate = null;
+    let uploadedDocs = [];
     try {
       const client = (typeof window !== 'undefined' && window.apiClient)
         ? window.apiClient
@@ -959,8 +1037,14 @@ class EvidenceViewerComponent {
       if (client && typeof client.getApplicationAggregate === 'function') {
         aggregate = await client.getApplicationAggregate(applicationId);
       }
+      if (client && typeof client.getDocuments === 'function') {
+        const docsRes = await client.getDocuments(applicationId);
+        if (docsRes && Array.isArray(docsRes.documents) && docsRes.documents.length > 0) {
+          uploadedDocs = docsRes.documents;
+        }
+      }
     } catch (err) {
-      console.warn(`[EvidenceViewer] Could not fetch aggregate for ${applicationId}:`, err);
+      console.warn(`[EvidenceViewer] Could not fetch aggregate or docs for ${applicationId}:`, err);
     }
 
     if (!aggregate && typeof window !== 'undefined') {
@@ -971,7 +1055,7 @@ class EvidenceViewerComponent {
       }
     }
 
-    const html = this.render(applicationId, aggregate);
+    const html = this.render(applicationId, aggregate, uploadedDocs);
     if (targetEl) {
       targetEl.innerHTML = html;
     }

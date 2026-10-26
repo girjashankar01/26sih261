@@ -239,7 +239,11 @@ class UploadModalComponent {
     const uploadBtn = document.getElementById('btn-start-upload');
     if (uploadBtn) {
       uploadBtn.addEventListener('click', () => {
-        this.startUpload();
+        if (uploadBtn.dataset.complete === 'true') {
+          this.close();
+        } else {
+          this.startUpload();
+        }
       });
     }
   }
@@ -328,13 +332,20 @@ class UploadModalComponent {
       window.appState.loadApplication(this.targetApplicationId).catch(() => {});
     }
 
+    // Reload documents list in workspace view if mounted
+    if (typeof window !== 'undefined' && window.documentListComponent && typeof window.documentListComponent.loadDocuments === 'function') {
+      window.documentListComponent.loadDocuments(this.targetApplicationId).catch(() => {});
+    }
+
     // Final UI button status
     if (uploadBtn) {
       if (successCount === validFiles.length) {
         uploadBtn.textContent = 'Upload Complete ✓';
-        uploadBtn.disabled = true;
+        uploadBtn.dataset.complete = 'true';
+        uploadBtn.disabled = false;
       } else {
         uploadBtn.textContent = 'Retry Failed Uploads';
+        uploadBtn.dataset.complete = 'false';
         uploadBtn.disabled = false;
       }
     }

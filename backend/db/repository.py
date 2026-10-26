@@ -271,7 +271,7 @@ def get_uploads_by_application(
         FROM uploads u
         JOIN blobs b ON u.blake3 = b.blake3
         WHERE u.application_id = ?
-        ORDER BY u.created_at ASC;
+        ORDER BY u.created_at DESC;
     """)
     params = (application_id,)
     if d.is_postgres:

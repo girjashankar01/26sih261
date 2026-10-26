@@ -164,7 +164,11 @@ class WorkspaceComponent {
 
     // Trigger tab-specific loaders
     if (this.activeTab === 'documents' && typeof window !== 'undefined' && window.documentListComponent) {
-      window.documentListComponent.loadDocuments(appId);
+      if (typeof window.documentListComponent.loadDocuments === 'function') {
+        window.documentListComponent.loadDocuments(appId);
+      } else if (typeof window.documentListComponent.loadApplicationDocuments === 'function') {
+        window.documentListComponent.loadApplicationDocuments(appId);
+      }
     }
     if (this.activeTab === 'checklist' && typeof window !== 'undefined' && window.checklistTableComponent) {
       window.checklistTableComponent.loadAndRender(appId, 'workspace-checklist-content');
@@ -227,7 +231,11 @@ class WorkspaceComponent {
 
     // 3. Trigger tab-specific loader
     if (tabId === 'documents' && this.currentAppId && typeof window !== 'undefined' && window.documentListComponent) {
-      window.documentListComponent.loadDocuments(this.currentAppId);
+      if (typeof window.documentListComponent.loadDocuments === 'function') {
+        window.documentListComponent.loadDocuments(this.currentAppId);
+      } else if (typeof window.documentListComponent.loadApplicationDocuments === 'function') {
+        window.documentListComponent.loadApplicationDocuments(this.currentAppId);
+      }
     }
     if (tabId === 'checklist' && this.currentAppId && typeof window !== 'undefined' && window.checklistTableComponent) {
       window.checklistTableComponent.loadAndRender(this.currentAppId, 'workspace-checklist-content');
