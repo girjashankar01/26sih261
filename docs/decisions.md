@@ -2190,3 +2190,18 @@ Date · decision · reason · owner · interfaces/files affected · unresolved f
   - Verified raster streaming endpoints via HTTP request with `Origin` headers: `doc_f95ba5d3ebac` (131,531 bytes, JPEG), `doc_12b7012c5953` (85,795 bytes, PNG), `doc_faf50e9a3365` (72,991 bytes, PNG) all return HTTP 200 with `Access-Control-Allow-Origin` and `Cache-Control`.
   - Verified all 48 frontend integration test suites (`tests/test_step11.js` through `tests/test_step58.js`): **48/48 passed (100% GREEN)**.
   - Verified all Python test suites: `test_rules.py` (9/9), `test_branch_b.py` (12/12), `test_typing.py` (9/9), `test_aggregation.py` (13/13), `test_extraction.py` (13/13), `test_ingest.py` (8/8) all passed.
+
+
+## Documentation Synchronization to Latest S1–S13 Architecture Baseline — 2026-10-27
+- Reason:
+  - Repository documentation (`README.md`, `docs/spec/phase-a.md`, `docs/HANDOFF.md`, and `backend/README.md`) lagged behind the active codebase, which already contains full implementations of pipeline stages S1 through S13, 43 REST endpoints, and 10 UI frontend panels.
+  - Previous specs incorrectly described stages S4 through S13 as "Not started", obscuring the completion of the Phase A milestone for the Extension of Approval (EoA renewal) category.
+- Actions Taken:
+  - Updated `README.md` with complete architectural overview, Mermaid pipeline diagram, detailed breakdowns for stages S1 through S13, complete 43-endpoint catalog, current vs future scope, Docker setup details, keyboard triage shortcuts, and testing guides.
+  - Updated `docs/spec/phase-a.md` to reflect the completed S1–S13 pipeline stages, state model governance, and boundaries to Phase B (multi-category expansion) and Phase C (live registries & sovereign trust integrations).
+  - Updated `docs/HANDOFF.md` with accurate workstream status, completed components, and immediate platform hardening backlog items.
+  - Updated `backend/README.md` detailing all 15 backend submodules, data contracts (C1–C6), 13 database tables, and content-addressed storage architecture.
+- Verification Runs Executed:
+  - `uv run python -m unittest discover tests`: Ran 151 tests in 16.475s — **151/151 passed (OK)**.
+  - `node -e "..."` step test runner: Ran all 48 frontend integration step tests (`tests/test_step11.js` to `tests/test_step58.js`) — **48/48 passed (ALL PASSED)**.
+  - `uv run python scripts/e2e_demo_walkthrough.py`: Executed all 13 pipeline stages (S1 through S13) end-to-end against test sandbox — **Clean exit with code 0**.
